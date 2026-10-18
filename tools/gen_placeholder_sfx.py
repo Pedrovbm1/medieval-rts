@@ -51,6 +51,8 @@ def main():
     write("order_stop", tone([392, 294], 0.14, volume=0.5, sweep=-0.25))
     # Very short tick for UI buttons.
     write("ui_click", tone([1500], 0.03, volume=0.35, decay_power=3.0))
+    # Two-tone horn for "under attack" alerts.
+    write("alert", tone([440, 554], 0.18, volume=0.5, decay_power=0.8) + tone([370, 466], 0.24, volume=0.5, decay_power=1.2))
 
 
 if __name__ == "__main__":
