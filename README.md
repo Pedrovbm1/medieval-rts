@@ -9,7 +9,7 @@ contenido propio, siempre.
 
 ## Estado
 - [x] Investigación + plan de construcción → `docs/PLAN-CONSTRUCCION-RTS.md`
-- [ ] F0 — Setup + mundo mínimo (APK corre en Galaxy S10; falta probar pinch a mano y aprobar)
+- [x] F0 — Setup + mundo mínimo (aprobada 2026-10-17; probada en Galaxy S10)
 - [ ] F1 — Selección y órdenes
 - [ ] F2 — Pathfinding
 - [ ] F3 — Economía
