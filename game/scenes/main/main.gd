@@ -17,6 +17,7 @@ var _idle_cycle: int = 0
 @onready var selection: SelectionController = $SelectionController
 @onready var pointer: PointerManager = $PointerManager
 @onready var runner: ScenarioRunner = $ScenarioRunner
+@onready var placement: PlacementController = $World/PlacementController
 
 
 func _ready() -> void:
@@ -27,7 +28,8 @@ func _ready() -> void:
 	world.build_from_map(map_id)
 	camera.set_map_bounds(Rect2(Vector2.ZERO, world.map_size_px))
 	selection.setup(world, camera, order_marker)
-	pointer.setup(camera, selection, hud)
+	placement.setup(world, camera)
+	pointer.setup(camera, selection, hud, placement)
 
 	selection.selection_changed.connect(hud.show_selection)
 	selection.building_selected.connect(hud.show_building)
@@ -36,6 +38,15 @@ func _ready() -> void:
 	hud.hold_pressed.connect(selection.order_hold)
 	hud.deselect_pressed.connect(selection.clear_selection)
 	hud.idle_pressed.connect(_on_idle_pressed)
+	hud.build_pressed.connect(hud.show_build_menu)
+	hud.build_back_pressed.connect(func() -> void: hud.show_selection(selection.selected))
+	hud.build_type_chosen.connect(_on_build_type_chosen)
+	hud.place_confirm_pressed.connect(placement.confirm)
+	hud.place_cancel_pressed.connect(placement.cancel)
+	placement.state_changed.connect(hud.show_placing)
+	hud.train_pressed.connect(_on_train_pressed)
+	hud.dequeue_pressed.connect(_on_dequeue_pressed)
+	hud.cancel_construction_pressed.connect(_on_cancel_construction)
 
 	runner.start(scenario_id, world, camera)
 	world.economy.refresh_population()
@@ -78,3 +89,30 @@ func _on_idle_pressed() -> void:
 	camera.center_on_smooth(unit.position)
 	if OS.is_debug_build():
 		print("[REALM] idle_bell selected=%s at=(%d,%d)" % [unit.name, int(unit.position.x), int(unit.position.y)])
+
+
+func _on_build_type_chosen(type_id: String) -> void:
+	var builders: Array[Unit] = selection.selected.filter(func(u: Unit) -> bool: return u.can_gather())
+	if builders.is_empty():
+		return
+	placement.begin(type_id, builders)
+
+
+func _on_train_pressed(type_id: String) -> void:
+	var b: Building = selection.selected_building
+	if b != null and is_instance_valid(b):
+		if not world.construction.enqueue(b, type_id):
+			Sfx.play("order_stop")
+
+
+func _on_dequeue_pressed() -> void:
+	var b: Building = selection.selected_building
+	if b != null and is_instance_valid(b) and not b.queue.is_empty():
+		world.construction.dequeue(b, b.queue.size() - 1)
+
+
+func _on_cancel_construction() -> void:
+	var b: Building = selection.selected_building
+	if b != null and is_instance_valid(b):
+		world.construction.cancel_construction(b)
+		selection.select_building(null)

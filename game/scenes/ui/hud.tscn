@@ -68,7 +68,7 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -420.0
+offset_left = -560.0
 offset_top = -150.0
 offset_right = -12.0
 offset_bottom = -12.0
@@ -92,24 +92,8 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "-"
 
-[node name="Buttons" type="HBoxContainer" parent="SelectionPanel/Margin/VBox"]
+[node name="Actions" type="HFlowContainer" parent="SelectionPanel/Margin/VBox"]
+custom_minimum_size = Vector2(600, 0)
 layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="StopButton" type="Button" parent="SelectionPanel/Margin/VBox/Buttons"]
-custom_minimum_size = Vector2(120, 72)
-layout_mode = 2
-focus_mode = 0
-text = "Stop"
-
-[node name="HoldButton" type="Button" parent="SelectionPanel/Margin/VBox/Buttons"]
-custom_minimum_size = Vector2(120, 72)
-layout_mode = 2
-focus_mode = 0
-text = "Hold"
-
-[node name="DeselectButton" type="Button" parent="SelectionPanel/Margin/VBox/Buttons"]
-custom_minimum_size = Vector2(120, 72)
-layout_mode = 2
-focus_mode = 0
-text = "X"
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 8

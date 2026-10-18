@@ -19,3 +19,7 @@ signal building_removed(building: Building)
 signal tree_depleted(cell: Vector2i)
 ## A villager delivered resources to a drop-off.
 signal resources_delivered(player_id: int, resource: String, amount: int)
+## A foundation finished construction.
+signal building_completed(building: Building)
+## A building finished training a unit.
+signal unit_trained(unit: Unit, building: Building)

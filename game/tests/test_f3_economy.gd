@@ -218,11 +218,18 @@ func test_i_boar_lure_with_helpers() -> void:
 	var spot: Vector2 = world.nav.cell_center(world.nav.nearest_walkable(world.world_to_cell(home + Vector2(-700, 300))))
 	var boar: Unit = world.spawn_unit("boar", Unit.OWNER_GAIA, spot)
 	var boar_id: int = boar.get_instance_id()
+	# Three villagers resting by the Town Center: the helpers the lure brings the boar to.
+	var tc: Building = world.buildings.filter(func(b: Building) -> bool: return b.building_type == "town_center")[0]
+	for i: int in range(1, 4):
+		var helper: Unit = _villagers()[i]
+		world.behavior.assign(helper, null)
+		world.movement.stop(helper)
+		helper.position = world.approach_point(tc.rect(), spot) + Vector2(0, 30 * (i - 2))
 	world.movement.stop(hunter)
 	hunter.position = spot + Vector2(100, 0)
 	world.behavior.assign(hunter, HuntTask.new(hunter, world, boar))
 	var max_helpers: Array[int] = [0]
-	await _run(90.0, 4.0, 1.0, func(_t: float) -> void:
+	await _run(90.0, 4.0, 0.1, func(_t: float) -> void:
 		var n: int = _villagers().filter(func(u: Unit) -> bool: return u.task is HuntTask).size()
 		max_helpers[0] = maxi(max_helpers[0], n))
 	check(instance_from_id(boar_id) == null, "the boar is killed")

@@ -87,3 +87,25 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 - Restos de 0.9999 por suma de flotantes no se entregaban → épsilon al entregar.
 - `time_scale` no da más pasos de física: los tests leen el reloj del escenario.
 - El runner de tests se colgaba si una suite no compilaba → ahora la reporta como falla.
+
+---
+
+## F4 — Construcción y producción (2026-10-18, ~2 h)
+
+**Qué se hizo**
+- `ConstructionSystem`: validación con motivo (ocupado / costo / era / tipo), pago al confirmar, cimientos que bloquean el paso, cancelar con 50% de reembolso, colas de producción (máx. 5, pago al encolar, reembolso al quitar), población que bloquea la cola, punto de reunión.
+- `BuildTask`: constructores con velocidad decreciente por constructor extra; al terminar siembran, recolectan o quedan ociosos.
+- `PlacementController`: fantasma verde/rojo validado en vivo, se mueve con tap o arrastre, ✓ / doble tap / ✕.
+- HUD dinámico: panel de aldeanos con Construir, menú de edificios con costos, barra ✓/✕ con motivo, panel de edificio con botones de entrenar, cola y Cancelar obra; el panel se ajusta a su contenido.
+- Cuartel (entrena miliciano); costos y tiempos de entrenamiento en `units.json`; recursos iniciales por escenario.
+- Tocar un edificio propio con selección: ayudar/sembrar/entregar o seleccionarlo.
+
+**Archivos clave**: `game/systems/construction/*`, `game/scenes/ui/hud.*`, `game/scenes/buildings/building.gd`, `game/tests/test_f4_construction.gd`, `tools/device_test_f4.sh`.
+
+**Tests**: 168/168 headless. Base completa en 64 s de juego. S10: construir una casa y entrenar con toques reales 5/5; F1 7/7.
+
+**Problemas**
+- Con aldeanos seleccionados no se podía seleccionar la Plaza (los movía) → regla D27.
+- El panel no crecía cuando los botones pasaban a otra fila → se mide tras el acomodo y se ancla abajo a la derecha.
+- El test del jabalí dependía de la posición de los aldeanos y de la correa de 900 px; el cazador mataba al jabalí durante el lure → correa 1600 px, no ataca mientras lurea, muestreo cada 0.1 s.
+- La sesión programada de las 2:05 quedó esperando un permiso sin hacer cambios; se continuó en la sesión original.

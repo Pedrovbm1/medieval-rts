@@ -73,12 +73,12 @@ func move(index: int, pos: Vector2, now_ms: int) -> Array[Dictionary]:
 			if mode == Mode.PENDING and Vector2(p["start"]).distance_to(pos) > drag_threshold_px:
 				mode = Mode.PAN
 				# Include the movement spent crossing the threshold so the map does not lag the finger.
-				_emit("pan", {"delta": pos - Vector2(p["start"])})
+				_emit("pan", {"delta": pos - Vector2(p["start"]), "pos": pos, "start": Vector2(p["start"]), "first": true})
 			elif mode == Mode.BOX:
 				_emit("box_update", {"from": Vector2(p["start"]), "to": pos})
 		Mode.PAN:
 			if index == _primary:
-				_emit("pan", {"delta": pos - prev})
+				_emit("pan", {"delta": pos - prev, "pos": pos, "start": Vector2(p["start"]), "first": false})
 		Mode.BOX:
 			if index == _primary:
 				_emit("box_update", {"from": Vector2(p["start"]), "to": pos})

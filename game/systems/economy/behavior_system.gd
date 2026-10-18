@@ -127,6 +127,8 @@ func _fight_back(animal: Unit, cfg: Dictionary) -> void:
 ## A boar is mauling a villager near home: villagers around come to help.
 func _call_helpers(boar: Unit, victim: Unit) -> void:
 	var home: Building = world.economy.nearest_dropoff(victim.owner_id, "food", victim.position)
+	if OS.is_debug_build() and bool(DataLoader.rule("debug", "log_tasks", false)):
+		print("[REALM] boar strike victim=%s home=%s dist=%.0f" % [victim.name, home.name if home else "none", World.distance_to_rect(victim.position, home.rect()) if home else -1.0])
 	if home == null or World.distance_to_rect(victim.position, home.rect()) > HOME_RADIUS_PX:
 		return
 	for other: Object in world.movement.spatial.query(boar.position, HELP_RADIUS_PX):

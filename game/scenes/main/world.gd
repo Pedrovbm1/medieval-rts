@@ -11,6 +11,7 @@ const UNIT_SCENE: PackedScene = preload("res://scenes/units/unit.tscn")
 @onready var entities: Node2D = $Entities
 @onready var movement: MovementSystem = $MovementSystem
 @onready var behavior: BehaviorSystem = $BehaviorSystem
+@onready var construction: ConstructionSystem = $ConstructionSystem
 
 var map_id: String = ""
 var map_def: Dictionary = {}
@@ -57,6 +58,7 @@ func build_from_map(p_map_id: String) -> void:
 	movement.setup(nav, units)
 	economy.setup(self)
 	behavior.setup(self)
+	construction.setup(self)
 	EventBus.map_generated.emit(map_width, map_height, tile_size)
 
 
@@ -254,8 +256,9 @@ func building_at(world_pos: Vector2) -> Building:
 
 
 ## True if a footprint fits: every cell walkable terrain, not blocked, no node,
-## no building (walkable farms included) and inside the map with a 1-cell margin.
-func can_place(type_id: String, origin_cell: Vector2i) -> bool:
+## no building (walkable farms included), no unit standing there (except
+## `ignore`, e.g. the builders) and inside the map with a 1-cell margin.
+func can_place(type_id: String, origin_cell: Vector2i, ignore: Array[Unit] = []) -> bool:
 	var fp_arr: Array = DataLoader.get_entry("buildings", type_id).get("footprint", [2, 2])
 	var fp: Vector2i = Vector2i(int(fp_arr[0]), int(fp_arr[1]))
 	if origin_cell.x < 1 or origin_cell.y < 1 or origin_cell.x + fp.x > map_width - 1 or origin_cell.y + fp.y > map_height - 1:
@@ -271,7 +274,24 @@ func can_place(type_id: String, origin_cell: Vector2i) -> bool:
 	for n: ResourceNode in resource_nodes:
 		if n.rect().intersects(area):
 			return false
+	for u: Unit in units:
+		if not ignore.has(u) and area.grow(-2.0).has_point(u.position):
+			return false
 	return true
+
+
+## The gather task a villager should get for a point (rally points, AI).
+func task_for_point(unit: Unit, point: Vector2) -> UnitTask:
+	var n: ResourceNode = node_at(point, 16.0)
+	if n != null and not n.is_depleted():
+		return GatherTask.for_node(unit, self, n)
+	var b: Building = building_at(point)
+	if b != null and b.owner_id == unit.owner_id and not b.gather_info().is_empty() and b.is_complete():
+		return GatherTask.for_farm(unit, self, b)
+	var cell: Vector2i = world_to_cell(point)
+	if is_tree(cell):
+		return GatherTask.for_tree(unit, self, cell)
+	return null
 
 
 ## Nearest origin cell (spiral search) where `type_id` fits near `near`, leaving

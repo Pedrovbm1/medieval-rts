@@ -5,6 +5,10 @@ extends Node2D
 ## F3: placed already built. F4 adds construction progress and production.
 
 signal destroyed(building: Building)
+## Construction finished (HUD, AI, builders react).
+signal completed(building: Building)
+## Queue / progress changed (HUD refresh).
+signal changed(building: Building)
 
 var building_type: String = ""
 var owner_id: int = 0
@@ -19,6 +23,15 @@ var walkable: bool = false
 var build_progress: float = 1.0
 ## Workers currently assigned (farms limit this).
 var workers: Array[Unit] = []
+## Villagers currently constructing it (order = speed share).
+var builders: Array[Unit] = []
+## Production: unit type ids waiting; the first one is in training.
+var queue: Array[String] = []
+var train_elapsed: float = 0.0
+## True while the head of the queue waits for free population.
+var blocked_by_pop: bool = false
+## Where trained units walk to (INF = stay next to the building).
+var rally_point: Vector2 = Vector2.INF
 var selected: bool = false:
 	set(value):
 		if selected != value:
@@ -46,6 +59,44 @@ func setup(type_id: String, player_id: int, origin_cell: Vector2i, p_tile_size: 
 
 func is_complete() -> bool:
 	return build_progress >= 1.0
+
+
+## Turns a freshly placed building into a foundation (0% built, low HP).
+func make_foundation() -> void:
+	build_progress = 0.0
+	hp = maxi(1, int(max_hp * float(DataLoader.rule("construction", "foundation_hp_ratio", 0.1))))
+	queue_redraw()
+
+
+## Adds construction progress (0..1). HP rises with it. Returns true on completion.
+func add_progress(amount: float) -> bool:
+	if is_complete():
+		return false
+	var before: float = build_progress
+	build_progress = minf(1.0, build_progress + amount)
+	hp = mini(max_hp, hp + int(ceilf((build_progress - before) * max_hp * 0.9)))
+	queue_redraw()
+	changed.emit(self)
+	if build_progress >= 1.0:
+		hp = max_hp
+		completed.emit(self)
+		return true
+	return false
+
+
+func trains() -> Array:
+	return data.get("trains", [])
+
+
+## Seconds of the unit currently in training (0 if none).
+func train_time_of(type_id: String) -> float:
+	return float(DataLoader.get_entry("units", type_id).get("train_time", 20.0))
+
+
+func train_progress() -> float:
+	if queue.is_empty():
+		return 0.0
+	return clampf(train_elapsed / train_time_of(queue[0]), 0.0, 1.0)
 
 
 func rect() -> Rect2:
@@ -91,7 +142,18 @@ func _draw() -> void:
 	var tex: Texture2D = PlaceholderArt.texture()
 	var region: Rect2 = PlaceholderArt.building_region(building_type, owner_id)
 	var half: Vector2 = Vector2(footprint) * tile_size * 0.5
-	draw_texture_rect_region(tex, Rect2(-half, region.size), region)
+	if is_complete():
+		draw_texture_rect_region(tex, Rect2(-half, region.size), region)
+	else:
+		# Foundation: faded building + construction progress bar.
+		draw_texture_rect_region(tex, Rect2(-half, region.size), region, Color(1, 1, 1, 0.35 + 0.5 * build_progress))
+		var bar: Rect2 = Rect2(Vector2(-half.x + 10.0, half.y - 18.0), Vector2(half.x * 2.0 - 20.0, 8.0))
+		draw_texture_rect_region(tex, bar, PlaceholderArt.WHITE_RECT, Color(0.1, 0.1, 0.1, 0.85))
+		draw_texture_rect_region(tex, Rect2(bar.position + Vector2(1, 1), Vector2((bar.size.x - 2.0) * build_progress, 6.0)), PlaceholderArt.WHITE_RECT, Color(0.95, 0.8, 0.3))
+	if not queue.is_empty():
+		var tbar: Rect2 = Rect2(Vector2(-half.x + 10.0, -half.y + 18.0), Vector2(half.x * 2.0 - 20.0, 6.0))
+		draw_texture_rect_region(tex, tbar, PlaceholderArt.WHITE_RECT, Color(0.1, 0.1, 0.1, 0.85))
+		draw_texture_rect_region(tex, Rect2(tbar.position + Vector2(1, 1), Vector2((tbar.size.x - 2.0) * train_progress(), 4.0)), PlaceholderArt.WHITE_RECT, Color(0.4, 0.75, 1.0))
 	if selected:
 		draw_rect(Rect2(-half, half * 2.0), Color(0.35, 1.0, 0.35), false, 3.0)
 	if hp < max_hp:

@@ -35,3 +35,19 @@ BLDG_MINING_CAMP_NAME,Campamento minero,Mining camp
 BLDG_FARM_NAME,Granja,Farm
 MAP_TEST_LAKE_NAME,Prueba lago,Test lake
 MAP_TEST_OPEN_NAME,Prueba abierta,Test open
+BLDG_BARRACKS_NAME,Cuartel,Barracks
+HUD_BUILD,Construir,Build
+HUD_CANCEL,Cancelar,Cancel
+HUD_CONFIRM,Confirmar,Confirm
+HUD_BACK,Volver,Back
+HUD_QUEUE,Cola,Queue
+HUD_POP_FULL,Población llena,Population full
+HUD_UNDER_CONSTRUCTION,En obra,Under construction
+RESOURCE_FOOD_SHORT,C,F
+RESOURCE_WOOD_SHORT,M,W
+RESOURCE_GOLD_SHORT,O,G
+RESOURCE_STONE_SHORT,P,S
+ERR_OCCUPIED,Lugar ocupado,Blocked
+ERR_COST,Faltan recursos,Not enough resources
+ERR_ERA,Requiere otra era,Needs a later era
+HUD_REMOVE,Quitar,Remove

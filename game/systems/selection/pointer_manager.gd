@@ -10,6 +10,7 @@ signal box_changed(active: bool, from_screen: Vector2, to_screen: Vector2)
 var camera: CameraController
 var selection: SelectionController
 var hud: Hud
+var placement: PlacementController
 var classifier: GestureClassifier = GestureClassifier.new()
 
 var _pinch_start_zoom: float = 1.0
@@ -19,10 +20,11 @@ var _log: bool = false
 var _ui_fingers: Dictionary = {}
 
 
-func setup(p_camera: CameraController, p_selection: SelectionController, p_hud: Hud) -> void:
+func setup(p_camera: CameraController, p_selection: SelectionController, p_hud: Hud, p_placement: PlacementController = null) -> void:
 	camera = p_camera
 	selection = p_selection
 	hud = p_hud
+	placement = p_placement
 	classifier.configure(DataLoader.get_table("rules").get("input", {}))
 	_vibrate_ms = int(DataLoader.rule("input", "box_arm_vibration_ms", 25))
 	_log = bool(DataLoader.rule("debug", "log_input", false)) and OS.is_debug_build()
@@ -68,6 +70,9 @@ func _dispatch(gestures: Array[Dictionary]) -> void:
 		var kind: String = String(g["type"])
 		if _log and kind != "pan" and kind != "pinch" and kind != "box_update":
 			print("[REALM] gesture ", kind)
+		# Build mode gets first look: taps move the ghost, drags on it slide it.
+		if placement != null and placement.handle_gesture(g):
+			continue
 		match kind:
 			"tap":
 				selection.on_tap(g["pos"])

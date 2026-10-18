@@ -44,6 +44,13 @@ func start(p_id: String, p_world: World, p_camera: CameraController) -> void:
 	if bool(def.get("spawn_near_center", false)):
 		origin = world.find_open_area(origin, 3)
 
+	# Optional starting stockpile override per player: {"0": {"wood": 600}}.
+	var stock: Dictionary = def.get("resources", {})
+	for key: Variant in stock.keys():
+		var bag: Dictionary = stock[key]
+		for res: String in bag.keys():
+			GameState.add_resource(int(key), res, int(bag[res]) - GameState.get_resource(int(key), res))
+
 	for b: Variant in def.get("buildings", []):
 		_place_building(b)
 

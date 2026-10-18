@@ -7,7 +7,10 @@ const PLAYER_AI: int = 1
 const RESOURCE_IDS: PackedStringArray = ["food", "wood", "gold", "stone"]
 
 var current_map_id: String = ""
+## Era of the human player (kept for the HUD); per-player eras live in `eras`.
 var era: int = 1
+## player_id -> era (1..4)
+var eras: Dictionary = {}
 ## player_id -> { "food": int, "wood": int, "gold": int, "stone": int }
 var resources: Dictionary = {}
 ## player_id -> civ id
@@ -30,6 +33,7 @@ func _ready() -> void:
 func new_match(map_id: String, human_civ: String, ai_civ: String) -> void:
 	current_map_id = map_id
 	era = 1
+	eras = {PLAYER_HUMAN: 1, PLAYER_AI: 1}
 	civs = {PLAYER_HUMAN: human_civ, PLAYER_AI: ai_civ}
 	resources = {}
 	population = {}
@@ -47,6 +51,16 @@ func new_match(map_id: String, human_civ: String, ai_civ: String) -> void:
 		multipliers[player_id] = {}
 		additions[player_id] = {}
 		stats[player_id] = {"gathered": {"food": 0, "wood": 0, "gold": 0, "stone": 0}}
+
+
+func era_of(player_id: int) -> int:
+	return int(eras.get(player_id, 1))
+
+
+func set_era(player_id: int, value: int) -> void:
+	eras[player_id] = value
+	if player_id == PLAYER_HUMAN:
+		era = value
 
 
 func get_resource(player_id: int, resource: String) -> int:
@@ -119,6 +133,7 @@ func to_dict() -> Dictionary:
 	return {
 		"map_id": current_map_id,
 		"era": era,
+		"eras": eras.duplicate(true),
 		"civs": civs.duplicate(true),
 		"resources": resources.duplicate(true),
 		"multipliers": multipliers.duplicate(true),
@@ -130,6 +145,9 @@ func to_dict() -> Dictionary:
 func from_dict(data: Dictionary) -> void:
 	current_map_id = String(data.get("map_id", current_map_id))
 	era = int(data.get("era", era))
+	eras = _int_keys(data.get("eras", {PLAYER_HUMAN: era, PLAYER_AI: 1}))
+	for k: Variant in eras.keys():
+		eras[k] = int(eras[k])
 	civs = _int_keys(data.get("civs", {}))
 	resources = {}
 	var raw_resources: Dictionary = data.get("resources", {})

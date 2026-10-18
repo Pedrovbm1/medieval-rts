@@ -45,6 +45,17 @@ func on_tap(screen_pos: Vector2) -> void:
 	if kind == "own_unit" and not (has_gatherers and (target["ref"] as Unit).is_animal()):
 		set_selection([target["ref"]])
 		Sfx.play("select")
+	elif selected.is_empty() and selected_building != null and is_instance_valid(selected_building) 			and kind != "own_building" and not selected_building.trains().is_empty():
+		# A producing building is selected: the tap sets its rally point.
+		selected_building.rally_point = world_pos
+		if order_marker != null:
+			order_marker.show_order(selected_building.position, world_pos, Color(0.5, 0.8, 1.0))
+		Sfx.play("order_move")
+	elif kind == "own_building" and not _any_task_for(target):
+		# Nothing to do there for the selection (not a foundation, farm or
+		# drop-off they need): the tap selects the building instead.
+		select_building(target["ref"])
+		Sfx.play("select")
 	elif not selected.is_empty():
 		issue_order(world_pos, target)
 	elif kind == "own_building":
@@ -152,11 +163,20 @@ func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
 				return HuntTask.new(unit, world, prey)
 		"own_building":
 			var b: Building = ref
-			if not b.gather_info().is_empty() and b.is_complete():
+			if not b.is_complete():
+				return BuildTask.new(unit, world, b)
+			if not b.gather_info().is_empty():
 				return GatherTask.for_farm(unit, world, b)
 			if unit.carry_amount >= 1.0 and b.accepts(unit.carry_type):
 				return GatherTask.deliver_to(unit, world, b)
 	return null
+
+
+func _any_task_for(target: Dictionary) -> bool:
+	for unit: Unit in selected:
+		if is_instance_valid(unit) and _task_for(unit, String(target["kind"]), target.get("ref")) != null:
+			return true
+	return false
 
 
 func order_stop() -> void:

@@ -24,6 +24,15 @@
 	"economy": {
 		"pop_max": 100
 	},
+	"construction": {
+		"cancel_refund": 0.5,
+		"extra_builder_factor": 0.6,
+		"foundation_hp_ratio": 0.1
+	},
+	"production": {
+		"queue_max": 5,
+		"cancel_refund": 1.0
+	},
 	"resource_colors": {
 		"food": "#e2574c",
 		"wood": "#a0703c",

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/main/world.tscn" id="2_world"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://systems/selection/selection_controller.gd" id="7_selection"]
 [ext_resource type="Script" path="res://systems/selection/pointer_manager.gd" id="8_pointer"]
 [ext_resource type="Script" path="res://scenes/main/scenario_runner.gd" id="9_runner"]
+[ext_resource type="Script" path="res://systems/construction/placement_controller.gd" id="10_placement"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -17,6 +18,9 @@ script = ExtResource("1_main")
 
 [node name="OrderMarker" type="Node2D" parent="World"]
 script = ExtResource("5_marker")
+
+[node name="PlacementController" type="Node2D" parent="World"]
+script = ExtResource("10_placement")
 
 [node name="CameraController" type="Camera2D" parent="."]
 script = ExtResource("3_camera")

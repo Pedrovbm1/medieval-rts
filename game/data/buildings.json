@@ -1,59 +1,127 @@
 {
 	"town_center": {
 		"name_key": "BLDG_TOWN_CENTER_NAME",
-		"cost": { "wood": 275, "stone": 100 },
+		"cost": {
+			"wood": 275,
+			"stone": 100
+		},
 		"hp": 2400,
-		"footprint": [3, 3],
+		"footprint": [
+			3,
+			3
+		],
 		"pop_bonus": 5,
-		"dropoff": ["food", "wood", "gold", "stone"],
+		"dropoff": [
+			"food",
+			"wood",
+			"gold",
+			"stone"
+		],
 		"build_time": 150,
 		"era": 1,
 		"color": "#8a6d4b",
-		"placeholder_glyph": "PM"
+		"placeholder_glyph": "PM",
+		"trains": [
+			"villager",
+			"scout"
+		],
+		"buildable": false
 	},
 	"house": {
 		"name_key": "BLDG_HOUSE_NAME",
-		"cost": { "wood": 30 },
+		"cost": {
+			"wood": 30
+		},
 		"hp": 550,
-		"footprint": [2, 2],
+		"footprint": [
+			2,
+			2
+		],
 		"pop_bonus": 5,
 		"build_time": 18,
 		"era": 1,
 		"color": "#a0794e",
-		"placeholder_glyph": "C"
+		"placeholder_glyph": "C",
+		"buildable": true
 	},
 	"lumber_camp": {
 		"name_key": "BLDG_LUMBER_CAMP_NAME",
-		"cost": { "wood": 100 },
+		"cost": {
+			"wood": 100
+		},
 		"hp": 600,
-		"footprint": [2, 2],
-		"dropoff": ["wood"],
+		"footprint": [
+			2,
+			2
+		],
+		"dropoff": [
+			"wood"
+		],
 		"build_time": 25,
 		"era": 1,
 		"color": "#6e5a3c",
-		"placeholder_glyph": "As"
+		"placeholder_glyph": "As",
+		"buildable": true
 	},
 	"mining_camp": {
 		"name_key": "BLDG_MINING_CAMP_NAME",
-		"cost": { "wood": 100 },
+		"cost": {
+			"wood": 100
+		},
 		"hp": 600,
-		"footprint": [2, 2],
-		"dropoff": ["gold", "stone"],
+		"footprint": [
+			2,
+			2
+		],
+		"dropoff": [
+			"gold",
+			"stone"
+		],
 		"build_time": 25,
 		"era": 1,
 		"color": "#7a7468",
-		"placeholder_glyph": "Ca"
+		"placeholder_glyph": "Ca",
+		"buildable": true
 	},
 	"farm": {
 		"name_key": "BLDG_FARM_NAME",
-		"cost": { "wood": 60 },
+		"cost": {
+			"wood": 60
+		},
 		"hp": 300,
-		"footprint": [2, 2],
+		"footprint": [
+			2,
+			2
+		],
 		"walkable": true,
-		"gather": { "resource": "food", "subtype": "farm", "workers": 1 },
+		"gather": {
+			"resource": "food",
+			"subtype": "farm",
+			"workers": 1
+		},
 		"build_time": 15,
 		"era": 1,
 		"color": "#c9a85c",
-		"placeholder_glyph": "G"
+		"placeholder_glyph": "G",
+		"buildable": true
+	},
+	"barracks": {
+		"name_key": "BLDG_BARRACKS_NAME",
+		"cost": {
+			"wood": 150
+		},
+		"hp": 1500,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 40,
+		"era": 1,
+		"trains": [
+			"militia"
+		],
+		"color": "#7d5a4a",
+		"placeholder_glyph": "CU",
+		"buildable": true
 	}
 }

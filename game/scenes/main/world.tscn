@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://systems/pathfinding/movement_system.gd" id="2_movement"]
 [ext_resource type="Script" path="res://systems/economy/behavior_system.gd" id="3_behavior"]
+[ext_resource type="Script" path="res://systems/construction/construction_system.gd" id="4_construction"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("1_world")
@@ -17,3 +18,6 @@ script = ExtResource("2_movement")
 
 [node name="BehaviorSystem" type="Node" parent="."]
 script = ExtResource("3_behavior")
+
+[node name="ConstructionSystem" type="Node" parent="."]
+script = ExtResource("4_construction")

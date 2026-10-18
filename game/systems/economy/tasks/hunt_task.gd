@@ -37,8 +37,8 @@ func tick(_delta: float) -> void:
 			if home != null:
 				_lure_point = world.approach_point(home.rect(), unit.position)
 		if _lure_point != Vector2.INF and unit.position.distance_to(_lure_point) > LURE_STOP_PX:
+			# Run home without fighting back: the boar follows to where help is.
 			go_to(_lure_point)
-			_strike_if_ready(dist, reach)
 			return
 	if dist <= reach:
 		if unit.is_moving() and not luring:
