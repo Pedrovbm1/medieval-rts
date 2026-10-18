@@ -2,6 +2,7 @@ extends Node
 ## Headless test runner. Runs as a scene so autoloads exist:
 ##   godot --headless --path game tests/run_tests.tscn
 ## Optional filter: append `-- suite=test_f1` to run only matching suites.
+## Suites named *_slow* (AI vs AI matches) run only with `-- slow` or a filter.
 ## Exit code 0 = all passed, 1 = at least one failure.
 
 const TESTS_DIR: String = "res://tests/"
@@ -27,12 +28,18 @@ func record(condition: bool, message: String) -> void:
 
 func _run() -> void:
 	var filter: String = ""
+	var include_slow: bool = false
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("suite="):
 			filter = arg.substr(6)
+		elif arg == "slow":
+			include_slow = true
 	print("== REALM tests ==")
 	for path: String in _suite_paths():
 		if filter != "" and not path.get_file().contains(filter):
+			continue
+		# Long simulations (AI vs AI) only run when asked: `-- slow` or a suite filter.
+		if path.get_file().contains("_slow") and not include_slow and filter == "":
 			continue
 		var script: Script = load(path)
 		if script == null or not script.can_instantiate():

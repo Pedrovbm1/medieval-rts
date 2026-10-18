@@ -32,6 +32,8 @@ var train_elapsed: float = 0.0
 var blocked_by_pop: bool = false
 ## Where trained units walk to (INF = stay next to the building).
 var rally_point: Vector2 = Vector2.INF
+## Armed buildings (towers): seconds until the next shot.
+var attack_cooldown: float = 0.0
 var selected: bool = false:
 	set(value):
 		if selected != value:
@@ -88,9 +90,18 @@ func trains() -> Array:
 	return data.get("trains", [])
 
 
-## Seconds of the unit currently in training (0 if none).
-func train_time_of(type_id: String) -> float:
-	return float(DataLoader.get_entry("units", type_id).get("train_time", 20.0))
+## Seconds a queue item takes (unit training or "#research").
+func train_time_of(item: String) -> float:
+	return TechSystem.item_time(item)
+
+
+## Max HP from data times the owner's "hp.building" techs (current HP keeps its ratio).
+func recompute_stats() -> void:
+	var new_max: int = maxi(1, int(round(float(data.get("hp", 100)) * Combat.class_mult(owner_id, data, "hp"))))
+	if new_max != max_hp:
+		hp = clampi(int(round(float(hp) * new_max / max_hp)), 1, new_max)
+		max_hp = new_max
+		queue_redraw()
 
 
 func train_progress() -> float:

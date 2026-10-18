@@ -46,21 +46,58 @@ static func armor_of(target: Object) -> Dictionary:
 	return armor
 
 
-## Flat attack bonus from techs for a unit (e.g. "attack.infantry": +1).
-static func attack_bonus_of(unit: Unit) -> int:
-	if unit.owner_id < 0:
-		return 0
-	var extra: int = 0
-	for c: Variant in classes_of(unit.data):
-		extra += int(GameState.modifier_add(unit.owner_id, "attack." + String(c)))
-	return extra
+## Sum of flat tech bonuses "<prefix>.<class>" over an entity's classes.
+static func class_add(owner: int, data: Dictionary, prefix: String) -> float:
+	if owner < 0:
+		return 0.0
+	var total: float = 0.0
+	for c: Variant in classes_of(data):
+		total += GameState.modifier_add(owner, prefix + "." + String(c))
+	return total
 
 
-## Full hit from `attacker` (a Unit) to `target` (Unit or Building).
-static func hit_damage(attacker: Unit, target: Variant) -> int:
-	var attack: Dictionary = attacker.data.get("combat", {})
+## Product of tech multipliers "<prefix>.<class>" over an entity's classes.
+static func class_mult(owner: int, data: Dictionary, prefix: String) -> float:
+	if owner < 0:
+		return 1.0
+	var total: float = 1.0
+	for c: Variant in classes_of(data):
+		total *= GameState.modifier(owner, prefix + "." + String(c))
+	return total
+
+
+## Flat attack bonus from techs (e.g. "attack.infantry": +1). Units or towers.
+static func attack_bonus_of(attacker: Variant) -> int:
+	return int(class_add(int(attacker.get("owner_id")), attacker.get("data"), "attack"))
+
+
+## Full hit from `attacker` (a Unit or an armed Building) to `target`.
+static func hit_damage(attacker: Variant, target: Variant) -> int:
+	var adata: Dictionary = attacker.get("data")
+	var attack: Dictionary = adata.get("combat", {})
 	var tdata: Dictionary = target.get("data")
 	return damage(attack, classes_of(tdata), armor_of(target), attack_bonus_of(attacker))
+
+
+## Attack range including tech bonuses ("range.archer").
+static func range_of(attacker: Variant) -> float:
+	var adata: Dictionary = attacker.get("data")
+	var base: float = float(Dictionary(adata.get("combat", {})).get("range_px", 0.0))
+	if base <= 0.0:
+		return float(DataLoader.rule("combat", "melee_reach_px", 10))
+	return base + class_add(int(attacker.get("owner_id")), adata, "range")
+
+
+## Seconds between attacks including tech bonuses ("repeat.archer" x0.9).
+static func repeat_of(attacker: Variant) -> float:
+	var adata: Dictionary = attacker.get("data")
+	return float(Dictionary(adata.get("combat", {})).get("repeat_s", 1.5)) * class_mult(int(attacker.get("owner_id")), adata, "repeat")
+
+
+## Sight radius including tech bonuses ("sight.building").
+static func sight_of(entity: Variant, fallback: float) -> float:
+	var data: Dictionary = entity.get("data")
+	return float(data.get("sight_px", fallback)) * class_mult(int(entity.get("owner_id")), data, "sight")
 
 
 ## Edge-to-edge distance from a unit to a target (unit or building).

@@ -4,7 +4,7 @@ extends Node2D
 ## Homes on the target's current position; damage lands on arrival if the
 ## target is still alive (missed shots on dead targets just vanish).
 
-var attacker: Unit = null
+var attacker: Node2D = null
 var target: Object = null
 var damage: int = 1
 var speed: float = 600.0
@@ -16,13 +16,13 @@ var active: bool = false
 var _last_target_pos: Vector2 = Vector2.ZERO
 
 
-func launch(p_attacker: Unit, p_target: Object, p_damage: int, p_speed: float, p_splash: float = 0.0) -> void:
+func launch(p_attacker: Node2D, p_target: Object, p_damage: int, p_speed: float, p_splash: float = 0.0) -> void:
 	attacker = p_attacker
 	target = p_target
 	damage = p_damage
 	speed = p_speed
 	splash_px = p_splash
-	shooter_owner = p_attacker.owner_id
+	shooter_owner = int(p_attacker.get("owner_id"))
 	position = p_attacker.position + Vector2(0, -6)
 	_last_target_pos = _aim()
 	active = true

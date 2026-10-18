@@ -36,6 +36,9 @@
 		"hit_flash_s": 0.12,
 		"chase_repath_px": 48
 	},
+	"vision": {
+		"update_interval_s": 0.25
+	},
 	"production": {
 		"queue_max": 5,
 		"cancel_refund": 1.0

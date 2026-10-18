@@ -4,7 +4,7 @@
 > Una sesión nueva retoma desde aquí.
 
 ## Fase actual
-**F6 — IA 2.0** (siguiente; F5.5 cerrada)
+**F8 — Fog, minimapa, UX y guardado** (siguiente; F6 y F7 cerradas)
 
 ## Completadas
 | Fase | Commit | Fecha | Gate |
@@ -16,14 +16,13 @@
 | F4 | ver BUILD-LOG | 2026-10-18 | 168/168 headless: base completa (2 casas, granja, aserradero, cuartel) en 64 s de juego con toques simulados; no construir sobre recursos/árboles/unidades; cancelar devuelve 50%. S10: flujo real Construir→Casa→✓ y entrenar aldeano por adb 5/5, F1 7/7, 60 fps 25-41 DC |
 | F5 | ver BUILD-LOG | 2026-10-18 | 192/192 headless: 10 lanceros vencen a 10 caballeros perdiendo 37% HP; 10 arqueros vencen a 10 lanceros sin bajas; 20v20 mixto termina en 49 s; 216 muertes sin fugas (24 nodos creados, huérfanos = pool). S10: batalla 20v20 a 60 fps con 15 DC |
 | F5.5 | ver BUILD-LOG | 2026-10-18 | 205/205 headless. Roster de 12: aldeano, explorador, miliciano, lancero, espadachín, arquero, escaramuzador, caballero, camellero (única de Northvale), ariete, mangonel, monje; cada nueva gana su duelo de rol y las 12 actúan en el ejército mixto |
+| F6 | ver BUILD-LOG | 2026-10-18 | Pasivo pierde vs IA Normal en ~19.8 min; IA sin map hack (0 ataques sin explorar; ataca al ver la base); pantalla de fin. Difícil vs Normal: NO cumplido: 3 duelos de 45 min terminaron en empate tras 3 rondas de ajustes (ver Blockers) |
+| F7 | ver BUILD-LOG | 2026-10-18 | 4 eras con requisito de 2 edificios; 24 techs en 3 ramas sin huérfanas, cada una cambia un número visible; IA Difícil llega a Era IV en ~22-24 min; torres |
 
 ## Siguiente
-F6 — IA 2.0. Plan:
-1. `AIController` por jugador IA con FSM de 4 fases (apertura 0-4 min, desarrollo 4-12, hostigamiento 12-18, push 18+), evalúa cada 2 s; números en `data/ai.json` (build order, ratios eco/ejército, tamaños de oleada) y 3 dificultades (Fácil, Normal, Difícil: bonus +20% recursos, ejército x1.3, scouting agresivo).
-2. Visión honesta: la IA solo conoce lo que vieron sus unidades/edificios (grid de visión propio, base del fog de F8); explora con el explorador para encontrar la base enemiga.
-3. Usa los mismos sistemas que el jugador: `ConstructionSystem` (construir/entrenar), `GatherTask`, `CombatSystem.attack_move`.
-4. Victoria/derrota: sin edificios = derrota; pantalla de fin de partida con estadísticas (recursos, unidades, bajas, tiempo) y Reintentar.
-5. Tests: jugador pasivo pierde en 15-20 min (Normal); la IA no ataca lo no explorado; Difícil gana a Normal en 3 de 4 (IA vs IA headless acelerado).
+**Detenido por el gate de F6 (ver Blockers): esperar decisión de Pedro.**
+Si se sigue con F8: el código ya escrito y sin probar está en la rama `wip/f8` (niebla `fog_layer.gd`, `minimap.gd`, `save_game.gd`, `main_menu.*`, `test_f8_ux.gd`, `tools/device_test_f8.sh`, `docs/f8_wire.py` con el cableado pendiente: HUD minimapa/grupos/menú de pausa, Main launch/autosave/load, visibilidad de enemigos, `project.godot` → main_menu).
+Gates F8: fog < 0.5 s; cargar = mismo estado; partida completa sin crash.
 
 ## Entorno
 | Pieza | Valor |
@@ -94,14 +93,25 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D36 | F5 | Eras de unidades/edificios ya en datos (lancero/arquero II, caballero III, ariete IV); se activan en F7 | Datos listos para F7 |
 | D37 | F5.5 | Roster de 12 con roles: escaramuzador (anti-arquero, armadura perforante), espadachín (infantería pesada era III), camellero (anti-caballería, única de Northvale vía `unique_to`), mangonel (área 56 px con caída 100→50%, rango mínimo, sin fuego amigo), monje (cura 3 HP/s, sin ataque) | Plan F5.5 |
 | D38 | F5.5 | Monasterio (era III) entrena monjes; Taller de asedio pasa a era III (mangonel) | Ubicar cada unidad en su edificio |
+| D39 | F6 | IA = FSM por fases (apertura/desarrollo/hostigamiento/empuje) que piensa cada 1.5-3 s; números en `data/ai.json`; 3 dificultades (Difícil: +20% recolección, ejército x1.3, fases 15% antes) | Plan 4.8 |
+| D40 | F6 | Visión honesta: `VisionGrid` por jugador (sin ver / explorado / visible); la IA recuerda edificios enemigos vistos y solo ataca posiciones exploradas | "Sin map hack" |
+| D41 | F6 | Derrota = sin edificios; solo compiten jugadores que empezaron con edificios (sandbox/pruebas nunca terminan) | Bug encontrado en el S10: victoria instantánea en demos |
+| D42 | F6 | Suites lentas (`*_slow*`, IA vs IA) solo con `-- slow` | La suite normal no debe tardar 30 min |
+| D43 | F7 | Investigación en las colas de edificios como ítems `#tech` / `#eraN`; efectos = modificadores por jugador ya leídos por los sistemas (`TechSystem.CONSUMED_KEYS`) | Cero código por tecnología |
+| D44 | F7 | Costos de era bajados (II 350C; III 600C+200O; IV 800C+500O) | Con los originales la IA no podía tener ejército y llegar a Era IV en 25 min (partidas de 20-30 min) |
+| D45 | F7 | IA: ahorra para la era manteniendo un ejército mínimo por fase; pausa aldeanos al "subir" (18/26/34); turno de investigación (la más barata) | Equilibra "pasivo pierde en 15-20" y "Era IV en 25" |
+| D46 | F7 | Torre de vigía con flechas propias; Almenas/Química la mejoran | Plan 2.4 (defensa) |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
+- **Gate F6 "Difícil gana a Normal 3 de 4" NO cumplido** (regla del prompt: 3 intentos → documentar y detener). Datos: 3 duelos Difícil vs Normal (semilla 11) llegaron al tope de 45 min sin ganador. Intentos: (1) oleadas completas en vez de refuerzos sueltos; (2) oleadas que crecen tras fallar + más asedio + destrabe del ahorro (oro agotado) y oleada alcanzable; (3) Difícil con las mismas fases que Normal. Diagnóstico: la defensa en casa es demasiado fuerte (producción al lado, refuerzos inmediatos) y la IA no ataca la economía enemiga ni usa asedio a tiempo; la ventaja económica de Difícil (+20%) no se convierte en victoria. Opciones para Pedro: (a) aceptar el hueco y seguir con F8, retomando el balance IA vs IA en F9 ("balance final"); (b) invertir en tácticas de IA (atacar aldeanos/campamentos, asedio temprano, retirada y reagrupamiento, flechas desde la Plaza Mayor); (c) redefinir el gate (p. ej. "Difícil termina con más recursos/población que Normal"). Correr: `godot --headless --path game tests/run_tests.tscn -- slow`.
 - Ninguno. Nota: el S10 se comparte con otra sesión (juego de Mateo); turnarse por mensaje.
+- 2026-10-18: el S10 se desconectó de adb; el script de F7 alcanzó otro dispositivo por red (192.168.100.10:5555, Fire TV de otra sesión): mandó 1 toque, 1 captura y Home. Ya corregido: todos los scripts fijan `ANDROID_SERIAL=R58M154WY9A` y abortan si no está.
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
 - F0: 22/22 headless. Device: arranque 0.6-0.9 s, 60 fps en pan.
+- F6+F7: suite normal F0-F5.5 sin cambios + F2 29/29, F6 17/17, F7 21/21 corridas solas. Nota: tiempos y economía de la IA dependen de la carga de CPU (la cola de rutas tiene tope de tiempo real); correr las suites de IA sin otras corridas en paralelo.
 - F5.5: 205/205 headless (~8 min).
 - F5: 192/192 headless (~6 min). S10: `bash tools/device_bench.sh battle20 40` → 60 fps, 15 DC, 44 MB.
 - F4: 168/168 headless (~4 min). S10 por adb: `tools/device_test_f4.sh` 5/5 (caja, Construir, Casa, ✓, entrenar en Plaza), F1 7/7. Nota: tiempos de PC varían 2x con la carga; el umbral de PC es solo alarma (6 ms), el presupuesto real se mide en el S10.

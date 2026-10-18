@@ -1,0 +1,39 @@
+{
+	"1": {
+		"name_key": "ERA_1_NAME"
+	},
+	"2": {
+		"name_key": "ERA_2_NAME",
+		"cost": {
+			"food": 350
+		},
+		"research_time": 60,
+		"requires_buildings": 2
+	},
+	"3": {
+		"name_key": "ERA_3_NAME",
+		"cost": {
+			"food": 600,
+			"gold": 200
+		},
+		"research_time": 90,
+		"requires_buildings": 2
+	},
+	"4": {
+		"name_key": "ERA_4_NAME",
+		"cost": {
+			"food": 800,
+			"gold": 500
+		},
+		"research_time": 120,
+		"requires_buildings": 2
+	},
+	"_rules": {
+		"exclude_from_requirement": [
+			"town_center",
+			"house",
+			"farm"
+		],
+		"researched_at": "town_center"
+	}
+}

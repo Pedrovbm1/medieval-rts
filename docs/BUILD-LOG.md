@@ -144,3 +144,29 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 
 **Problemas**
 - Comandos bash muy largos con heredocs fallaban al parsear → los cambios grandes se aplican con scripts de Python en el scratchpad.
+
+---
+
+## F6 + F7 — IA, eras y tecnologías (2026-10-18, ~5 h, un solo commit)
+
+Se cerraron juntas: la IA de F6 necesitaba eras y tecnologías (F7) para gastar su economía, y el balance de los gates de ambas se ajustó en conjunto (el código de la IA es el mismo archivo).
+
+**F6 — Qué se hizo**
+- `VisionGrid` + `VisionSystem` (3 estados por jugador, 4 veces por segundo, círculos precalculados).
+- `AIController`: economía (aldeanos, casas, aserraderos escalables, campamento minero, granjas, reparto por recurso), edificios militares por fase, mezcla de ejército, explorador con barrido de puntos no explorados, defensa proporcional, hostigamiento, oleadas completas que crecen tras fallar, refuerzos solo a oleadas vivas, memoria de edificios enemigos.
+- `MatchRules`: derrota sin edificios, estadísticas (recolectado, entrenados, bajas); pantalla de fin con Reintentar.
+
+**F7 — Qué se hizo**
+- `eras.json` (4 eras, costo, tiempo, requisito de 2 edificios de la era), `techs.json` (24 en economía/militar/defensa), Herrería, Universidad, Torre de vigía.
+- `TechSystem`: disponibilidad con motivo, investigación en colas, efectos como modificadores, recalcula unidades y edificios existentes.
+- Hooks: velocidad, vida, alcance, cadencia, visión, armadura y ataque por clase; torres que disparan.
+- HUD: botón de avanzar de era, botones de tecnologías con descripción, era en la barra superior, aviso de nueva era, estadísticas de la unidad seleccionada (antes/después).
+- IA: avanza de era (ahorro con ejército mínimo, pausa de aldeanos al subir), construye requisitos primero, investiga.
+
+**Tests**: suite normal F0-F5.5 sin cambios + F2 29/29, F6 17/17, F7 21/21 corridas solas; Difícil vs Normal: NO cumplido: 3 duelos de 45 min terminaron en empate tras 3 rondas de ajustes (ver Blockers).
+
+**Problemas**
+- Balance IA: con costos de era altos la IA no podía tener ejército y avanzar a tiempo → costos bajados (D44) y reglas de ahorro (D45).
+- Duelo IA vs IA se estancaba (refuerzos sueltos contra la defensa) → oleadas completas que crecen, refuerzos solo a oleadas vivas, más asedio.
+- `MatchRules` declaraba victoria instantánea sin rival (encontrado en el S10).
+- Un script de device tocó otro dispositivo conectado por red al desconectarse el S10 → serial fijo y aborto si falta.

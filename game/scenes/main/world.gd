@@ -13,6 +13,7 @@ const UNIT_SCENE: PackedScene = preload("res://scenes/units/unit.tscn")
 @onready var behavior: BehaviorSystem = $BehaviorSystem
 @onready var construction: ConstructionSystem = $ConstructionSystem
 @onready var combat: CombatSystem = $CombatSystem
+@onready var vision: VisionSystem = $VisionSystem
 
 var map_id: String = ""
 var map_def: Dictionary = {}
@@ -26,6 +27,7 @@ var buildings: Array[Building] = []
 var resource_nodes: Array[ResourceNode] = []
 var nav: NavGrid = NavGrid.new()
 var economy: EconomySystem = EconomySystem.new()
+var tech: TechSystem = TechSystem.new()
 ## Dead units waiting for reuse, by type: type_id -> Array[Unit] (out of the tree).
 var unit_pool: Dictionary = {}
 var units_created: int = 0
@@ -61,9 +63,11 @@ func build_from_map(p_map_id: String) -> void:
 	nav.build(terrain_grid, map_width, map_height, tile_size, terrain_def)
 	movement.setup(nav, units)
 	economy.setup(self)
+	tech.setup(self)
 	behavior.setup(self)
 	construction.setup(self)
 	combat.setup(self)
+	vision.setup(self)
 	EventBus.map_generated.emit(map_width, map_height, tile_size)
 
 
@@ -207,6 +211,16 @@ func recycle_unit(unit: Unit) -> void:
 	unit_pool[unit.unit_type] = pool
 
 
+## Re-applies tech modifiers to every unit and building of a player.
+func refresh_stats(player_id: int) -> void:
+	for u: Unit in units:
+		if u.owner_id == player_id:
+			u.recompute_stats()
+	for b: Building in buildings:
+		if b.owner_id == player_id:
+			b.recompute_stats()
+
+
 func pooled_units() -> int:
 	var n: int = 0
 	for key: String in unit_pool.keys():
@@ -270,6 +284,7 @@ func units_in_rect(rect: Rect2, player_id: int) -> Array[Unit]:
 func place_building(type_id: String, player_id: int, origin_cell: Vector2i) -> Building:
 	var b: Building = Building.new()
 	b.setup(type_id, player_id, origin_cell, tile_size)
+	b.recompute_stats()
 	entities.add_child(b)
 	buildings.append(b)
 	if not b.walkable:

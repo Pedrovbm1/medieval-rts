@@ -98,10 +98,14 @@ func can_enqueue(b: Building, type_id: String) -> String:
 	return ""
 
 
+## Queues a unit or a "#research" item (tech or era). Paid up front.
 func enqueue(b: Building, type_id: String) -> bool:
-	if can_enqueue(b, type_id) != "":
+	if TechSystem.is_research(type_id):
+		if not b.is_complete() or b.queue.size() >= int(DataLoader.rule("production", "queue_max", 5)) or world.tech.research_error(b, type_id) != "":
+			return false
+	elif can_enqueue(b, type_id) != "":
 		return false
-	GameState.spend(b.owner_id, DataLoader.get_entry("units", type_id).get("cost", {}))
+	GameState.spend(b.owner_id, TechSystem.item_cost(type_id))
 	b.queue.append(type_id)
 	b.changed.emit(b)
 	b.queue_redraw()
@@ -113,7 +117,7 @@ func dequeue(b: Building, index: int) -> bool:
 		return false
 	var type_id: String = b.queue[index]
 	var ratio: float = float(DataLoader.rule("production", "cancel_refund", 1.0))
-	var cost: Dictionary = DataLoader.get_entry("units", type_id).get("cost", {})
+	var cost: Dictionary = TechSystem.item_cost(type_id)
 	for res: String in cost.keys():
 		GameState.add_resource(b.owner_id, res, int(floorf(int(cost[res]) * ratio)))
 	b.queue.remove_at(index)
@@ -132,8 +136,9 @@ func _physics_process(delta: float) -> void:
 		if b.queue.is_empty() or not b.is_complete():
 			continue
 		var type_id: String = b.queue[0]
-		var pop: int = int(DataLoader.get_entry("units", type_id).get("pop", 1))
-		var free: bool = GameState.pop_used(b.owner_id) + pop <= GameState.pop_cap(b.owner_id)
+		var research: bool = TechSystem.is_research(type_id)
+		var pop: int = 0 if research else int(DataLoader.get_entry("units", type_id).get("pop", 1))
+		var free: bool = research or GameState.pop_used(b.owner_id) + pop <= GameState.pop_cap(b.owner_id)
 		if not free:
 			if not b.blocked_by_pop:
 				b.blocked_by_pop = true
@@ -146,8 +151,15 @@ func _physics_process(delta: float) -> void:
 		b.train_elapsed += delta
 		if int(b.train_progress() * 50.0) != before:
 			b.queue_redraw()
-		if b.train_elapsed >= b.train_time_of(type_id):
-			_finish_training(b, type_id)
+		if b.train_elapsed >= b.train_time_of(type_id) / GameState.modifier(b.owner_id, "research_speed" if research else "train_speed"):
+			if research:
+				b.queue.remove_at(0)
+				b.train_elapsed = 0.0
+				world.tech.complete(b.owner_id, type_id)
+				b.changed.emit(b)
+				b.queue_redraw()
+			else:
+				_finish_training(b, type_id)
 
 
 func _finish_training(b: Building, type_id: String) -> void:

@@ -20,6 +20,8 @@ signal place_cancel_pressed
 signal train_pressed(type_id: String)
 signal dequeue_pressed
 signal cancel_construction_pressed
+signal retry_pressed
+signal research_pressed(item: String)
 
 const RESOURCE_ORDER: PackedStringArray = ["food", "wood", "gold", "stone"]
 const BUTTON_SIZE: Vector2 = Vector2(120, 72)
@@ -37,6 +39,10 @@ enum Mode { NONE, UNITS, BUILD_MENU, PLACING, BUILDING }
 
 var player_id: int = GameState.PLAYER_HUMAN
 var mode: Mode = Mode.NONE
+## Set by Main: lists the techs a building offers and why one is unavailable.
+var tech: TechSystem = null
+var era_label: Label
+var banner: Label
 var stop_button: Button
 var hold_button: Button
 var deselect_button: Button
@@ -51,11 +57,27 @@ var _resource_labels: Dictionary = {}
 var _units: Array[Unit] = []
 var _building: Building = null
 var _place_error: String = ""
+var end_panel: PanelContainer = null
 
 
 func _ready() -> void:
 	idle_button.pressed.connect(_emit_click.bind(idle_pressed))
 	_build_resource_row()
+	era_label = Label.new()
+	era_label.custom_minimum_size = Vector2(150, 0)
+	pop_label.get_parent().add_child(era_label)
+	pop_label.get_parent().move_child(era_label, pop_label.get_index() + 1)
+	banner = Label.new()
+	banner.add_theme_font_size_override("font_size", 40)
+	banner.add_theme_color_override("font_color", Color(1, 0.88, 0.45))
+	banner.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	banner.add_theme_constant_override("outline_size", 8)
+	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	banner.position = Vector2(0, 120)
+	banner.visible = false
+	add_child(banner)
+	EventBus.era_changed.connect(_on_era_changed)
 	box_rect.visible = false
 	EventBus.resource_changed.connect(_on_resource_changed)
 	EventBus.population_changed.connect(_on_population_changed)
@@ -67,6 +89,36 @@ func refresh_all() -> void:
 	for res: String in RESOURCE_ORDER:
 		_on_resource_changed(player_id, res, GameState.get_resource(player_id, res))
 	_on_population_changed(player_id, GameState.pop_used(player_id), GameState.pop_cap(player_id))
+	_refresh_era()
+
+
+func _refresh_era() -> void:
+	if era_label != null:
+		var era: int = GameState.era_of(player_id)
+		era_label.text = "%s %s" % ["I II III IV".split(" ")[clampi(era - 1, 0, 3)], tr(String(DataLoader.get_entry("eras", str(era)).get("name_key", "")))]
+
+
+func _on_era_changed(p: int, era: int) -> void:
+	if p != player_id:
+		return
+	_refresh_era()
+	show_banner("%s: %s" % [tr("ERA_REACHED"), tr(String(DataLoader.get_entry("eras", str(era)).get("name_key", "")))])
+	Sfx.play("order_move")
+	if mode == Mode.BUILDING:
+		_set_mode(Mode.BUILDING)
+
+
+## Big centred message that fades out after a few seconds (new era...).
+func show_banner(text: String) -> void:
+	banner.text = text
+	banner.visible = true
+	banner.modulate = Color.WHITE
+	banner.size = Vector2(get_viewport().get_visible_rect().size.x, 60)
+	banner.position = Vector2(0, 110)
+	var tw: Tween = create_tween()
+	tw.tween_interval(2.2)
+	tw.tween_property(banner, "modulate:a", 0.0, 0.8)
+	tw.tween_callback(func() -> void: banner.visible = false)
 
 
 func set_idle_count(count: int) -> void:
@@ -122,6 +174,8 @@ func show_box(active: bool, from_screen: Vector2, to_screen: Vector2) -> void:
 
 ## True when a screen point lands on an interactive HUD element.
 func is_point_over_ui(screen_pos: Vector2) -> bool:
+	if end_panel != null:
+		return true
 	if selection_panel.visible and selection_panel.get_global_rect().has_point(screen_pos):
 		return true
 	return top_bar.get_global_rect().has_point(screen_pos)
@@ -172,6 +226,8 @@ func _fill_units() -> void:
 		var name_key: String = String(DataLoader.get_entry("units", type_id).get("name_key", type_id))
 		parts.append("%d %s" % [counts[type_id], tr(name_key)])
 	selection_label.text = ", ".join(parts)
+	if _units.size() == 1 and is_instance_valid(_units[0]):
+		selection_label.text += "\n" + unit_stats_text(_units[0])
 	if _units.any(func(u: Unit) -> bool: return is_instance_valid(u) and u.can_gather()):
 		build_button = _add_button(tr("HUD_BUILD"), build_pressed)
 	stop_button = _add_button(tr("HUD_STOP"), stop_pressed)
@@ -233,10 +289,28 @@ func _fill_building() -> void:
 				Sfx.play("ui_click")
 				train_pressed.emit(id))
 			type_buttons[id] = b
+		if tech != null:
+			if _building.building_type == String(DataLoader.get_entry("eras", "_rules").get("researched_at", "town_center")):
+				var next: int = GameState.era_of(player_id) + 1
+				if not DataLoader.get_entry("eras", str(next)).is_empty():
+					_add_research_button(TechSystem.era_item(next), "%s %s" % [tr("ERA_ADVANCE"), tr(String(DataLoader.get_entry("eras", str(next)).get("name_key", "")))])
+			for id: String in tech.techs_at(_building):
+				_add_research_button(TechSystem.PREFIX + id, tr(String(DataLoader.get_entry("techs", id).get("name_key", id))))
 		if not _building.queue.is_empty():
 			_add_button(tr("HUD_REMOVE"), dequeue_pressed)
 	deselect_button = _add_button(tr("HUD_DESELECT"), deselect_pressed)
 	_refresh_building()
+
+
+func _add_research_button(item: String, title: String) -> void:
+	var b: Button = _add_button("%s\n%s" % [title, cost_text(TechSystem.item_cost(item))], Signal(), Vector2(170, 72))
+	var def: Dictionary = TechSystem.item_def(item)
+	if def.has("desc_key"):
+		b.tooltip_text = tr(String(def["desc_key"]))
+	b.pressed.connect(func() -> void:
+		Sfx.play("ui_click")
+		research_pressed.emit(item))
+	type_buttons[item] = b
 
 
 func _refresh_building() -> void:
@@ -250,14 +324,17 @@ func _refresh_building() -> void:
 	if not _building.queue.is_empty():
 		var names: PackedStringArray = PackedStringArray()
 		for id: String in _building.queue:
-			names.append(String(DataLoader.get_entry("units", id).get("placeholder_glyph", "?")))
+			names.append("I" if TechSystem.is_research(id) else String(DataLoader.get_entry("units", id).get("placeholder_glyph", "?")))
 		text += "\n%s: %s  %d%%" % [tr("HUD_QUEUE"), " ".join(names), int(_building.train_progress() * 100.0)]
 		if _building.blocked_by_pop:
 			text += "  " + tr("HUD_POP_FULL")
 	selection_label.text = text
 	for id: String in type_buttons.keys():
-		var def: Dictionary = DataLoader.get_entry("units", id)
-		(type_buttons[id] as Button).disabled = not GameState.can_afford(player_id, def.get("cost", {}))
+		var btn: Button = type_buttons[id]
+		if TechSystem.is_research(id):
+			btn.disabled = tech == null or tech.research_error(_building, id) != ""
+		else:
+			btn.disabled = not GameState.can_afford(player_id, TechSystem.item_cost(id))
 
 
 func _on_building_changed(b: Building) -> void:
@@ -367,3 +444,86 @@ func _log_button_centers() -> void:
 func _emit_click(sig: Signal) -> void:
 	Sfx.play("ui_click")
 	sig.emit()
+
+
+## End of match: big result, a few stats for both sides, and Retry.
+func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary) -> void:
+	if end_panel != null:
+		return
+	_set_mode(Mode.NONE)
+	end_panel = PanelContainer.new()
+	end_panel.set_anchors_preset(Control.PRESET_CENTER)
+	end_panel.theme = selection_panel.theme
+	end_panel.add_theme_stylebox_override("panel", selection_panel.get_theme_stylebox("panel"))
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	var margin: MarginContainer = MarginContainer.new()
+	for side: String in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 24)
+	margin.add_child(box)
+	end_panel.add_child(margin)
+	var title: Label = Label.new()
+	title.text = tr("END_VICTORY") if won else tr("END_DEFEAT")
+	title.add_theme_font_size_override("font_size", 44)
+	title.add_theme_color_override("font_color", Color(1, 0.85, 0.35) if won else Color(1, 0.45, 0.4))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var dur: Label = Label.new()
+	dur.text = "%s %d:%02d" % [tr("END_TIME"), int(seconds) / 60, int(seconds) % 60]
+	dur.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(dur)
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 28)
+	for cell: String in ["", tr("END_YOU"), tr("END_AI")]:
+		grid.add_child(_stat_label(cell))
+	var rows: Array = [["END_GATHERED", _sum_gathered(mine), _sum_gathered(theirs)],
+		["END_TRAINED", int(mine.get("trained", 0)), int(theirs.get("trained", 0))],
+		["END_KILLS", int(mine.get("kills", 0)), int(theirs.get("kills", 0))],
+		["END_LOST", int(mine.get("lost", 0)), int(theirs.get("lost", 0))]]
+	for row: Array in rows:
+		grid.add_child(_stat_label(tr(String(row[0]))))
+		grid.add_child(_stat_label(str(row[1])))
+		grid.add_child(_stat_label(str(row[2])))
+	box.add_child(grid)
+	var retry: Button = Button.new()
+	retry.text = tr("END_RETRY")
+	retry.custom_minimum_size = Vector2(220, 80)
+	retry.focus_mode = Control.FOCUS_NONE
+	retry.pressed.connect(_emit_click.bind(retry_pressed))
+	box.add_child(retry)
+	add_child(end_panel)
+	end_panel.reset_size()
+	end_panel.position = (end_panel.get_viewport_rect().size - end_panel.size) * 0.5
+
+
+func _stat_label(text: String) -> Label:
+	var l: Label = Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", 22)
+	return l
+
+
+static func _sum_gathered(stats: Dictionary) -> int:
+	var total: int = 0
+	for v: Variant in Dictionary(stats.get("gathered", {})).values():
+		total += int(v)
+	return total
+
+
+## "ATQ 7  ARM 1/3  ALC 352  VEL 96" for one unit, techs included.
+static func unit_stats_text(u: Unit) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	var attack: Dictionary = u.data.get("combat", {})
+	if not attack.is_empty():
+		var base: int = 0
+		for v: Variant in Dictionary(attack.get("damage", {})).values():
+			base += int(v)
+		parts.append("%s %d" % [TranslationServer.translate("STAT_ATTACK"), base + Combat.attack_bonus_of(u)])
+	var armor: Dictionary = Combat.armor_of(u)
+	parts.append("%s %d/%d" % [TranslationServer.translate("STAT_ARMOR"), int(armor.get("hack", 0)), int(armor.get("pierce", 0))])
+	if float(attack.get("range_px", 0.0)) > 0.0:
+		parts.append("%s %d" % [TranslationServer.translate("STAT_RANGE"), int(Combat.range_of(u))])
+	parts.append("%s %d" % [TranslationServer.translate("STAT_SPEED"), int(u.speed_px)])
+	parts.append("HP %d/%d" % [u.hp, u.max_hp])
+	return "  ".join(parts)

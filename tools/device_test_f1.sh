@@ -3,7 +3,7 @@
 # game's own log lines ([REALM] ...). Run from the repo root after installing
 # build/realm-debug.apk. Usage: bash tools/device_test_f1.sh
 set -u
-. "$(dirname "$0")/device_guard.sh"
+. "$(dirname "$0")/device_guard.sh" || exit 3
 guard_wait_free || exit 2
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
 PKG="dev.pedro.realm/com.godot.game.GodotAppLauncher"

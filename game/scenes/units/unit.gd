@@ -69,12 +69,23 @@ func setup(type_id: String, player_id: int, world_pos: Vector2) -> void:
 	if data.is_empty():
 		push_error("Unit: unknown type " + type_id)
 	radius = float(data.get("radius_px", 12))
-	max_hp = int(data.get("hp", 1))
+	max_hp = 0
+	recompute_stats()
 	hp = max_hp
 	stance = String(data.get("stance", "aggressive"))
-	speed_px = float(data.get("speed", 1.0)) * float(DataLoader.rule("movement", "base_speed_px", 96))
 	arrive_distance = float(DataLoader.rule("movement", "arrive_distance_px", 3))
 	name = "%s_%d" % [type_id, get_instance_id()]
+
+
+## Speed and max HP from data times the owner's tech multipliers
+## ("speed.<class>", "hp.<class>"). Current HP keeps its ratio.
+func recompute_stats() -> void:
+	speed_px = float(data.get("speed", 1.0)) * float(DataLoader.rule("movement", "base_speed_px", 96)) * Combat.class_mult(owner_id, data, "speed")
+	var new_max: int = maxi(1, int(round(float(data.get("hp", 1)) * Combat.class_mult(owner_id, data, "hp"))))
+	if max_hp > 0 and new_max != max_hp:
+		hp = clampi(int(round(float(hp) * new_max / max_hp)), 1, new_max)
+	max_hp = new_max
+	queue_redraw()
 
 
 func stance_data() -> Dictionary:

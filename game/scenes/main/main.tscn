@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/main/world.tscn" id="2_world"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://systems/selection/pointer_manager.gd" id="8_pointer"]
 [ext_resource type="Script" path="res://scenes/main/scenario_runner.gd" id="9_runner"]
 [ext_resource type="Script" path="res://systems/construction/placement_controller.gd" id="10_placement"]
+[ext_resource type="Script" path="res://systems/ai/match_rules.gd" id="11_rules"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -33,6 +34,9 @@ script = ExtResource("8_pointer")
 
 [node name="ScenarioRunner" type="Node" parent="."]
 script = ExtResource("9_runner")
+
+[node name="MatchRules" type="Node" parent="."]
+script = ExtResource("11_rules")
 
 [node name="Hud" parent="." instance=ExtResource("6_hud")]
 

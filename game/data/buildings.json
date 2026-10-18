@@ -33,7 +33,8 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"sight_px": 448
 	},
 	"house": {
 		"name_key": "BLDG_HOUSE_NAME",
@@ -284,6 +285,93 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
+		}
+	},
+	"blacksmith": {
+		"name_key": "BLDG_BLACKSMITH_NAME",
+		"cost": {
+			"wood": 150
+		},
+		"hp": 1500,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 40,
+		"era": 2,
+		"color": "#5b4a42",
+		"placeholder_glyph": "HE",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
+	},
+	"university": {
+		"name_key": "BLDG_UNIVERSITY_NAME",
+		"cost": {
+			"wood": 200
+		},
+		"hp": 1600,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 45,
+		"era": 3,
+		"color": "#6d6a8a",
+		"placeholder_glyph": "UN",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
+	},
+	"watch_tower": {
+		"name_key": "BLDG_WATCH_TOWER_NAME",
+		"cost": {
+			"wood": 25,
+			"stone": 125
+		},
+		"hp": 850,
+		"footprint": [
+			1,
+			1
+		],
+		"build_time": 35,
+		"era": 2,
+		"color": "#8b8b80",
+		"placeholder_glyph": "T",
+		"buildable": true,
+		"classes": [
+			"building",
+			"tower"
+		],
+		"armor": {
+			"hack": 1,
+			"pierce": 7,
+			"crush": 0
+		},
+		"sight_px": 512,
+		"combat": {
+			"damage": {
+				"pierce": 5
+			},
+			"range_px": 448,
+			"prepare_s": 0.0,
+			"repeat_s": 2.0,
+			"bonus": {},
+			"projectile": {
+				"speed_px": 640
+			}
 		}
 	}
 }

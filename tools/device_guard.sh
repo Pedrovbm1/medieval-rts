@@ -6,6 +6,13 @@
 # Rules: never touch the screen / start apps while another app is in front;
 # `adb install -r` is always fine; when done, force-stop our app and go home.
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
+# Always talk to the S10 test phone, never to whatever else is connected
+# (other sessions use network adb devices such as a Fire TV).
+export ANDROID_SERIAL="${ANDROID_SERIAL:-R58M154WY9A}"
+if [ "$("$ADB" get-state 2>/dev/null | tr -d '')" != "device" ]; then
+  echo "guard: test phone $ANDROID_SERIAL is not connected; aborting (no other device is touched)" >&2
+  return 3 2>/dev/null || exit 3
+fi
 OUR_PKG="dev.pedro.realm"
 OTHER_PKGS="com.pedro.escaner mx.mateo.misioncolima"
 GUARD_MAX_WAIT_S="${GUARD_MAX_WAIT_S:-600}"

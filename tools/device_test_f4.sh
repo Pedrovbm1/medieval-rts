@@ -2,7 +2,7 @@
 # F4 device test: build a House with real touches on the phone through the HUD
 # (box-select villagers -> Build -> House -> tap map -> ✓) and train a villager.
 set -u
-. "$(dirname "$0")/device_guard.sh"
+. "$(dirname "$0")/device_guard.sh" || exit 3
 guard_wait_free || exit 2
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
 PKG_NAME="dev.pedro.realm"

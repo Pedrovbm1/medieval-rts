@@ -23,3 +23,9 @@ signal resources_delivered(player_id: int, resource: String, amount: int)
 signal building_completed(building: Building)
 ## A building finished training a unit.
 signal unit_trained(unit: Unit, building: Building)
+## The match is over (MatchRules).
+signal match_ended(winner_id: int, seconds: float)
+## A player reached a new era.
+signal era_changed(player_id: int, era: int)
+## A player finished researching a technology.
+signal tech_researched(player_id: int, tech_id: String)

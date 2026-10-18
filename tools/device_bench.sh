@@ -3,7 +3,7 @@
 # game's [REALM] perf / scenario lines. Debug APK only (uses run-as).
 # Usage: bash tools/device_bench.sh <scenario> <seconds>
 set -u
-. "$(dirname "$0")/device_guard.sh"
+. "$(dirname "$0")/device_guard.sh" || exit 3
 guard_wait_free || exit 2
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
 PKG_NAME="dev.pedro.realm"

@@ -16,8 +16,8 @@ contenido propio, siempre.
 - [x] F4 — Construcción (base completa en 64 s de juego; probado con toques reales en S10)
 - [x] F5 — Combate (counters del plan; 20v20 en 49 s; sin fugas; 60 fps en S10)
 - [x] F5.5 — Roster de 12 unidades con roles
-- [ ] F6 — IA enemiga
-- [ ] F7 — Eras y tecnologías
+- [x] F6 — IA enemiga (pasivo pierde en ~20 min; sin map hack)
+- [x] F7 — Eras y 24 tecnologías
 - [ ] F8 — Fog of war + UX
 - [ ] F9 — Arte y contenido
 - [ ] F10 — Publicación

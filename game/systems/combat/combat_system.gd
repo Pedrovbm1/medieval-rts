@@ -32,23 +32,25 @@ func setup(p_world: World) -> void:
 
 # ------------------------------------------------------------------ hits
 
-func apply_hit(attacker: Unit, target: Object, dmg: int) -> void:
+func apply_hit(attacker: Node2D, target: Object, dmg: int) -> void:
 	if not Combat.target_alive(target):
 		return
+	var source: Unit = attacker as Unit if attacker != null and is_instance_valid(attacker) else null
 	if attacker != null and is_instance_valid(attacker):
-		damage_by_type[attacker.unit_type] = int(damage_by_type.get(attacker.unit_type, 0)) + dmg
+		var kind: String = source.unit_type if source != null else String(attacker.get("building_type"))
+		damage_by_type[kind] = int(damage_by_type.get(kind, 0)) + dmg
 	if target is Unit:
 		var u: Unit = target
-		u.take_damage(dmg, attacker)
+		u.take_damage(dmg, source)
 		if not u.is_dead:
 			u.flash_t = _flash_seconds
 			_flashing[u] = true
 			u.queue_redraw()
 	elif target is Building:
-		(target as Building).take_damage(dmg, attacker)
+		(target as Building).take_damage(dmg, source)
 
 
-func fire(attacker: Unit, target: Object, dmg: int, speed: float, splash: float = 0.0) -> void:
+func fire(attacker: Node2D, target: Object, dmg: int, speed: float, splash: float = 0.0) -> void:
 	var p: Projectile = null
 	for candidate: Projectile in _projectiles:
 		if not candidate.active:
@@ -64,9 +66,9 @@ func fire(attacker: Unit, target: Object, dmg: int, speed: float, splash: float 
 
 ## Area damage around `center`: full damage at the centre, half at the edge.
 ## Hits every enemy unit and building of the shooter in range (no friendly fire).
-func apply_splash(attacker: Unit, shooter_owner: int, center: Vector2, radius: float, base_damage: int) -> int:
+func apply_splash(attacker: Node2D, shooter_owner: int, center: Vector2, radius: float, base_damage: int) -> int:
 	var hits: int = 0
-	var src: Unit = attacker if is_instance_valid(attacker) else null
+	var src: Unit = attacker as Unit if is_instance_valid(attacker) else null
 	for other: Object in world.movement.spatial.query(center, radius + 24.0).duplicate():
 		var u: Unit = other as Unit
 		if u.is_dead or u.owner_id == shooter_owner or u.owner_id < 0:
@@ -143,7 +145,33 @@ func find_enemy(unit: Unit) -> Object:
 	return best
 
 
+## Armed buildings (towers) shoot the nearest enemy unit in range.
+func _towers(interval: float) -> void:
+	for b: Building in world.buildings:
+		if b.data.get("combat", {}).is_empty() or not b.is_complete() or b.owner_id < 0:
+			continue
+		b.attack_cooldown -= interval
+		if b.attack_cooldown > 0.0:
+			continue
+		var reach: float = Combat.range_of(b)
+		var best: Unit = null
+		var best_d: float = INF
+		for other: Object in world.movement.spatial.query(b.position, reach):
+			var u: Unit = other as Unit
+			if u.is_dead or u.owner_id < 0 or u.owner_id == b.owner_id:
+				continue
+			var d: float = b.position.distance_to(u.position)
+			if d <= reach and d < best_d:
+				best_d = d
+				best = u
+		if best != null:
+			b.attack_cooldown = Combat.repeat_of(b)
+			var proj: Dictionary = Dictionary(b.data["combat"]).get("projectile", {})
+			fire(b, best, Combat.hit_damage(b, best), float(proj.get("speed_px", 600)))
+
+
 func _acquire_targets() -> void:
+	_towers(_acquire_interval)
 	for unit: Unit in world.units:
 		if unit.is_dead or unit.owner_id < 0 or unit.is_animal():
 			continue

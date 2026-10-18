@@ -1,1 +1,502 @@
-{}
+{
+	"loom": {
+		"name_key": "TECH_LOOM_NAME",
+		"desc_key": "TECH_LOOM_DESC",
+		"researched_at": "town_center",
+		"era": 1,
+		"cost": {
+			"gold": 50
+		},
+		"research_time": 25,
+		"effects": [
+			{
+				"key": "armor.hack.civilian",
+				"add": 1
+			},
+			{
+				"key": "armor.pierce.civilian",
+				"add": 1
+			},
+			{
+				"key": "hp.civilian",
+				"mult": 1.25
+			}
+		],
+		"branch": "economy"
+	},
+	"sickles": {
+		"name_key": "TECH_SICKLES_NAME",
+		"desc_key": "TECH_SICKLES_DESC",
+		"researched_at": "town_center",
+		"era": 2,
+		"cost": {
+			"food": 100,
+			"wood": 50
+		},
+		"research_time": 30,
+		"effects": [
+			{
+				"key": "gather.berries",
+				"mult": 1.15
+			},
+			{
+				"key": "gather.farm",
+				"mult": 1.1
+			}
+		],
+		"branch": "economy"
+	},
+	"plough": {
+		"name_key": "TECH_PLOUGH_NAME",
+		"desc_key": "TECH_PLOUGH_DESC",
+		"researched_at": "town_center",
+		"era": 2,
+		"cost": {
+			"food": 75,
+			"wood": 75
+		},
+		"research_time": 30,
+		"effects": [
+			{
+				"key": "gather.farm",
+				"mult": 1.15
+			}
+		],
+		"branch": "economy"
+	},
+	"sharp_axe": {
+		"name_key": "TECH_SHARP_AXE_NAME",
+		"desc_key": "TECH_SHARP_AXE_DESC",
+		"researched_at": "town_center",
+		"era": 2,
+		"cost": {
+			"food": 100,
+			"wood": 50
+		},
+		"research_time": 30,
+		"effects": [
+			{
+				"key": "gather.wood",
+				"mult": 1.15
+			}
+		],
+		"branch": "economy"
+	},
+	"pickaxe": {
+		"name_key": "TECH_PICKAXE_NAME",
+		"desc_key": "TECH_PICKAXE_DESC",
+		"researched_at": "town_center",
+		"era": 2,
+		"cost": {
+			"food": 100,
+			"wood": 75
+		},
+		"research_time": 30,
+		"effects": [
+			{
+				"key": "gather.gold",
+				"mult": 1.15
+			},
+			{
+				"key": "gather.stone",
+				"mult": 1.15
+			}
+		],
+		"branch": "economy"
+	},
+	"double_axe": {
+		"name_key": "TECH_DOUBLE_AXE_NAME",
+		"desc_key": "TECH_DOUBLE_AXE_DESC",
+		"researched_at": "town_center",
+		"era": 3,
+		"cost": {
+			"food": 150,
+			"wood": 100
+		},
+		"research_time": 40,
+		"effects": [
+			{
+				"key": "gather.wood",
+				"mult": 1.15
+			}
+		],
+		"branch": "economy"
+	},
+	"deep_mining": {
+		"name_key": "TECH_DEEP_MINING_NAME",
+		"desc_key": "TECH_DEEP_MINING_DESC",
+		"researched_at": "town_center",
+		"era": 3,
+		"cost": {
+			"food": 150,
+			"wood": 100
+		},
+		"research_time": 40,
+		"effects": [
+			{
+				"key": "gather.gold",
+				"mult": 1.15
+			},
+			{
+				"key": "gather.stone",
+				"mult": 1.15
+			}
+		],
+		"branch": "economy"
+	},
+	"wheelbarrow": {
+		"name_key": "TECH_WHEELBARROW_NAME",
+		"desc_key": "TECH_WHEELBARROW_DESC",
+		"researched_at": "town_center",
+		"era": 3,
+		"cost": {
+			"food": 175,
+			"wood": 50
+		},
+		"research_time": 45,
+		"effects": [
+			{
+				"key": "speed.civilian",
+				"mult": 1.1
+			},
+			{
+				"key": "carry_capacity",
+				"add": 5
+			}
+		],
+		"branch": "economy"
+	},
+	"crop_rotation": {
+		"name_key": "TECH_CROP_ROTATION_NAME",
+		"desc_key": "TECH_CROP_ROTATION_DESC",
+		"researched_at": "town_center",
+		"era": 4,
+		"cost": {
+			"food": 250,
+			"wood": 100
+		},
+		"research_time": 50,
+		"effects": [
+			{
+				"key": "gather.farm",
+				"mult": 1.2
+			}
+		],
+		"branch": "economy"
+	},
+	"forging": {
+		"name_key": "TECH_FORGING_NAME",
+		"desc_key": "TECH_FORGING_DESC",
+		"researched_at": "blacksmith",
+		"era": 2,
+		"cost": {
+			"food": 150
+		},
+		"research_time": 35,
+		"effects": [
+			{
+				"key": "attack.infantry",
+				"add": 1
+			},
+			{
+				"key": "attack.cavalry",
+				"add": 1
+			}
+		],
+		"branch": "military"
+	},
+	"iron_casting": {
+		"name_key": "TECH_IRON_CASTING_NAME",
+		"desc_key": "TECH_IRON_CASTING_DESC",
+		"researched_at": "blacksmith",
+		"era": 3,
+		"cost": {
+			"food": 220,
+			"gold": 120
+		},
+		"research_time": 45,
+		"effects": [
+			{
+				"key": "attack.infantry",
+				"add": 1
+			},
+			{
+				"key": "attack.cavalry",
+				"add": 1
+			}
+		],
+		"branch": "military"
+	},
+	"fletching": {
+		"name_key": "TECH_FLETCHING_NAME",
+		"desc_key": "TECH_FLETCHING_DESC",
+		"researched_at": "blacksmith",
+		"era": 2,
+		"cost": {
+			"food": 100,
+			"gold": 50
+		},
+		"research_time": 30,
+		"effects": [
+			{
+				"key": "attack.archer",
+				"add": 1
+			},
+			{
+				"key": "range.archer",
+				"add": 32
+			}
+		],
+		"branch": "military"
+	},
+	"crossbow_drill": {
+		"name_key": "TECH_CROSSBOW_DRILL_NAME",
+		"desc_key": "TECH_CROSSBOW_DRILL_DESC",
+		"researched_at": "blacksmith",
+		"era": 3,
+		"cost": {
+			"food": 200,
+			"gold": 100
+		},
+		"research_time": 45,
+		"effects": [
+			{
+				"key": "attack.archer",
+				"add": 2
+			}
+		],
+		"branch": "military"
+	},
+	"quivers": {
+		"name_key": "TECH_QUIVERS_NAME",
+		"desc_key": "TECH_QUIVERS_DESC",
+		"researched_at": "blacksmith",
+		"era": 3,
+		"cost": {
+			"food": 150,
+			"gold": 100
+		},
+		"research_time": 40,
+		"effects": [
+			{
+				"key": "repeat.archer",
+				"mult": 0.9
+			}
+		],
+		"branch": "military"
+	},
+	"mail_armor": {
+		"name_key": "TECH_MAIL_ARMOR_NAME",
+		"desc_key": "TECH_MAIL_ARMOR_DESC",
+		"researched_at": "blacksmith",
+		"era": 2,
+		"cost": {
+			"food": 100
+		},
+		"research_time": 35,
+		"effects": [
+			{
+				"key": "armor.hack.infantry",
+				"add": 1
+			},
+			{
+				"key": "armor.pierce.infantry",
+				"add": 1
+			}
+		],
+		"branch": "military"
+	},
+	"plate_armor": {
+		"name_key": "TECH_PLATE_ARMOR_NAME",
+		"desc_key": "TECH_PLATE_ARMOR_DESC",
+		"researched_at": "blacksmith",
+		"era": 4,
+		"cost": {
+			"food": 300,
+			"gold": 150
+		},
+		"research_time": 55,
+		"effects": [
+			{
+				"key": "armor.hack.infantry",
+				"add": 2
+			},
+			{
+				"key": "armor.pierce.infantry",
+				"add": 2
+			}
+		],
+		"branch": "military"
+	},
+	"barding": {
+		"name_key": "TECH_BARDING_NAME",
+		"desc_key": "TECH_BARDING_DESC",
+		"researched_at": "blacksmith",
+		"era": 2,
+		"cost": {
+			"food": 150
+		},
+		"research_time": 35,
+		"effects": [
+			{
+				"key": "armor.hack.cavalry",
+				"add": 1
+			},
+			{
+				"key": "armor.pierce.cavalry",
+				"add": 1
+			}
+		],
+		"branch": "military"
+	},
+	"stirrups": {
+		"name_key": "TECH_STIRRUPS_NAME",
+		"desc_key": "TECH_STIRRUPS_DESC",
+		"researched_at": "blacksmith",
+		"era": 3,
+		"cost": {
+			"food": 200,
+			"gold": 100
+		},
+		"research_time": 40,
+		"effects": [
+			{
+				"key": "speed.cavalry",
+				"mult": 1.1
+			}
+		],
+		"branch": "military"
+	},
+	"masonry": {
+		"name_key": "TECH_MASONRY_NAME",
+		"desc_key": "TECH_MASONRY_DESC",
+		"researched_at": "university",
+		"era": 3,
+		"cost": {
+			"wood": 175,
+			"stone": 100
+		},
+		"research_time": 45,
+		"effects": [
+			{
+				"key": "hp.building",
+				"mult": 1.1
+			},
+			{
+				"key": "armor.pierce.building",
+				"add": 2
+			}
+		],
+		"branch": "defense"
+	},
+	"fortified_walls": {
+		"name_key": "TECH_FORTIFIED_WALLS_NAME",
+		"desc_key": "TECH_FORTIFIED_WALLS_DESC",
+		"researched_at": "university",
+		"era": 3,
+		"cost": {
+			"food": 200,
+			"stone": 150
+		},
+		"research_time": 50,
+		"effects": [
+			{
+				"key": "hp.building",
+				"mult": 1.2
+			}
+		],
+		"branch": "defense"
+	},
+	"battlements": {
+		"name_key": "TECH_BATTLEMENTS_NAME",
+		"desc_key": "TECH_BATTLEMENTS_DESC",
+		"researched_at": "university",
+		"era": 3,
+		"cost": {
+			"food": 150,
+			"gold": 100
+		},
+		"research_time": 40,
+		"effects": [
+			{
+				"key": "attack.tower",
+				"add": 2
+			},
+			{
+				"key": "range.tower",
+				"add": 64
+			}
+		],
+		"branch": "defense"
+	},
+	"watchmen": {
+		"name_key": "TECH_WATCHMEN_NAME",
+		"desc_key": "TECH_WATCHMEN_DESC",
+		"researched_at": "university",
+		"era": 3,
+		"cost": {
+			"food": 100,
+			"wood": 100
+		},
+		"research_time": 30,
+		"effects": [
+			{
+				"key": "sight.building",
+				"mult": 1.3
+			},
+			{
+				"key": "sight.infantry",
+				"mult": 1.15
+			}
+		],
+		"branch": "defense"
+	},
+	"architecture": {
+		"name_key": "TECH_ARCHITECTURE_NAME",
+		"desc_key": "TECH_ARCHITECTURE_DESC",
+		"researched_at": "university",
+		"era": 4,
+		"cost": {
+			"wood": 200,
+			"stone": 200
+		},
+		"research_time": 50,
+		"effects": [
+			{
+				"key": "build_speed",
+				"mult": 1.25
+			},
+			{
+				"key": "hp.building",
+				"mult": 1.1
+			}
+		],
+		"branch": "defense"
+	},
+	"chemistry": {
+		"name_key": "TECH_CHEMISTRY_NAME",
+		"desc_key": "TECH_CHEMISTRY_DESC",
+		"researched_at": "university",
+		"era": 4,
+		"cost": {
+			"food": 250,
+			"gold": 200
+		},
+		"research_time": 55,
+		"effects": [
+			{
+				"key": "attack.archer",
+				"add": 1
+			},
+			{
+				"key": "attack.siege",
+				"add": 2
+			},
+			{
+				"key": "attack.tower",
+				"add": 1
+			}
+		],
+		"branch": "defense"
+	}
+}

@@ -68,3 +68,79 @@ UNIT_MONK_NAME,Monje,Monk
 UNIT_MANGONEL_NAME,Mangonel,Mangonel
 UNIT_CAMEL_RIDER_NAME,Camellero,Camel rider
 BLDG_MONASTERY_NAME,Monasterio,Monastery
+AI_EASY,Fácil,Easy
+AI_NORMAL,Normal,Normal
+AI_HARD,Difícil,Hard
+END_VICTORY,¡Victoria!,Victory!
+END_DEFEAT,Derrota,Defeat
+END_TIME,Duración,Time
+END_GATHERED,Recolectado,Gathered
+END_TRAINED,Entrenados,Trained
+END_KILLS,Bajas enemigas,Kills
+END_LOST,Bajas propias,Losses
+END_RETRY,Reintentar,Retry
+END_YOU,Tú,You
+END_AI,IA,AI
+TECH_LOOM_NAME,"Telar","Loom"
+TECH_LOOM_DESC,"Aldeanos +1/+1 armadura, +25% vida","Villagers +1/+1 armor, +25% HP"
+TECH_SICKLES_NAME,"Hoces","Sickles"
+TECH_SICKLES_DESC,"Bayas +15%, granjas +10%","Berries +15%, farms +10%"
+TECH_PLOUGH_NAME,"Arado","Plough"
+TECH_PLOUGH_DESC,"Granjas +15%","Farms +15%"
+TECH_SHARP_AXE_NAME,"Hacha afilada","Sharp axe"
+TECH_SHARP_AXE_DESC,"Madera +15%","Wood +15%"
+TECH_PICKAXE_NAME,"Pico","Pickaxe"
+TECH_PICKAXE_DESC,"Oro y piedra +15%","Gold and stone +15%"
+TECH_DOUBLE_AXE_NAME,"Hacha de doble filo","Double-bit axe"
+TECH_DOUBLE_AXE_DESC,"Madera +15%","Wood +15%"
+TECH_DEEP_MINING_NAME,"Minería profunda","Deep mining"
+TECH_DEEP_MINING_DESC,"Oro y piedra +15%","Gold and stone +15%"
+TECH_WHEELBARROW_NAME,"Carretilla","Wheelbarrow"
+TECH_WHEELBARROW_DESC,"Aldeanos +10% velocidad, +5 carga","Villagers +10% speed, +5 carry"
+TECH_CROP_ROTATION_NAME,"Rotación de cultivos","Crop rotation"
+TECH_CROP_ROTATION_DESC,"Granjas +20%","Farms +20%"
+TECH_FORGING_NAME,"Forja","Forging"
+TECH_FORGING_DESC,"Infantería y caballería +1 ataque","Infantry and cavalry +1 attack"
+TECH_IRON_CASTING_NAME,"Fundición","Iron casting"
+TECH_IRON_CASTING_DESC,"Infantería y caballería +1 ataque","Infantry and cavalry +1 attack"
+TECH_FLETCHING_NAME,"Flechas reforzadas","Fletching"
+TECH_FLETCHING_DESC,"Arqueros +1 ataque, +32 alcance","Archers +1 attack, +32 range"
+TECH_CROSSBOW_DRILL_NAME,"Ballesta","Crossbow drill"
+TECH_CROSSBOW_DRILL_DESC,"Arqueros +2 ataque","Archers +2 attack"
+TECH_QUIVERS_NAME,"Carcaj","Quivers"
+TECH_QUIVERS_DESC,"Arqueros disparan 10% más rápido","Archers shoot 10% faster"
+TECH_MAIL_ARMOR_NAME,"Cota de malla","Mail armor"
+TECH_MAIL_ARMOR_DESC,"Infantería +1/+1 armadura","Infantry +1/+1 armor"
+TECH_PLATE_ARMOR_NAME,"Armadura de placas","Plate armor"
+TECH_PLATE_ARMOR_DESC,"Infantería +2/+2 armadura","Infantry +2/+2 armor"
+TECH_BARDING_NAME,"Bardas","Barding"
+TECH_BARDING_DESC,"Caballería +1/+1 armadura","Cavalry +1/+1 armor"
+TECH_STIRRUPS_NAME,"Estribos","Stirrups"
+TECH_STIRRUPS_DESC,"Caballería +10% velocidad","Cavalry +10% speed"
+TECH_MASONRY_NAME,"Albañilería","Masonry"
+TECH_MASONRY_DESC,"Edificios +10% vida, +2 armadura perforante","Buildings +10% HP, +2 pierce armor"
+TECH_FORTIFIED_WALLS_NAME,"Muros reforzados","Fortified walls"
+TECH_FORTIFIED_WALLS_DESC,"Edificios +20% vida","Buildings +20% HP"
+TECH_BATTLEMENTS_NAME,"Almenas","Battlements"
+TECH_BATTLEMENTS_DESC,"Torres +2 ataque, +64 alcance","Towers +2 attack, +64 range"
+TECH_WATCHMEN_NAME,"Vigías","Watchmen"
+TECH_WATCHMEN_DESC,"Edificios +30% visión, infantería +15%","Buildings +30% sight, infantry +15%"
+TECH_ARCHITECTURE_NAME,"Arquitectura","Architecture"
+TECH_ARCHITECTURE_DESC,"Construir 25% más rápido, edificios +10% vida","Build 25% faster, buildings +10% HP"
+TECH_CHEMISTRY_NAME,"Química","Chemistry"
+TECH_CHEMISTRY_DESC,"Arqueros +1, asedio +2, torres +1 ataque","Archers +1, siege +2, towers +1 attack"
+ERA_1_NAME,Asentamientos,Settlements
+ERA_2_NAME,Fortalezas,Strongholds
+ERA_3_NAME,Coronas,Crowns
+ERA_4_NAME,Imperio,Empire
+ERA_ADVANCE,Avanzar a,Advance to
+ERA_REACHED,Nueva era,New era
+ERR_REQUIRES,Requiere 2 edificios de esta era,Needs 2 buildings of this era
+HUD_ERA,Era,Era
+BLDG_BLACKSMITH_NAME,Herrería,Blacksmith
+BLDG_UNIVERSITY_NAME,Universidad,University
+BLDG_WATCH_TOWER_NAME,Torre de vigía,Watch tower
+STAT_ATTACK,ATQ,ATK
+STAT_ARMOR,ARM,ARM
+STAT_RANGE,ALC,RNG
+STAT_SPEED,VEL,SPD

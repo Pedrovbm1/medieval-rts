@@ -23,6 +23,8 @@ var multipliers: Dictionary = {}
 var additions: Dictionary = {}
 ## player_id -> { "gathered": {res: int}, ... } for end-of-match screens and tests.
 var stats: Dictionary = {}
+## player_id -> { tech_id: true }
+var researched: Dictionary = {}
 
 
 func _ready() -> void:
@@ -40,6 +42,7 @@ func new_match(map_id: String, human_civ: String, ai_civ: String) -> void:
 	multipliers = {}
 	additions = {}
 	stats = {}
+	researched = {}
 	for player_id: int in civs.keys():
 		var civ: Dictionary = DataLoader.get_entry("civs", String(civs[player_id]))
 		var starting: Dictionary = civ.get("starting_resources", {})
@@ -50,6 +53,7 @@ func new_match(map_id: String, human_civ: String, ai_civ: String) -> void:
 		population[player_id] = {"used": 0, "cap": 0}
 		multipliers[player_id] = {}
 		additions[player_id] = {}
+		researched[player_id] = {}
 		stats[player_id] = {"gathered": {"food": 0, "wood": 0, "gold": 0, "stone": 0}}
 
 
@@ -139,6 +143,7 @@ func to_dict() -> Dictionary:
 		"multipliers": multipliers.duplicate(true),
 		"additions": additions.duplicate(true),
 		"stats": stats.duplicate(true),
+		"researched": researched.duplicate(true),
 	}
 
 
@@ -160,6 +165,7 @@ func from_dict(data: Dictionary) -> void:
 	multipliers = _int_keys(data.get("multipliers", {}))
 	additions = _int_keys(data.get("additions", {}))
 	stats = _int_keys(data.get("stats", {}))
+	researched = _int_keys(data.get("researched", {}))
 
 
 ## JSON turns int keys into strings; restore them.

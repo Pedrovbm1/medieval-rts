@@ -25,9 +25,7 @@ func _init(p_unit: Unit, p_world: World, p_target: Object = null, p_ordered: boo
 	if p_unit.attack_move and p_unit.goal != Vector2.INF:
 		resume_to = p_unit.goal
 	_attack = p_unit.data.get("combat", {})
-	_range = float(_attack.get("range_px", 0.0))
-	if _range <= 0.0:
-		_range = float(DataLoader.rule("combat", "melee_reach_px", 10))
+	_range = Combat.range_of(p_unit)
 	_repath_px = float(DataLoader.rule("combat", "chase_repath_px", 48))
 
 
@@ -82,7 +80,7 @@ func cancel() -> void:
 func _strike() -> void:
 	unit.winding_up = false
 	unit.queue_redraw()
-	var repeat: float = float(_attack.get("repeat_s", 1.5))
+	var repeat: float = Combat.repeat_of(unit)
 	unit.attack_cooldown = maxf(0.05, repeat - float(_attack.get("prepare_s", 0.3)))
 	if not Combat.target_alive(target):
 		return

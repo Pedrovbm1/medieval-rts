@@ -58,7 +58,10 @@
 				"count": 1,
 				"near": "start"
 			}
-		]
+		],
+		"ai": {
+			"1": "normal"
+		}
 	},
 	"eco12": {
 		"map": "skirmish_120",
@@ -367,5 +370,54 @@
 			}
 		],
 		"report_battle": true
+	},
+	"techdemo": {
+		"map": "skirmish_120",
+		"camera": "start",
+		"populate": true,
+		"resources": {
+			"0": {
+				"food": 2000,
+				"wood": 2000,
+				"gold": 2000,
+				"stone": 800
+			}
+		},
+		"buildings": [
+			{
+				"type": "town_center",
+				"player": 0,
+				"at": "start"
+			},
+			{
+				"type": "lumber_camp",
+				"player": 0,
+				"near": "wood"
+			},
+			{
+				"type": "barracks",
+				"player": 0,
+				"near": "start"
+			},
+			{
+				"type": "house",
+				"player": 0,
+				"near": "start"
+			}
+		],
+		"units": [
+			{
+				"type": "villager",
+				"player": 0,
+				"count": 6,
+				"near": "start"
+			},
+			{
+				"type": "militia",
+				"player": 0,
+				"count": 1,
+				"near": "start"
+			}
+		]
 	}
 }

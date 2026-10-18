@@ -8,6 +8,11 @@ const SCENARIO_FILE: String = "user://scenario.txt"
 const IDLE_REFRESH_SECONDS: float = 0.5
 
 var scenario: String = ""
+## Tests: force AI players, e.g. {0: "hard", 1: "normal"} (overrides the scenario).
+var ai_override: Dictionary = {}
+## Tests: seed for AI decisions.
+var ai_seed: int = 1
+var ais: Array[AIController] = []
 var _idle_cycle: int = 0
 
 @onready var world: World = $World
@@ -18,6 +23,7 @@ var _idle_cycle: int = 0
 @onready var pointer: PointerManager = $PointerManager
 @onready var runner: ScenarioRunner = $ScenarioRunner
 @onready var placement: PlacementController = $World/PlacementController
+@onready var rules: MatchRules = $MatchRules
 
 
 func _ready() -> void:
@@ -45,10 +51,22 @@ func _ready() -> void:
 	hud.place_cancel_pressed.connect(placement.cancel)
 	placement.state_changed.connect(hud.show_placing)
 	hud.train_pressed.connect(_on_train_pressed)
+	hud.research_pressed.connect(_on_train_pressed)
+	hud.tech = world.tech
 	hud.dequeue_pressed.connect(_on_dequeue_pressed)
 	hud.cancel_construction_pressed.connect(_on_cancel_construction)
 
 	runner.start(scenario_id, world, camera)
+	world.vision.refresh()
+	rules.setup(world)
+	rules.match_ended.connect(_on_match_ended)
+	hud.retry_pressed.connect(_on_retry)
+	var ai_players: Dictionary = ai_override if not ai_override.is_empty() else Dictionary(def.get("ai", {}))
+	for key: Variant in ai_players.keys():
+		var ai: AIController = AIController.new()
+		add_child(ai)
+		ai.setup(world, int(key), String(ai_players[key]), ai_seed + int(key) * 101)
+		ais.append(ai)
 	world.economy.refresh_population()
 	hud.refresh_all()
 	var idle_timer: Timer = Timer.new()
@@ -116,3 +134,15 @@ func _on_cancel_construction() -> void:
 	if b != null and is_instance_valid(b):
 		world.construction.cancel_construction(b)
 		selection.select_building(null)
+
+
+func _on_match_ended(winner_id: int, loser_id: int, seconds: float) -> void:
+	for ai: AIController in ais:
+		ai.enabled = false
+	if ai_override.has(GameState.PLAYER_HUMAN):
+		return  # AI vs AI test: no human screen.
+	hud.show_end(winner_id == GameState.PLAYER_HUMAN, seconds, GameState.stats.get(GameState.PLAYER_HUMAN, {}), GameState.stats.get(loser_id if winner_id == GameState.PLAYER_HUMAN else winner_id, {}))
+
+
+func _on_retry() -> void:
+	get_tree().reload_current_scene()
