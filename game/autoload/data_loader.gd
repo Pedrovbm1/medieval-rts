@@ -12,6 +12,7 @@ const TABLE_FILES: Dictionary = {
 	"rules": "rules.json",
 	"audio": "audio.json",
 	"scenarios": "scenarios.json",
+	"resources": "resources.json",
 }
 const MAPS_DIR: String = "res://data/maps/"
 

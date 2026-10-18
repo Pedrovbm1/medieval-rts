@@ -1,1 +1,59 @@
-{}
+{
+	"town_center": {
+		"name_key": "BLDG_TOWN_CENTER_NAME",
+		"cost": { "wood": 275, "stone": 100 },
+		"hp": 2400,
+		"footprint": [3, 3],
+		"pop_bonus": 5,
+		"dropoff": ["food", "wood", "gold", "stone"],
+		"build_time": 150,
+		"era": 1,
+		"color": "#8a6d4b",
+		"placeholder_glyph": "PM"
+	},
+	"house": {
+		"name_key": "BLDG_HOUSE_NAME",
+		"cost": { "wood": 30 },
+		"hp": 550,
+		"footprint": [2, 2],
+		"pop_bonus": 5,
+		"build_time": 18,
+		"era": 1,
+		"color": "#a0794e",
+		"placeholder_glyph": "C"
+	},
+	"lumber_camp": {
+		"name_key": "BLDG_LUMBER_CAMP_NAME",
+		"cost": { "wood": 100 },
+		"hp": 600,
+		"footprint": [2, 2],
+		"dropoff": ["wood"],
+		"build_time": 25,
+		"era": 1,
+		"color": "#6e5a3c",
+		"placeholder_glyph": "As"
+	},
+	"mining_camp": {
+		"name_key": "BLDG_MINING_CAMP_NAME",
+		"cost": { "wood": 100 },
+		"hp": 600,
+		"footprint": [2, 2],
+		"dropoff": ["gold", "stone"],
+		"build_time": 25,
+		"era": 1,
+		"color": "#7a7468",
+		"placeholder_glyph": "Ca"
+	},
+	"farm": {
+		"name_key": "BLDG_FARM_NAME",
+		"cost": { "wood": 60 },
+		"hp": 300,
+		"footprint": [2, 2],
+		"walkable": true,
+		"gather": { "resource": "food", "subtype": "farm", "workers": 1 },
+		"build_time": 15,
+		"era": 1,
+		"color": "#c9a85c",
+		"placeholder_glyph": "G"
+	}
+}

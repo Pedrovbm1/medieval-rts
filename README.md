@@ -12,7 +12,7 @@ contenido propio, siempre.
 - [x] F0 — Setup + mundo mínimo (aprobada 2026-10-17; probada en Galaxy S10)
 - [x] F1 — Selección y órdenes (gate humano aprobado 2026-10-17)
 - [x] F2 — Pathfinding (S10: 150 unidades a 60 fps, 50/50 rodean el lago)
-- [ ] F3 — Economía
+- [x] F3 — Economía (12 aldeanos 10 min sin trabarse; 60 fps y 15 draw calls en S10)
 - [ ] F4 — Construcción
 - [ ] F5 — Combate
 - [ ] F6 — IA enemiga

@@ -3,9 +3,49 @@
 		"map": "skirmish_120",
 		"camera": "spawn",
 		"spawn_near_center": true,
+		"populate": false,
 		"units": [
 			{ "type": "militia", "player": 0, "count": 3 },
 			{ "type": "villager", "player": 0, "count": 2 }
+		]
+	},
+	"skirmish": {
+		"map": "skirmish_120",
+		"camera": "start",
+		"populate": true,
+		"buildings": [
+			{ "type": "town_center", "player": 0, "at": "start" },
+			{ "type": "town_center", "player": 1, "at": "start" }
+		],
+		"units": [
+			{ "type": "villager", "player": 0, "count": 4, "near": "start" },
+			{ "type": "scout", "player": 0, "count": 1, "near": "start" },
+			{ "type": "villager", "player": 1, "count": 4, "near": "start" },
+			{ "type": "scout", "player": 1, "count": 1, "near": "start" }
+		]
+	},
+	"eco12": {
+		"map": "skirmish_120",
+		"camera": "start",
+		"populate": true,
+		"buildings": [
+			{ "type": "town_center", "player": 0, "at": "start" },
+			{ "type": "lumber_camp", "player": 0, "near": "wood" },
+			{ "type": "mining_camp", "player": 0, "near": "gold" },
+			{ "type": "farm", "player": 0, "near": "start" },
+			{ "type": "farm", "player": 0, "near": "start" },
+			{ "type": "house", "player": 0, "near": "start" },
+			{ "type": "house", "player": 0, "near": "start" }
+		],
+		"units": [
+			{ "type": "villager", "player": 0, "count": 12, "near": "start" }
+		],
+		"assign": [
+			{ "count": 4, "gather": "wood" },
+			{ "count": 3, "gather": "gold" },
+			{ "count": 2, "gather": "stone" },
+			{ "count": 2, "gather": "farm" },
+			{ "count": 1, "gather": "berries" }
 		]
 	},
 	"lake50": {

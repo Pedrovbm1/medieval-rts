@@ -21,11 +21,21 @@
 	"feedback": {
 		"order_marker_seconds": 0.6
 	},
+	"economy": {
+		"pop_max": 100
+	},
+	"resource_colors": {
+		"food": "#e2574c",
+		"wood": "#a0703c",
+		"gold": "#f0c93a",
+		"stone": "#a8a8a0"
+	},
 	"players": {
 		"colors": ["#3a6fd8", "#d84a3a"]
 	},
 	"debug": {
 		"log_input": true,
-		"log_perf": true
+		"log_perf": true,
+		"log_tasks": false
 	}
 }

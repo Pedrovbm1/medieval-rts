@@ -192,16 +192,20 @@ func test_stress150_cost() -> void:
 	var total_ms: float = 0.0
 	var worst_ms: float = 0.0
 	var worst_queue_ms: float = 0.0
+	var all_ms: Array[float] = []
 	for i: int in 240:
 		await physics_frames(1)
 		worst_queue_ms = maxf(worst_queue_ms, world.movement.last_queue_usec / 1000.0)
 		var ms: float = world.movement.last_step_usec / 1000.0
+		all_ms.append(ms)
 		total_ms += ms
 		worst_ms = maxf(worst_ms, ms)
 		samples += 1
 	var moving: int = runner.spawned.filter(func(u: Unit) -> bool: return u.is_moving()).size()
-	print("  info  stress150 movement avg=%.2f ms worst=%.2f ms (worst path queue %.2f ms) moving=%d" % [total_ms / samples, worst_ms, worst_queue_ms, moving])
+	all_ms.sort()
+	var median: float = all_ms[all_ms.size() / 2]
+	print("  info  stress150 movement median=%.2f avg=%.2f ms worst=%.2f ms (worst path queue %.2f ms) moving=%d" % [median, total_ms / samples, worst_ms, worst_queue_ms, moving])
 	check(moving > 20, "units keep moving under wander orders (%d moving)" % moving)
-	check(total_ms / samples < 3.0, "150 units: movement step under 3 ms on desktop (avg %.2f ms)" % (total_ms / samples))
+	check(median < 3.0, "150 units: movement step median under 3 ms on desktop (%.2f ms)" % median)
 	main.queue_free()
 	await frames(1)

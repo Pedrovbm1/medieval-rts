@@ -4,17 +4,23 @@
 > Una sesión nueva retoma desde aquí.
 
 ## Fase actual
-**F3 — Economía + animales** (en curso)
+**F4 — Construcción y producción** (siguiente; F3 cerrada)
 
 ## Completadas
 | Fase | Commit | Fecha | Gate |
 |---|---|---|---|
 | F0 | 2007d99, 2638e05 | 2026-10-17 | Cumplido en Galaxy S10 (arranque 0.6-0.9 s, pan 60 fps, pinch probado por Pedro) |
 | F1 | 4747fd7 | 2026-10-17 | 67/67 headless, 7/7 adb en S10, gate humano 10/10 aprobado por Pedro |
-| F2 | 3784c4d | 2026-10-17 | Headless 96/96. S10: 150 unidades a 59.5-60 fps (peor frame en juego 28 ms; 149 ms solo en la carga), lake50 50/50 en 57 s. Draw calls 189-543 → se corrige en F3 con atlas |
+| F2 | 3784c4d | 2026-10-17 | Headless 96/96. S10: 150 unidades a 59.5-60 fps (peor frame en juego 28 ms; 149 ms solo en la carga), lake50 50/50 en 57 s. Draw calls 189-543 → se corrigió en F3 con atlas (15) |
+| F3 | ver BUILD-LOG | 2026-10-17 | 132/132 headless (12 aldeanos 10 min sin trabarse ni perder carga; campana; tasas JSON + modificadores; oveja/ciervo/jabalí con lure). S10: 150 unidades 60 fps con 15 draw calls; eco12 60 fps 15-32 DC; F1 adb 7/7 |
 
 ## Siguiente
-F3 → F4. El S10 se comparte con la sesión del juego de Mateo: pedir turno por mensaje antes de usarlo.
+F4 — Construcción y producción. Plan:
+1. Modo construir: botón Construir en el panel de aldeanos (grid de edificios), fantasma que sigue el dedo con validación en vivo (`World.can_place`), confirmar ✓ / cancelar ✕.
+2. `Building.build_progress` 0→1 con aldeanos constructores (`BuildTask`), costo con `GameState.spend`, cancelar devuelve 50% (`rules.json`).
+3. Cola de producción en la Plaza Mayor (aldeano, explorador) con tiempos de `units.json` (`train_time`, `cost`), respeta población.
+4. Escenario `build4min` + tests: base completa (2 casas, granja, aserradero, cuartel) < 4 min con "dedo" simulado; no construir sobre recursos/unidades; cancelar devuelve recursos.
+El S10 se comparte con la sesión del juego de Mateo: pedir turno por mensaje antes de usarlo.
 
 ## Entorno
 | Pieza | Valor |
@@ -61,11 +67,20 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D14 | F2 | Escenarios en `data/scenarios.json`; en debug el teléfono lee `user://scenario.txt` (lo escribe `tools/device_bench.sh` con `run-as`) | Benchmarks reproducibles en device sin menús de debug |
 | D15 | F2 | Mapas con `features` (círculo, rectángulo, línea) pintados sobre el ruido | Mapas de prueba exactos y, en F9, mapas curados |
 | D16 | F2 | Las tablas de `DataLoader` se comparten: son de solo lectura (`duplicate()` antes de modificar) | Un test borró datos compartidos y rompió el siguiente |
+| D17 | F3 | Árboles = datos por celda (no nodos); al agotarse la celda pasa a pasto y se libera en NavGrid | ~2000 árboles sin costo de dibujo |
+| D18 | F3 | Todo el arte placeholder en UN atlas generado en runtime (`PlaceholderArt` + fuente de píxeles propia `PixelFont`) | De 189-543 a 15 draw calls con 150 unidades |
+| D19 | F3 | Tareas por unidad (`UnitTask`: `GatherTask`, `HuntTask`) avanzadas por `BehaviorSystem` en un loop | Base para BuildTask (F4) y AttackTask (F5) |
+| D20 | F3 | Tasas por subtipo (bayas, carne, granja, madera, oro, piedra) en `units.json` × multiplicador por jugador (`GameState.multipliers`, para techs F7) | Lección de 0 A.D.: cachear modificadores |
+| D21 | F3 | Ciervo huye solo al recibir daño; oveja se une al primer jugador cerca; jabalí pelea y el cazador lo "lurea" a la Plaza, donde ayudan aldeanos cercanos | "Lure simple" del plan sin micro obligatorio |
+| D22 | F3 | Granja infinita (1 trabajador); cambiar de recurso tira la carga | Plan 4.5; regla del género |
+| D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
 - Ninguno. Nota: el S10 se comparte con otra sesión (juego de Mateo); turnarse por mensaje.
+- Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
 - F0: 22/22 headless. Device: arranque 0.6-0.9 s, 60 fps en pan.
+- F3: 132/132 headless (~2 min). 10 min de economía: comida 750, madera 879, oro 770, piedra 360; peor aldeano quieto 5 s; extraído = entregado + cargado + tirado. S10: stress150 60 fps / 15 DC / 43 MB; eco12 60 fps; F1 adb 7/7.
 - F2: 96/96 headless. Lake50: 50/50 llegan, ninguna pisa agua. Muro: re-planifica y 10/10 llegan; quitarlo re-planifica a todas. Stress150 (PC): movimiento 1.5-1.9 ms promedio, peor ~4-6 ms.
 - F1: 67/67 headless (incluye 10/10 ciclos simulados y 100 taps con temblor). Device S10 por adb (`bash tools/device_test_f1.sh`): 7/7, incluye 10/10 ciclos selección + orden. 60 fps.

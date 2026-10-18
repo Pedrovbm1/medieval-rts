@@ -18,3 +18,20 @@ HUD_DESELECT,Soltar,Deselect
 UNIT_VILLAGER_NAME,Aldeano,Villager
 UNIT_SCOUT_NAME,Explorador,Scout
 UNIT_MILITIA_NAME,Miliciano,Militia
+HUD_IDLE,Ociosos,Idle
+HUD_POP,Pob,Pop
+UNIT_SHEEP_NAME,Oveja,Sheep
+UNIT_DEER_NAME,Ciervo,Deer
+UNIT_BOAR_NAME,Jabalí,Boar
+RES_TREE_NAME,Árbol,Tree
+RES_GOLD_MINE_NAME,Mina de oro,Gold mine
+RES_STONE_MINE_NAME,Cantera,Stone quarry
+RES_BERRY_BUSH_NAME,Arbusto de bayas,Berry bush
+RES_CARCASS_NAME,Presa,Carcass
+BLDG_TOWN_CENTER_NAME,Plaza Mayor,Town Center
+BLDG_HOUSE_NAME,Casa,House
+BLDG_LUMBER_CAMP_NAME,Aserradero,Lumber camp
+BLDG_MINING_CAMP_NAME,Campamento minero,Mining camp
+BLDG_FARM_NAME,Granja,Farm
+MAP_TEST_LAKE_NAME,Prueba lago,Test lake
+MAP_TEST_OPEN_NAME,Prueba abierta,Test open

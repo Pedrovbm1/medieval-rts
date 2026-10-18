@@ -34,7 +34,11 @@ func _run() -> void:
 	for path: String in _suite_paths():
 		if filter != "" and not path.get_file().contains(filter):
 			continue
-		var suite: TestSuite = load(path).new()
+		var script: Script = load(path)
+		if script == null or not script.can_instantiate():
+			record(false, "suite compiles: " + path.get_file())
+			continue
+		var suite: TestSuite = script.new()
 		suite.runner = self
 		print("-- " + path.get_file())
 		var names: PackedStringArray = PackedStringArray()

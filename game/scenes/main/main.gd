@@ -5,8 +5,10 @@ extends Node
 ## user://scenario.txt (debug builds, for device benchmarks), else "sandbox".
 
 const SCENARIO_FILE: String = "user://scenario.txt"
+const IDLE_REFRESH_SECONDS: float = 0.5
 
 var scenario: String = ""
+var _idle_cycle: int = 0
 
 @onready var world: World = $World
 @onready var camera: CameraController = $CameraController
@@ -28,12 +30,22 @@ func _ready() -> void:
 	pointer.setup(camera, selection, hud)
 
 	selection.selection_changed.connect(hud.show_selection)
+	selection.building_selected.connect(hud.show_building)
 	pointer.box_changed.connect(hud.show_box)
 	hud.stop_pressed.connect(selection.order_stop)
 	hud.hold_pressed.connect(selection.order_hold)
 	hud.deselect_pressed.connect(selection.clear_selection)
+	hud.idle_pressed.connect(_on_idle_pressed)
 
 	runner.start(scenario_id, world, camera)
+	world.economy.refresh_population()
+	hud.refresh_all()
+	var idle_timer: Timer = Timer.new()
+	idle_timer.wait_time = IDLE_REFRESH_SECONDS
+	idle_timer.autostart = true
+	idle_timer.timeout.connect(_refresh_idle)
+	add_child(idle_timer)
+	_refresh_idle()
 	if OS.is_debug_build():
 		for i: int in mini(runner.spawned.size(), 5):
 			var unit: Unit = runner.spawned[i]
@@ -49,3 +61,20 @@ func _resolve_scenario() -> String:
 		if not DataLoader.get_entry("scenarios", line).is_empty():
 			return line
 	return "sandbox"
+
+
+func _refresh_idle() -> void:
+	hud.set_idle_count(world.economy.idle_villagers(GameState.PLAYER_HUMAN).size())
+
+
+## Idle bell: select the next idle villager and bring the camera to it.
+func _on_idle_pressed() -> void:
+	var idle: Array[Unit] = world.economy.idle_villagers(GameState.PLAYER_HUMAN)
+	if idle.is_empty():
+		return
+	_idle_cycle = (_idle_cycle + 1) % idle.size()
+	var unit: Unit = idle[_idle_cycle]
+	selection.set_selection([unit])
+	camera.center_on_smooth(unit.position)
+	if OS.is_debug_build():
+		print("[REALM] idle_bell selected=%s at=(%d,%d)" % [unit.name, int(unit.position.x), int(unit.position.y)])

@@ -75,6 +75,23 @@ func cell_center(cell: Vector2i) -> Vector2:
 	return Vector2((cell.x + 0.5) * cell_size, (cell.y + 0.5) * cell_size)
 
 
+## Changes the terrain walkability of a cell (e.g. a tree was cut down).
+func set_terrain_walkable(cell: Vector2i, walkable: bool) -> void:
+	if not in_bounds(cell):
+		return
+	var i: int = cell.y * width + cell.x
+	var before: bool = is_walkable(cell)
+	_terrain_walkable[i] = 1 if walkable else 0
+	var after: bool = is_walkable(cell)
+	if before != after:
+		_astar.set_point_solid(cell, not after)
+		version += 1
+		if after:
+			changed_unblocked = true
+		else:
+			changed_blocked = true
+
+
 ## Adds (blocked=true) or removes one block from each cell. Returns how many cells flipped.
 func set_blocked(cells: Array[Vector2i], blocked: bool) -> int:
 	var flipped: int = 0

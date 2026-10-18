@@ -1,0 +1,69 @@
+{
+	"tree": {
+		"name_key": "RES_TREE_NAME",
+		"resource": "wood",
+		"subtype": "wood",
+		"amount": 100,
+		"footprint": [1, 1]
+	},
+	"gold_mine": {
+		"name_key": "RES_GOLD_MINE_NAME",
+		"resource": "gold",
+		"subtype": "gold",
+		"amount": 800,
+		"footprint": [2, 2],
+		"color": "#e8c547",
+		"placeholder_glyph": "O"
+	},
+	"stone_mine": {
+		"name_key": "RES_STONE_MINE_NAME",
+		"resource": "stone",
+		"subtype": "stone",
+		"amount": 500,
+		"footprint": [2, 2],
+		"color": "#a9a9a0",
+		"placeholder_glyph": "P"
+	},
+	"berry_bush": {
+		"name_key": "RES_BERRY_BUSH_NAME",
+		"resource": "food",
+		"subtype": "berries",
+		"amount": 120,
+		"footprint": [1, 1],
+		"color": "#b0306a",
+		"placeholder_glyph": "B"
+	},
+	"carcass_sheep": {
+		"name_key": "RES_CARCASS_NAME",
+		"resource": "food",
+		"subtype": "meat",
+		"amount": 100,
+		"footprint": [1, 1],
+		"walkable": true,
+		"decay_per_s": 0.15,
+		"color": "#d9c7b8",
+		"placeholder_glyph": "c"
+	},
+	"carcass_deer": {
+		"name_key": "RES_CARCASS_NAME",
+		"resource": "food",
+		"subtype": "meat",
+		"amount": 140,
+		"footprint": [1, 1],
+		"walkable": true,
+		"decay_per_s": 0.15,
+		"color": "#b9875a",
+		"placeholder_glyph": "c"
+	},
+	"carcass_boar": {
+		"name_key": "RES_CARCASS_NAME",
+		"resource": "food",
+		"subtype": "meat",
+		"amount": 300,
+		"footprint": [1, 1],
+		"walkable": true,
+		"decay_per_s": 0.15,
+		"color": "#6b4a3a",
+		"placeholder_glyph": "c"
+	}
+}

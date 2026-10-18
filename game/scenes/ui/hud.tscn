@@ -28,6 +28,40 @@ script = ExtResource("1_hud")
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBox_box")
 
+[node name="TopBar" type="PanelContainer" parent="."]
+offset_left = 8.0
+offset_top = 6.0
+offset_right = 760.0
+offset_bottom = 82.0
+theme = SubResource("Theme_hud")
+theme_override_styles/panel = SubResource("StyleBox_panel")
+
+[node name="Margin" type="MarginContainer" parent="TopBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="Row" type="HBoxContainer" parent="TopBar/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Resources" type="HBoxContainer" parent="TopBar/Margin/Row"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PopLabel" type="Label" parent="TopBar/Margin/Row"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+text = "Pob 0/0"
+
+[node name="IdleButton" type="Button" parent="TopBar/Margin/Row"]
+custom_minimum_size = Vector2(150, 68)
+layout_mode = 2
+focus_mode = 0
+text = "Ociosos 0"
+
 [node name="SelectionPanel" type="PanelContainer" parent="."]
 anchors_preset = 3
 anchor_left = 1.0

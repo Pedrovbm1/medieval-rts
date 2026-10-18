@@ -65,3 +65,25 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 - El suavizado era cuadrático en rutas largas (picos de 20 ms en la cola): búsqueda exponencial + binaria del punto visible más lejano y tope de tiempo por frame → picos de ~4 ms.
 - Un test modificó la tabla de escenarios compartida → el runner ahora copia los datos.
 - El S10 se desconectó de adb a mitad del benchmark: medición de device pendiente.
+
+---
+
+## F3 — Economía + animales (2026-10-17, ~3 h)
+
+**Qué se hizo**
+- `Building` (huella, bloquea NavGrid salvo granja, drop-off, población) y `ResourceNode` (minas, arbustos, cadáveres con decaimiento).
+- Árboles como datos por celda: talar libera el camino.
+- `EconomySystem`: drop-off más cercano, entregas con estadísticas, población usada/tope, aldeanos ociosos, tasas con modificadores.
+- `GatherTask` (recolectar → depositar → volver, re-objetivo cercano, granjas con 1 trabajador) y `HuntTask` (caza a distancia, lure del jabalí); `BehaviorSystem` corre tareas y cerebros de animales.
+- `MapPopulator`: inicios y recursos por inicio desde el JSON del mapa; escenarios `skirmish` y `eco12`.
+- Órdenes inteligentes (árbol, mina, granja, animal, entregar, mover) y selección de edificios.
+- HUD: barra de recursos y población, campana de ociosos (selecciona y centra la cámara), panel de edificio.
+- Atlas único de arte placeholder con fuente de píxeles propia: 15 draw calls con 150 unidades.
+
+**Tests**: 132/132 headless. S10: 60 fps con 150 unidades y 15 draw calls; eco12 60 fps; F1 adb 7/7.
+
+**Problemas**
+- Los grupos de bayas/oro solo ponían 1 recurso (el anillo libre chocaba con el vecino) → los aldeanos quedaban ociosos al agotarse. Corregido: los miembros de un grupo pueden tocarse.
+- Restos de 0.9999 por suma de flotantes no se entregaban → épsilon al entregar.
+- `time_scale` no da más pasos de física: los tests leen el reloj del escenario.
+- El runner de tests se colgaba si una suite no compilaba → ahora la reporta como falla.
