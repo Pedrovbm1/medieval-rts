@@ -1,0 +1,9 @@
+# Normalise line endings: LF in the repo, LF on checkout (Godot is happier with LF).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ogg binary
+*.wav binary
+*.ttf binary
+*.apk binary
+*.aab binary

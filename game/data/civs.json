@@ -1,0 +1,11 @@
+{
+	"northvale": {
+		"name_key": "CIV_NORTHVALE_NAME",
+		"starting_resources": {
+			"food": 200,
+			"wood": 200,
+			"gold": 100,
+			"stone": 100
+		}
+	}
+}

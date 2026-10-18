@@ -1,0 +1,18 @@
+{
+	"id": "skirmish_120",
+	"name_key": "MAP_SKIRMISH_120_NAME",
+	"width": 120,
+	"height": 120,
+	"seed": 20261017,
+	"height_noise": {
+		"frequency": 0.035,
+		"octaves": 3
+	},
+	"forest_noise": {
+		"frequency": 0.08,
+		"octaves": 2
+	},
+	"water_threshold": -0.3,
+	"forest_threshold": 0.28,
+	"shore_margin": 0.1
+}

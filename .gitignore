@@ -1,0 +1,18 @@
+# Godot 4
+.godot/
+*.translation
+# Exports / builds
+build/
+*.apk
+*.aab
+*.keystore
+*.jks
+export_credentials.cfg
+# Android gradle build dir (only if gradle builds are enabled later)
+game/android/
+# OS / editors
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/

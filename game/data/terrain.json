@@ -1,0 +1,26 @@
+{
+	"tile_size": 64,
+	"types": {
+		"grass": {
+			"id": 0,
+			"name_key": "TERRAIN_GRASS_NAME",
+			"walkable": true,
+			"buildable": true,
+			"color": "#6aa84f"
+		},
+		"water": {
+			"id": 1,
+			"name_key": "TERRAIN_WATER_NAME",
+			"walkable": false,
+			"buildable": false,
+			"color": "#3d7fc4"
+		},
+		"forest": {
+			"id": 2,
+			"name_key": "TERRAIN_FOREST_NAME",
+			"walkable": false,
+			"buildable": false,
+			"color": "#2f6b34"
+		}
+	}
+}
