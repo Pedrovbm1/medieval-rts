@@ -1,8 +1,11 @@
 class_name Unit
 extends Node2D
-## A single unit. Stats come from units.json; this script only moves and draws.
+## A single unit. Stats come from units.json. Movement is driven by
+## MovementSystem (path + steering); this script holds state and draws.
 ## Placeholder art: a coloured disc with a letter, green ring when selected.
-## F1 movement is a straight line to the target (pathfinding arrives in F2).
+
+signal arrived(unit: Unit)
+signal move_failed(unit: Unit)
 
 enum Stance { AGGRESSIVE, HOLD }
 
@@ -11,6 +14,7 @@ var owner_id: int = 0
 var data: Dictionary = {}
 var radius: float = 12.0
 var speed_px: float = 96.0
+var arrive_distance: float = 3.0
 var hp: int = 1
 var stance: Stance = Stance.AGGRESSIVE
 var selected: bool = false:
@@ -19,10 +23,18 @@ var selected: bool = false:
 			selected = value
 			queue_redraw()
 
-var move_target: Vector2 = Vector2.INF
+# --- movement state (owned by MovementSystem) ---
+var goal: Vector2 = Vector2.INF
+var path: PackedVector2Array = PackedVector2Array()
+var path_i: int = 0
+var waiting_path: bool = false
+var group_id: int = 0
+var repaths: int = 0
+var stall_timer: float = 0.0
+var best_goal_dist: float = INF
+
 var _color: Color = Color.WHITE
 var _glyph: String = ""
-var _arrive_distance: float = 3.0
 
 
 ## Must be called before adding the unit to the tree.
@@ -36,7 +48,7 @@ func setup(type_id: String, player_id: int, world_pos: Vector2) -> void:
 	radius = float(data.get("radius_px", 12))
 	hp = int(data.get("hp", 1))
 	speed_px = float(data.get("speed", 1.0)) * float(DataLoader.rule("movement", "base_speed_px", 96))
-	_arrive_distance = float(DataLoader.rule("movement", "arrive_distance_px", 3))
+	arrive_distance = float(DataLoader.rule("movement", "arrive_distance_px", 3))
 	_glyph = String(data.get("placeholder_glyph", "?"))
 	var colors: Array = DataLoader.rule("players", "colors", ["#3a6fd8", "#d84a3a"])
 	_color = Color.html(String(colors[clampi(player_id, 0, colors.size() - 1)]))
@@ -44,34 +56,25 @@ func setup(type_id: String, player_id: int, world_pos: Vector2) -> void:
 
 
 func is_moving() -> bool:
-	return move_target != Vector2.INF
+	return goal != Vector2.INF
 
 
-func order_move(target: Vector2) -> void:
-	move_target = target
-	stance = Stance.AGGRESSIVE
+func clear_move() -> void:
+	goal = Vector2.INF
+	path = PackedVector2Array()
+	path_i = 0
+	waiting_path = false
+	group_id = 0
 
 
-func order_stop() -> void:
-	move_target = Vector2.INF
+func finish_move() -> void:
+	clear_move()
+	arrived.emit(self)
 
 
-func order_hold() -> void:
-	move_target = Vector2.INF
-	stance = Stance.HOLD
-
-
-func _physics_process(delta: float) -> void:
-	if move_target == Vector2.INF:
-		return
-	var to_target: Vector2 = move_target - position
-	var dist: float = to_target.length()
-	var step: float = speed_px * delta
-	if dist <= maxf(step, _arrive_distance):
-		position = move_target
-		move_target = Vector2.INF
-		return
-	position += to_target / dist * step
+func fail_move() -> void:
+	clear_move()
+	move_failed.emit(self)
 
 
 func _draw() -> void:

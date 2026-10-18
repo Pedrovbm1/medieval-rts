@@ -44,3 +44,24 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 - El script de device leía la posición del botón después de limpiar el log. Corregido.
 
 **Gate humano**: aprobado por Pedro en el teléfono (10/10).
+
+---
+
+## F2 — Pathfinding y movimiento de grupo (2026-10-17, ~2 h)
+
+**Qué se hizo**
+- `NavGrid`: `AStarGrid2D` 120x120 (celdas de 64 px), sin cortar esquinas, contador de bloqueos por celda para obstáculos dinámicos, vecino caminable más cercano, línea de vista con margen (recorrido de celdas Amanatides-Woo) y suavizado de rutas.
+- `PathQueue`: máximo 8 rutas y ~2.5 ms por frame; una petición nueva del mismo dueño reemplaza la vieja.
+- `MovementSystem`: un loop para todas las unidades; rutas compartidas por grupo; lugares de formación solo en celdas caminables; separación con `SpatialHash`; deslizamiento contra paredes; detección de atasco (llegó entre la multitud / re-planifica / se rinde); re-planifica si un obstáculo corta la ruta o si se libera camino.
+- Mapas con `features` y dos mapas de prueba (`test_lake`, `test_open`).
+- `ScenarioRunner` + `data/scenarios.json` (sandbox, lake50, stress150) y `tools/device_bench.sh`.
+- Overlay con draw calls y log `[REALM] perf` cada 2 s.
+
+**Archivos clave**: `game/systems/pathfinding/*`, `game/scenes/main/scenario_runner.gd`, `game/data/scenarios.json`, `game/data/maps/test_*.json`, `game/tests/test_f2_pathfinding.gd`, `tools/device_bench.sh`.
+
+**Tests**: 96/96 headless. 50 unidades rodean el lago y llegan todas sin pisar agua. Un muro a media ruta las re-planifica y llegan 10/10; quitarlo re-planifica a todas. 150 unidades: 1.5-1.9 ms por paso en PC.
+
+**Problemas**
+- El suavizado era cuadrático en rutas largas (picos de 20 ms en la cola): búsqueda exponencial + binaria del punto visible más lejano y tope de tiempo por frame → picos de ~4 ms.
+- Un test modificó la tabla de escenarios compartida → el runner ahora copia los datos.
+- El S10 se desconectó de adb a mitad del benchmark: medición de device pendiente.

@@ -74,9 +74,8 @@ func order_move(world_pos: Vector2) -> void:
 	var positions: Array[Vector2] = []
 	for unit: Unit in selected:
 		positions.append(unit.position)
-	var targets: Array[Vector2] = Formation.assign(positions, Formation.slots(world_pos, selected.size(), _spacing))
-	for i: int in selected.size():
-		selected[i].order_move(targets[i])
+		unit.stance = Unit.Stance.AGGRESSIVE
+	world.movement.command_move(selected, world_pos)
 	if order_marker != null:
 		order_marker.show_order(Formation.centroid(positions), world_pos, Color(0.45, 1.0, 0.45))
 	Sfx.play("order_move")
@@ -85,7 +84,7 @@ func order_move(world_pos: Vector2) -> void:
 func order_stop() -> void:
 	_prune()
 	for unit: Unit in selected:
-		unit.order_stop()
+		world.movement.stop(unit)
 	if not selected.is_empty():
 		Sfx.play("order_stop")
 	_trace("stop", Vector2.ZERO)
@@ -94,7 +93,8 @@ func order_stop() -> void:
 func order_hold() -> void:
 	_prune()
 	for unit: Unit in selected:
-		unit.order_hold()
+		world.movement.stop(unit)
+		unit.stance = Unit.Stance.HOLD
 	if not selected.is_empty():
 		Sfx.play("order_stop")
 	_trace("hold", Vector2.ZERO)

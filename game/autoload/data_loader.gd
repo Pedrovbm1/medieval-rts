@@ -11,6 +11,7 @@ const TABLE_FILES: Dictionary = {
 	"terrain": "terrain.json",
 	"rules": "rules.json",
 	"audio": "audio.json",
+	"scenarios": "scenarios.json",
 }
 const MAPS_DIR: String = "res://data/maps/"
 
@@ -44,6 +45,7 @@ func get_table(table_name: String) -> Dictionary:
 
 
 ## Returns one entry of a table, e.g. get_entry("terrain", "grass").
+## The result is shared: treat it as read-only (duplicate() before mutating).
 func get_entry(table_name: String, entry_id: String) -> Dictionary:
 	var table: Dictionary = get_table(table_name)
 	return table.get(entry_id, {})

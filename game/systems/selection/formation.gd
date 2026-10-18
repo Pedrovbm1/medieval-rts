@@ -22,6 +22,29 @@ static func slots(center: Vector2, count: int, spacing: float) -> Array[Vector2]
 	return result
 
 
+## Like slots(), but only on walkable cells of `nav`, nearest rings first.
+static func walkable_slots(center: Vector2, count: int, spacing: float, nav: NavGrid) -> Array[Vector2]:
+	var result: Array[Vector2] = []
+	var ring: int = 0
+	while result.size() < count and ring <= 40:
+		var ring_points: Array[Vector2] = []
+		for dy: int in range(-ring, ring + 1):
+			for dx: int in range(-ring, ring + 1):
+				if absi(dx) == ring or absi(dy) == ring:
+					var p: Vector2 = center + Vector2(dx, dy) * spacing
+					if nav.is_walkable_world(p):
+						ring_points.append(p)
+		ring_points.sort_custom(func(a: Vector2, b: Vector2) -> bool:
+			return a.distance_squared_to(center) < b.distance_squared_to(center))
+		for p: Vector2 in ring_points:
+			if result.size() < count:
+				result.append(p)
+		ring += 1
+	while result.size() < count:
+		result.append(center)
+	return result
+
+
 ## Greedy assignment: each slot (nearest to target first) takes the closest free unit.
 ## Returns an Array of positions aligned with `positions` (same index order).
 static func assign(positions: Array[Vector2], slot_list: Array[Vector2]) -> Array[Vector2]:

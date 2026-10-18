@@ -1,7 +1,12 @@
 extends Node
-## Match entry point: wires world, camera, input, selection and HUD together.
+## Match entry point: builds the world for a scenario and wires camera, input,
+## selection and HUD together.
+## Scenario: `scenario` (set before adding to the tree), else the first line of
+## user://scenario.txt (debug builds, for device benchmarks), else "sandbox".
 
-const TEST_UNITS: Array[String] = ["militia", "militia", "militia", "villager", "villager"]
+const SCENARIO_FILE: String = "user://scenario.txt"
+
+var scenario: String = ""
 
 @onready var world: World = $World
 @onready var camera: CameraController = $CameraController
@@ -9,9 +14,15 @@ const TEST_UNITS: Array[String] = ["militia", "militia", "militia", "villager", 
 @onready var hud: Hud = $Hud
 @onready var selection: SelectionController = $SelectionController
 @onready var pointer: PointerManager = $PointerManager
+@onready var runner: ScenarioRunner = $ScenarioRunner
 
 
 func _ready() -> void:
+	var scenario_id: String = _resolve_scenario()
+	var def: Dictionary = DataLoader.get_entry("scenarios", scenario_id)
+	var map_id: String = String(def.get("map", "skirmish_120"))
+	GameState.new_match(map_id, "northvale", "northvale")
+	world.build_from_map(map_id)
 	camera.set_map_bounds(Rect2(Vector2.ZERO, world.map_size_px))
 	selection.setup(world, camera, order_marker)
 	pointer.setup(camera, selection, hud)
@@ -22,19 +33,19 @@ func _ready() -> void:
 	hud.hold_pressed.connect(selection.order_hold)
 	hud.deselect_pressed.connect(selection.clear_selection)
 
-	var spawn: Vector2 = world.find_open_area(world.map_size_px * 0.5, 3)
-	camera.center_on(spawn)
-	_spawn_test_units(spawn)
-
-
-## F1 sandbox: 3 militia + 2 villagers in a row so selection can be tested.
-func _spawn_test_units(center: Vector2) -> void:
-	var spacing: float = 72.0
-	var start_x: float = center.x - spacing * (TEST_UNITS.size() - 1) * 0.5
-	for i: int in TEST_UNITS.size():
-		var unit: Unit = world.spawn_unit(TEST_UNITS[i], GameState.PLAYER_HUMAN, Vector2(start_x + spacing * i, center.y))
-		if OS.is_debug_build():
+	runner.start(scenario_id, world, camera)
+	if OS.is_debug_build():
+		for i: int in mini(runner.spawned.size(), 5):
+			var unit: Unit = runner.spawned[i]
 			var screen: Vector2 = camera.world_to_screen(unit.position)
-			print("[REALM] unit %d %s screen=(%d,%d) view=(%d,%d)" % [
-				i, unit.unit_type, int(screen.x), int(screen.y),
-				int(camera.get_viewport_rect().size.x), int(camera.get_viewport_rect().size.y)])
+			print("[REALM] unit %d %s screen=(%d,%d)" % [i, unit.unit_type, int(screen.x), int(screen.y)])
+
+
+func _resolve_scenario() -> String:
+	if scenario != "":
+		return scenario
+	if OS.is_debug_build() and FileAccess.file_exists(SCENARIO_FILE):
+		var line: String = FileAccess.get_file_as_string(SCENARIO_FILE).strip_edges()
+		if not DataLoader.get_entry("scenarios", line).is_empty():
+			return line
+	return "sandbox"

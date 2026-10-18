@@ -1,0 +1,17 @@
+{
+	"id": "test_lake",
+	"name_key": "MAP_TEST_LAKE_NAME",
+	"test_only": true,
+	"width": 120,
+	"height": 120,
+	"seed": 7,
+	"height_noise": { "frequency": 0.035, "octaves": 3 },
+	"forest_noise": { "frequency": 0.08, "octaves": 2 },
+	"water_threshold": -2.0,
+	"forest_threshold": 2.0,
+	"shore_margin": 0.1,
+	"features": [
+		{ "type": "circle", "terrain": "water", "center": [60, 60], "radius": 14 },
+		{ "type": "rect", "terrain": "water", "from": [58, 40], "to": [62, 80] }
+	]
+}

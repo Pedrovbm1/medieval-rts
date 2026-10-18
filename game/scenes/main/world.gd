@@ -8,6 +8,7 @@ const UNIT_SCENE: PackedScene = preload("res://scenes/units/unit.tscn")
 
 @onready var terrain_layer: TileMapLayer = $TerrainLayer
 @onready var entities: Node2D = $Entities
+@onready var movement: MovementSystem = $MovementSystem
 
 var map_width: int = 0
 var map_height: int = 0
@@ -15,11 +16,8 @@ var tile_size: int = 64
 var terrain_grid: PackedByteArray = PackedByteArray()
 var map_size_px: Vector2 = Vector2.ZERO
 var units: Array[Unit] = []
+var nav: NavGrid = NavGrid.new()
 var _grass_id: int = 0
-
-
-func _ready() -> void:
-	build_from_map(GameState.current_map_id)
 
 
 ## Generates and paints the map described by data/maps/<map_id>.json.
@@ -40,6 +38,8 @@ func build_from_map(map_id: String) -> void:
 	terrain_grid = MapGenerator.generate(map_def, terrain_def)
 	terrain_layer.tile_set = PlaceholderTileset.build(terrain_def)
 	_paint_terrain()
+	nav.build(terrain_grid, map_width, map_height, tile_size, terrain_def)
+	movement.setup(nav, units)
 	EventBus.map_generated.emit(map_width, map_height, tile_size)
 
 
@@ -77,6 +77,12 @@ func spawn_unit(type_id: String, player_id: int, world_pos: Vector2) -> Unit:
 	entities.add_child(unit)
 	units.append(unit)
 	return unit
+
+
+func remove_unit(unit: Unit) -> void:
+	units.erase(unit)
+	movement.stop(unit)
+	unit.queue_free()
 
 
 ## Closest unit of `player_id` within `radius` of world_pos, or null.

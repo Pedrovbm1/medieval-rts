@@ -10,7 +10,13 @@
 	"movement": {
 		"base_speed_px": 96,
 		"arrive_distance_px": 3,
-		"formation_spacing_px": 40
+		"formation_spacing_px": 40,
+		"waypoint_reach_px": 24,
+		"paths_per_frame": 8,
+		"path_budget_usec": 2500,
+		"separation_gain": 6.0,
+		"stall_seconds": 1.0,
+		"max_repaths": 3
 	},
 	"feedback": {
 		"order_marker_seconds": 0.6
@@ -19,6 +25,7 @@
 		"colors": ["#3a6fd8", "#d84a3a"]
 	},
 	"debug": {
-		"log_input": true
+		"log_input": true,
+		"log_perf": true
 	}
 }

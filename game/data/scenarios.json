@@ -1,0 +1,33 @@
+{
+	"sandbox": {
+		"map": "skirmish_120",
+		"camera": "spawn",
+		"spawn_near_center": true,
+		"units": [
+			{ "type": "militia", "player": 0, "count": 3 },
+			{ "type": "villager", "player": 0, "count": 2 }
+		]
+	},
+	"lake50": {
+		"map": "test_lake",
+		"camera": [60, 60],
+		"zoom": 0.5,
+		"units": [
+			{ "type": "militia", "player": 0, "count": 50, "block": [26, 54, 10] }
+		],
+		"auto_orders": [
+			{ "after_s": 1.0, "target": [92, 60] }
+		],
+		"report_arrival": true
+	},
+	"stress150": {
+		"map": "test_open",
+		"camera": [60, 60],
+		"zoom": 0.5,
+		"units": [
+			{ "type": "militia", "player": 0, "count": 75, "block": [38, 44, 15] },
+			{ "type": "villager", "player": 1, "count": 75, "block": [62, 70, 15] }
+		],
+		"wander": { "every_s": 2.0, "batch": 15, "region": [22, 22, 98, 98] }
+	}
+}

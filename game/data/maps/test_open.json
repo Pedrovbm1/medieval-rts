@@ -1,0 +1,18 @@
+{
+	"id": "test_open",
+	"name_key": "MAP_TEST_OPEN_NAME",
+	"test_only": true,
+	"width": 120,
+	"height": 120,
+	"seed": 11,
+	"height_noise": { "frequency": 0.035, "octaves": 3 },
+	"forest_noise": { "frequency": 0.08, "octaves": 2 },
+	"water_threshold": -2.0,
+	"forest_threshold": 2.0,
+	"shore_margin": 0.1,
+	"features": [
+		{ "type": "circle", "terrain": "forest", "center": [30, 30], "radius": 4 },
+		{ "type": "circle", "terrain": "water", "center": [90, 35], "radius": 6 },
+		{ "type": "circle", "terrain": "forest", "center": [40, 90], "radius": 5 }
+	]
+}

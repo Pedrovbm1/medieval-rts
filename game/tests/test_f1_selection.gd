@@ -51,6 +51,7 @@ func _screen(unit: Unit) -> Vector2:
 
 func test_00_setup() -> void:
 	main = load("res://scenes/main/main.tscn").instantiate()
+	main.scenario = "sandbox"
 	add_to_tree(main)
 	await frames(2)
 	pointer = main.get_node("PointerManager")
