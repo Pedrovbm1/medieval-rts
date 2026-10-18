@@ -57,7 +57,7 @@ static func attack_bonus_of(unit: Unit) -> int:
 
 
 ## Full hit from `attacker` (a Unit) to `target` (Unit or Building).
-static func hit_damage(attacker: Unit, target: Object) -> int:
+static func hit_damage(attacker: Unit, target: Variant) -> int:
 	var attack: Dictionary = attacker.data.get("combat", {})
 	var tdata: Dictionary = target.get("data")
 	return damage(attack, classes_of(tdata), armor_of(target), attack_bonus_of(attacker))

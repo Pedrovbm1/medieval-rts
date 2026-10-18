@@ -224,7 +224,7 @@ func _fill_building() -> void:
 	else:
 		for type_id: Variant in _building.trains():
 			var def: Dictionary = DataLoader.get_entry("units", String(type_id))
-			if int(def.get("era", 1)) > GameState.era_of(player_id):
+			if int(def.get("era", 1)) > GameState.era_of(player_id) or not ConstructionSystem.unit_allowed(player_id, String(type_id)):
 				continue
 			var text: String = "%s\n%s" % [tr(String(def.get("name_key", type_id))), cost_text(def.get("cost", {}))]
 			var b: Button = _add_button(text, Signal(), Vector2(150, 72))

@@ -75,10 +75,18 @@ func _on_completed(b: Building) -> void:
 
 # ------------------------------------------------------------------ production
 
+## Whether a player's faction may ever train this unit (unique units).
+static func unit_allowed(player_id: int, type_id: String) -> bool:
+	var def: Dictionary = DataLoader.get_entry("units", type_id)
+	if not def.has("unique_to"):
+		return true
+	return Array(def["unique_to"]).has(String(GameState.civs.get(player_id, "")))
+
+
 func can_enqueue(b: Building, type_id: String) -> String:
 	if not b.is_complete():
 		return "unbuilt"
-	if not b.trains().has(type_id):
+	if not b.trains().has(type_id) or not unit_allowed(b.owner_id, type_id):
 		return "type"
 	var def: Dictionary = DataLoader.get_entry("units", type_id)
 	if int(def.get("era", 1)) > GameState.era_of(b.owner_id):

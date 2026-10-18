@@ -153,6 +153,14 @@ func take_damage(amount: int, source: Unit) -> void:
 		died.emit(self)
 
 
+## Restores HP (monks). Never above max.
+func heal(amount: int) -> void:
+	if is_dead:
+		return
+	hp = mini(max_hp, hp + amount)
+	queue_redraw()
+
+
 func change_owner(new_owner: int) -> void:
 	owner_id = new_owner
 	queue_redraw()

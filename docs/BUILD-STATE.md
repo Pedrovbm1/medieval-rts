@@ -4,7 +4,7 @@
 > Una sesión nueva retoma desde aquí.
 
 ## Fase actual
-**F5.5 — Roster 10-12** (siguiente; F5 cerrada)
+**F6 — IA 2.0** (siguiente; F5.5 cerrada)
 
 ## Completadas
 | Fase | Commit | Fecha | Gate |
@@ -15,14 +15,15 @@
 | F3 | ver BUILD-LOG | 2026-10-17 | 132/132 headless (12 aldeanos 10 min sin trabarse ni perder carga; campana; tasas JSON + modificadores; oveja/ciervo/jabalí con lure). S10: 150 unidades 60 fps con 15 draw calls; eco12 60 fps 15-32 DC; F1 adb 7/7 |
 | F4 | ver BUILD-LOG | 2026-10-18 | 168/168 headless: base completa (2 casas, granja, aserradero, cuartel) en 64 s de juego con toques simulados; no construir sobre recursos/árboles/unidades; cancelar devuelve 50%. S10: flujo real Construir→Casa→✓ y entrenar aldeano por adb 5/5, F1 7/7, 60 fps 25-41 DC |
 | F5 | ver BUILD-LOG | 2026-10-18 | 192/192 headless: 10 lanceros vencen a 10 caballeros perdiendo 37% HP; 10 arqueros vencen a 10 lanceros sin bajas; 20v20 mixto termina en 49 s; 216 muertes sin fugas (24 nodos creados, huérfanos = pool). S10: batalla 20v20 a 60 fps con 15 DC |
+| F5.5 | ver BUILD-LOG | 2026-10-18 | 205/205 headless. Roster de 12: aldeano, explorador, miliciano, lancero, espadachín, arquero, escaramuzador, caballero, camellero (única de Northvale), ariete, mangonel, monje; cada nueva gana su duelo de rol y las 12 actúan en el ejército mixto |
 
 ## Siguiente
-F5.5 — Roster 10-12. Plan:
-1. Nuevas unidades con rol propio (datos + glyph): escaramuzador (anti-arquero), espadachín (infantería pesada, mejora de miliciano), monje (cura aliados, sin ataque), manganela/mangonel (daño de área contra grupos y edificios), camellero o unidad única de la facción (anti-caballería móvil).
-2. Mecánicas mínimas nuevas: curación (`HealTask`), daño de área (splash en el impacto del proyectil), proyectil de mangonel.
-3. Cada unidad en el edificio que corresponda y con era.
-4. Tests de composición: cada unidad nueva gana su enfrentamiento de rol (escaramuzador > arquero, mangonel > grupo de arqueros, monje mantiene vivo a un grupo, espadachín > miliciano, camellero > caballero) y aparece en al menos un test de ejército.
-El S10 se comparte con la sesión del juego de Mateo: pedir turno por mensaje antes de usarlo.
+F6 — IA 2.0. Plan:
+1. `AIController` por jugador IA con FSM de 4 fases (apertura 0-4 min, desarrollo 4-12, hostigamiento 12-18, push 18+), evalúa cada 2 s; números en `data/ai.json` (build order, ratios eco/ejército, tamaños de oleada) y 3 dificultades (Fácil, Normal, Difícil: bonus +20% recursos, ejército x1.3, scouting agresivo).
+2. Visión honesta: la IA solo conoce lo que vieron sus unidades/edificios (grid de visión propio, base del fog de F8); explora con el explorador para encontrar la base enemiga.
+3. Usa los mismos sistemas que el jugador: `ConstructionSystem` (construir/entrenar), `GatherTask`, `CombatSystem.attack_move`.
+4. Victoria/derrota: sin edificios = derrota; pantalla de fin de partida con estadísticas (recursos, unidades, bajas, tiempo) y Reintentar.
+5. Tests: jugador pasivo pierde en 15-20 min (Normal); la IA no ataca lo no explorado; Difícil gana a Normal en 3 de 4 (IA vs IA headless acelerado).
 
 ## Entorno
 | Pieza | Valor |
@@ -32,6 +33,7 @@ El S10 se comparte con la sesión del juego de Mateo: pedir turno por mensaje an
 | Android SDK | `C:\Users\pedro\AppData\Local\Android\Sdk` |
 | Device | Samsung Galaxy S10 (SM-G975U1), Android 12, 2280x1080, adb id R58M154WY9A |
 | Paquete | `dev.pedro.realm`, actividad `com.godot.game.GodotAppLauncher` |
+| Teléfono compartido | Con AppScanner (`com.pedro.escaner`, sesión "F6 PDF multipágina") y el juego de Mateo (`mx.mateo.misioncolima`, sesión "Revisión videojuego"). Reglas: no tocar pantalla ni `am start` si otra app está al frente (`dumpsys activity activities` → `mResumedActivity`); `adb install -r` siempre se vale; al terminar `am force-stop` + launcher; avisar "tomo el S10" / "S10 libre". Los scripts lo hacen con `tools/device_guard.sh` |
 
 ## Comandos
 ```bash
@@ -90,6 +92,8 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D34 | F5 | Attack-move (`CombatSystem.attack_move`): caminar peleando con lo que aparezca y luego seguir. Disponible en código; botón en HUD queda para F8 | Sin él, ejércitos que se cruzan quedan fuera de vista |
 | D35 | F5 | Unidades muertas: cadáver 0.8 s y luego al pool de `World` por tipo (fuera del árbol, señales desconectadas); flechas en pool de `CombatSystem` | Gate "sin fugas tras 200 muertes" |
 | D36 | F5 | Eras de unidades/edificios ya en datos (lancero/arquero II, caballero III, ariete IV); se activan en F7 | Datos listos para F7 |
+| D37 | F5.5 | Roster de 12 con roles: escaramuzador (anti-arquero, armadura perforante), espadachín (infantería pesada era III), camellero (anti-caballería, única de Northvale vía `unique_to`), mangonel (área 56 px con caída 100→50%, rango mínimo, sin fuego amigo), monje (cura 3 HP/s, sin ataque) | Plan F5.5 |
+| D38 | F5.5 | Monasterio (era III) entrena monjes; Taller de asedio pasa a era III (mangonel) | Ubicar cada unidad en su edificio |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
@@ -98,6 +102,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 
 ## Últimos tests
 - F0: 22/22 headless. Device: arranque 0.6-0.9 s, 60 fps en pan.
+- F5.5: 205/205 headless (~8 min).
 - F5: 192/192 headless (~6 min). S10: `bash tools/device_bench.sh battle20 40` → 60 fps, 15 DC, 44 MB.
 - F4: 168/168 headless (~4 min). S10 por adb: `tools/device_test_f4.sh` 5/5 (caja, Construir, Casa, ✓, entrenar en Plaza), F1 7/7. Nota: tiempos de PC varían 2x con la carga; el umbral de PC es solo alarma (6 ms), el presupuesto real se mide en el S10.
 - F3: 132/132 headless (~2 min). 10 min de economía: comida 750, madera 879, oro 770, piedra 360; peor aldeano quieto 5 s; extraído = entregado + cargado + tirado. S10: stress150 60 fps / 15 DC / 43 MB; eco12 60 fps; F1 adb 7/7.

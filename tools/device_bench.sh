@@ -3,6 +3,8 @@
 # game's [REALM] perf / scenario lines. Debug APK only (uses run-as).
 # Usage: bash tools/device_bench.sh <scenario> <seconds>
 set -u
+. "$(dirname "$0")/device_guard.sh"
+guard_wait_free || exit 2
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
 PKG_NAME="dev.pedro.realm"
 ACTIVITY="$PKG_NAME/com.godot.game.GodotAppLauncher"
@@ -18,3 +20,4 @@ sleep "$SECONDS_TO_RUN"
 # Leave the phone in its normal state (sandbox) for manual play.
 "$ADB" shell "run-as $PKG_NAME rm -f files/scenario.txt"
 "$ADB" shell am force-stop "$PKG_NAME"
+guard_release

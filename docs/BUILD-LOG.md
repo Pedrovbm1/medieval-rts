@@ -128,3 +128,19 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 - `target_alive` recibía edificios ya liberados con un tipo estricto → acepta cualquier valor.
 - La batalla 20v20 se estancaba (ejércitos fuera de vista) → attack-move y reenganche cada 5 s en el test.
 - Los tests de caza esperaban animales liberados; ahora se reciclan → se comprueba "ya no vive".
+
+---
+
+## F5.5 — Roster 10-12 (2026-10-18, ~1 h)
+
+**Qué se hizo**
+- 5 unidades nuevas con rol propio: escaramuzador, espadachín, monje, mangonel y camellero (unidad única de la facción).
+- Mecánicas: `HealTask` (curación con búsqueda de heridos), daño de área con caída en el impacto del proyectil, rango mínimo de asedio (retrocede), unidades únicas por facción.
+- Monasterio; trenes actualizados en Cuartel, Galería, Establo y Taller.
+- `CombatSystem` registra daño por tipo de unidad y curación (para afinar y probar roles).
+- Acuerdo de uso compartido del S10 con AppScanner y el juego de Mateo; `tools/device_guard.sh` aplicado a todos los scripts de device.
+
+**Tests**: 205/205 headless. Duelos de rol: escaramuzadores, espadachines y camelleros ganan su enfrentamiento; un disparo de mangonel hiere a 6 arqueros agrupados; 2 monjes curan 84 HP y deciden una pelea pareja; las 12 unidades actúan en el ejército mixto.
+
+**Problemas**
+- Comandos bash muy largos con heredocs fallaban al parsear → los cambios grandes se aplican con scripts de Python en el scratchpad.

@@ -17,6 +17,9 @@ var _corpses: Dictionary = {}
 ## Stats for tests / tuning.
 var shots_fired: int = 0
 var kills: int = 0
+var healed: int = 0
+## Damage dealt per attacker unit type (tuning and role tests).
+var damage_by_type: Dictionary = {}
 
 
 func setup(p_world: World) -> void:
@@ -32,6 +35,8 @@ func setup(p_world: World) -> void:
 func apply_hit(attacker: Unit, target: Object, dmg: int) -> void:
 	if not Combat.target_alive(target):
 		return
+	if attacker != null and is_instance_valid(attacker):
+		damage_by_type[attacker.unit_type] = int(damage_by_type.get(attacker.unit_type, 0)) + dmg
 	if target is Unit:
 		var u: Unit = target
 		u.take_damage(dmg, attacker)
@@ -43,7 +48,7 @@ func apply_hit(attacker: Unit, target: Object, dmg: int) -> void:
 		(target as Building).take_damage(dmg, attacker)
 
 
-func fire(attacker: Unit, target: Object, dmg: int, speed: float) -> void:
+func fire(attacker: Unit, target: Object, dmg: int, speed: float, splash: float = 0.0) -> void:
 	var p: Projectile = null
 	for candidate: Projectile in _projectiles:
 		if not candidate.active:
@@ -53,8 +58,50 @@ func fire(attacker: Unit, target: Object, dmg: int, speed: float) -> void:
 		p = Projectile.new()
 		add_child(p)
 		_projectiles.append(p)
-	p.launch(attacker, target, dmg, speed)
+	p.launch(attacker, target, dmg, speed, splash)
 	shots_fired += 1
+
+
+## Area damage around `center`: full damage at the centre, half at the edge.
+## Hits every enemy unit and building of the shooter in range (no friendly fire).
+func apply_splash(attacker: Unit, shooter_owner: int, center: Vector2, radius: float, base_damage: int) -> int:
+	var hits: int = 0
+	var src: Unit = attacker if is_instance_valid(attacker) else null
+	for other: Object in world.movement.spatial.query(center, radius + 24.0).duplicate():
+		var u: Unit = other as Unit
+		if u.is_dead or u.owner_id == shooter_owner or u.owner_id < 0:
+			continue
+		var d: float = maxf(0.0, u.position.distance_to(center) - u.radius)
+		if d > radius:
+			continue
+		var falloff: float = lerpf(1.0, 0.5, clampf(d / radius, 0.0, 1.0))
+		var dmg: int = Combat.hit_damage(src, u) if src != null else base_damage
+		apply_hit(src, u, maxi(1, int(dmg * falloff)))
+		hits += 1
+	for b: Building in world.buildings.duplicate():
+		if b.owner_id == shooter_owner or b.owner_id < 0:
+			continue
+		if World.distance_to_rect(center, b.rect()) <= radius:
+			var bd: int = Combat.hit_damage(src, b) if src != null else base_damage
+			b.take_damage(bd, src)
+			hits += 1
+	return hits
+
+
+## Nearest wounded ally (own unit, not an animal) within a healer's sight.
+func find_wounded_ally(healer: Unit) -> Unit:
+	var sight: float = float(healer.data.get("sight_px", 320))
+	var best: Unit = null
+	var best_d: float = INF
+	for other: Object in world.movement.spatial.query(healer.position, sight):
+		var u: Unit = other as Unit
+		if u == healer or u.is_dead or u.owner_id != healer.owner_id or u.is_animal() or u.hp >= u.max_hp:
+			continue
+		var d: float = healer.position.distance_to(u.position)
+		if d <= sight and d < best_d:
+			best_d = d
+			best = u
+	return best
 
 
 func active_projectiles() -> int:
@@ -98,7 +145,15 @@ func find_enemy(unit: Unit) -> Object:
 
 func _acquire_targets() -> void:
 	for unit: Unit in world.units:
-		if unit.is_dead or unit.owner_id < 0 or unit.is_animal() or unit.data.get("combat", {}).is_empty():
+		if unit.is_dead or unit.owner_id < 0 or unit.is_animal():
+			continue
+		if unit.data.has("heal"):
+			if unit.task == null and not unit.is_moving():
+				var ally: Unit = find_wounded_ally(unit)
+				if ally != null:
+					world.behavior.assign(unit, HealTask.new(unit, world, ally))
+			continue
+		if unit.data.get("combat", {}).is_empty():
 			continue
 		var stance: Dictionary = unit.stance_data()
 		if unit.task != null:
@@ -145,7 +200,9 @@ func _physics_process(delta: float) -> void:
 		_acquire_targets()
 	for p: Projectile in _projectiles:
 		if p.active and p.step(delta):
-			if Combat.target_alive(p.target) and is_instance_valid(p.attacker):
+			if p.splash_px > 0.0:
+				apply_splash(p.attacker, p.shooter_owner, p.impact_point(), p.splash_px, p.damage)
+			elif Combat.target_alive(p.target) and is_instance_valid(p.attacker):
 				apply_hit(p.attacker, p.target, p.damage)
 			elif Combat.target_alive(p.target):
 				apply_hit(null, p.target, p.damage)

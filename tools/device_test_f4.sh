@@ -2,6 +2,8 @@
 # F4 device test: build a House with real touches on the phone through the HUD
 # (box-select villagers -> Build -> House -> tap map -> ✓) and train a villager.
 set -u
+. "$(dirname "$0")/device_guard.sh"
+guard_wait_free || exit 2
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
 PKG_NAME="dev.pedro.realm"
 PASS=0; FAIL=0
@@ -46,4 +48,5 @@ sleep 1
 "$ADB" exec-out screencap -p > "${SHOT:-/tmp/f4.png}"
 "$ADB" shell "run-as $PKG_NAME rm -f files/scenario.txt"
 echo "== device F4: $PASS passed, $FAIL failed =="
+guard_release
 [ "$FAIL" -eq 0 ]

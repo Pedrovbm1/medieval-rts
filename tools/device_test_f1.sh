@@ -3,6 +3,8 @@
 # game's own log lines ([REALM] ...). Run from the repo root after installing
 # build/realm-debug.apk. Usage: bash tools/device_test_f1.sh
 set -u
+. "$(dirname "$0")/device_guard.sh"
+guard_wait_free || exit 2
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
 PKG="dev.pedro.realm/com.godot.game.GodotAppLauncher"
 PASS=0
@@ -86,4 +88,5 @@ done
 if [ "$GOOD" -eq 10 ]; then ok "10/10 select + order cycles"; else ko "10/10 select + order cycles (got $GOOD)"; fi
 
 echo "== device: $PASS passed, $FAIL failed =="
+guard_release
 [ "$FAIL" -eq 0 ]

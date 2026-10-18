@@ -62,3 +62,9 @@ STANCE_AGGRESSIVE,Agresiva,Aggressive
 STANCE_DEFENSIVE,Defensiva,Defensive
 STANCE_HOLD,Quieta,Hold
 STANCE_PASSIVE,Pasiva,Passive
+UNIT_SKIRMISHER_NAME,Escaramuzador,Skirmisher
+UNIT_SWORDSMAN_NAME,Espadachín,Swordsman
+UNIT_MONK_NAME,Monje,Monk
+UNIT_MANGONEL_NAME,Mangonel,Mangonel
+UNIT_CAMEL_RIDER_NAME,Camellero,Camel rider
+BLDG_MONASTERY_NAME,Monasterio,Monastery

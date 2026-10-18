@@ -333,5 +333,190 @@
 			"buildings_only": true
 		},
 		"sight_px": 256
+	},
+	"skirmisher": {
+		"name_key": "UNIT_SKIRMISHER_NAME",
+		"class": "archer",
+		"classes": [
+			"archer",
+			"ranged",
+			"skirmisher"
+		],
+		"stance": "aggressive",
+		"hp": 35,
+		"speed": 1.0,
+		"radius_px": 12,
+		"placeholder_glyph": "S",
+		"pop": 1,
+		"cost": {
+			"food": 25,
+			"wood": 35
+		},
+		"train_time": 22,
+		"era": 2,
+		"armor": {
+			"hack": 0,
+			"pierce": 3,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"pierce": 2
+			},
+			"range_px": 288,
+			"prepare_s": 0.4,
+			"repeat_s": 1.5,
+			"bonus": {
+				"archer": 4
+			},
+			"projectile": {
+				"speed_px": 620
+			}
+		},
+		"sight_px": 384
+	},
+	"swordsman": {
+		"name_key": "UNIT_SWORDSMAN_NAME",
+		"class": "infantry",
+		"classes": [
+			"infantry"
+		],
+		"stance": "aggressive",
+		"hp": 75,
+		"speed": 0.95,
+		"radius_px": 14,
+		"placeholder_glyph": "W",
+		"pop": 1,
+		"cost": {
+			"food": 60,
+			"gold": 30
+		},
+		"train_time": 24,
+		"era": 3,
+		"armor": {
+			"hack": 2,
+			"pierce": 3,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"hack": 9
+			},
+			"range_px": 0,
+			"prepare_s": 0.35,
+			"repeat_s": 1.5,
+			"bonus": {}
+		},
+		"sight_px": 288
+	},
+	"monk": {
+		"name_key": "UNIT_MONK_NAME",
+		"class": "support",
+		"classes": [
+			"support"
+		],
+		"stance": "defensive",
+		"hp": 30,
+		"speed": 0.8,
+		"radius_px": 12,
+		"placeholder_glyph": "F",
+		"pop": 1,
+		"cost": {
+			"gold": 100
+		},
+		"train_time": 40,
+		"era": 3,
+		"armor": {
+			"hack": 0,
+			"pierce": 0,
+			"crush": 0
+		},
+		"heal": {
+			"hp_per_s": 3.0,
+			"range_px": 176
+		},
+		"sight_px": 352
+	},
+	"mangonel": {
+		"name_key": "UNIT_MANGONEL_NAME",
+		"class": "siege",
+		"classes": [
+			"siege"
+		],
+		"stance": "aggressive",
+		"hp": 80,
+		"speed": 0.65,
+		"radius_px": 17,
+		"placeholder_glyph": "G",
+		"pop": 3,
+		"cost": {
+			"wood": 160,
+			"gold": 135
+		},
+		"train_time": 46,
+		"era": 3,
+		"armor": {
+			"hack": 0,
+			"pierce": 6,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"crush": 12
+			},
+			"range_px": 448,
+			"prepare_s": 1.0,
+			"repeat_s": 4.5,
+			"bonus": {
+				"building": 20
+			},
+			"projectile": {
+				"speed_px": 380,
+				"arc": true
+			},
+			"splash_px": 56
+		},
+		"sight_px": 480,
+		"min_range_px": 96
+	},
+	"camel_rider": {
+		"name_key": "UNIT_CAMEL_RIDER_NAME",
+		"class": "cavalry",
+		"classes": [
+			"cavalry",
+			"camel"
+		],
+		"stance": "aggressive",
+		"hp": 100,
+		"speed": 1.45,
+		"radius_px": 16,
+		"placeholder_glyph": "Q",
+		"pop": 1,
+		"cost": {
+			"food": 55,
+			"gold": 60
+		},
+		"train_time": 22,
+		"era": 3,
+		"armor": {
+			"hack": 0,
+			"pierce": 0,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"hack": 6
+			},
+			"range_px": 0,
+			"prepare_s": 0.3,
+			"repeat_s": 1.7,
+			"bonus": {
+				"cavalry": 8
+			}
+		},
+		"sight_px": 384,
+		"unique_to": [
+			"northvale"
+		]
 	}
 }

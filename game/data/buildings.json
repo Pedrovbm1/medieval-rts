@@ -159,7 +159,8 @@
 		"era": 1,
 		"trains": [
 			"militia",
-			"spearman"
+			"spearman",
+			"swordsman"
 		],
 		"color": "#7d5a4a",
 		"placeholder_glyph": "CU",
@@ -186,7 +187,8 @@
 		"build_time": 40,
 		"era": 2,
 		"trains": [
-			"archer"
+			"archer",
+			"skirmisher"
 		],
 		"color": "#6a7a4a",
 		"placeholder_glyph": "GT",
@@ -214,7 +216,8 @@
 		"era": 3,
 		"trains": [
 			"scout",
-			"knight"
+			"knight",
+			"camel_rider"
 		],
 		"color": "#7a6250",
 		"placeholder_glyph": "E",
@@ -239,12 +242,40 @@
 			3
 		],
 		"build_time": 45,
-		"era": 4,
+		"era": 3,
 		"trains": [
-			"ram"
+			"ram",
+			"mangonel"
 		],
 		"color": "#5f5a52",
 		"placeholder_glyph": "TA",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
+	},
+	"monastery": {
+		"name_key": "BLDG_MONASTERY_NAME",
+		"cost": {
+			"wood": 175
+		},
+		"hp": 1600,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 40,
+		"era": 3,
+		"trains": [
+			"monk"
+		],
+		"color": "#8c7f9a",
+		"placeholder_glyph": "MO",
 		"buildable": true,
 		"classes": [
 			"building"

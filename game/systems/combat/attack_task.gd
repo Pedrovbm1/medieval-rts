@@ -50,6 +50,16 @@ func tick(delta: float) -> void:
 		if not unit.is_moving() or unit.goal.distance_to(tpos) > _repath_px:
 			world.movement.move_unit(unit, tpos)
 		return
+	var min_range: float = float(unit.data.get("min_range_px", 0.0))
+	if min_range > 0.0 and gap < min_range:
+		# Too close to fire (siege): back off first.
+		var away: Vector2 = (unit.position - _target_pos()).normalized()
+		if away == Vector2.ZERO:
+			away = Vector2.RIGHT
+		if not unit.is_moving():
+			world.movement.move_unit(unit, unit.position + away * min_range * 1.6)
+		_windup = -1.0
+		return
 	if unit.is_moving():
 		world.movement.stop(unit)
 	if _windup >= 0.0:
@@ -79,7 +89,7 @@ func _strike() -> void:
 	var dmg: int = Combat.hit_damage(unit, target)
 	var proj: Dictionary = _attack.get("projectile", {})
 	if not proj.is_empty():
-		world.combat.fire(unit, target, dmg, float(proj.get("speed_px", 600)))
+		world.combat.fire(unit, target, dmg, float(proj.get("speed_px", 600)), float(_attack.get("splash_px", 0.0)))
 	else:
 		world.combat.apply_hit(unit, target, dmg)
 
