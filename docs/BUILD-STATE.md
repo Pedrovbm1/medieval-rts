@@ -4,25 +4,16 @@
 > Una sesión nueva retoma desde aquí.
 
 ## Fase actual
-**F1 — Selección y órdenes**: implementada y probada por adb en el S10. **Esperando el gate humano de Pedro** (10/10 con los dedos).
+**F2 — Pathfinding y movimiento de grupo** (en curso)
 
 ## Completadas
 | Fase | Commit | Fecha | Gate |
 |---|---|---|---|
 | F0 | 2007d99, 2638e05 | 2026-10-17 | Cumplido en Galaxy S10 (arranque 0.6-0.9 s, pan 60 fps, pinch probado por Pedro) |
-| F1 | ver BUILD-LOG | 2026-10-17 | Automático cumplido (67/67 headless, 7/7 adb en S10). Falta gate humano |
+| F1 | 4747fd7 | 2026-10-17 | 67/67 headless, 7/7 adb en S10, gate humano 10/10 aprobado por Pedro |
 
 ## Siguiente
-Gate humano de F1. Checklist para Pedro (con el APK instalado):
-1. Tap en una unidad: se selecciona solo esa (anillo verde, panel abajo a la derecha).
-2. Mantener el dedo quieto ~0.35 s (vibra) y arrastrar: caja; al soltar quedan seleccionadas las de adentro.
-3. Tap en el pasto con selección: se mueven, sale línea + círculo y suena la confirmación.
-4. Doble tap en un miliciano: se seleccionan todos los milicianos en pantalla.
-5. Detener / Mantener / Soltar responden y nunca mandan una orden al mapa.
-6. Arrastre rápido con un dedo mueve la cámara aunque empiece encima de una unidad.
-7. Pinch con dos dedos nunca selecciona ni da órdenes.
-8. Repetir 1-3 diez veces seguidas sin un gesto no previsto.
-Si pasa → F2. Si algo se siente mal → iterar F1 (umbrales en `game/data/rules.json` > `input`).
+F2 → F3.
 
 ## Entorno
 | Pieza | Valor |

@@ -10,7 +10,7 @@ contenido propio, siempre.
 ## Estado
 - [x] Investigación + plan de construcción → `docs/PLAN-CONSTRUCCION-RTS.md`
 - [x] F0 — Setup + mundo mínimo (aprobada 2026-10-17; probada en Galaxy S10)
-- [ ] F1 — Selección y órdenes (implementada; falta gate humano en teléfono)
+- [x] F1 — Selección y órdenes (gate humano aprobado 2026-10-17)
 - [ ] F2 — Pathfinding
 - [ ] F3 — Economía
 - [ ] F4 — Construcción

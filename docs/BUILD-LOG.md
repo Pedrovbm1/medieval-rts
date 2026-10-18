@@ -43,4 +43,4 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 - Una presión de 500 ms sin frames intermedios contaba como tap (el dedo se borraba antes de revisar el tiempo). Corregido y cubierto por test.
 - El script de device leía la posición del botón después de limpiar el log. Corregido.
 
-**Pendiente**: gate humano (Pedro, 10/10 con los dedos).
+**Gate humano**: aprobado por Pedro en el teléfono (10/10).
