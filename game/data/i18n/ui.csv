@@ -12,3 +12,9 @@ RESOURCE_FOOD_NAME,Comida,Food
 RESOURCE_WOOD_NAME,Madera,Wood
 RESOURCE_GOLD_NAME,Oro,Gold
 RESOURCE_STONE_NAME,Piedra,Stone
+HUD_STOP,Detener,Stop
+HUD_HOLD,Mantener,Hold
+HUD_DESELECT,Soltar,Deselect
+UNIT_VILLAGER_NAME,Aldeano,Villager
+UNIT_SCOUT_NAME,Explorador,Scout
+UNIT_MILITIA_NAME,Miliciano,Militia

@@ -1,0 +1,8 @@
+{
+	"sfx": {
+		"select": "res://assets/placeholder/sfx/select.wav",
+		"order_move": "res://assets/placeholder/sfx/order_move.wav",
+		"order_stop": "res://assets/placeholder/sfx/order_stop.wav",
+		"ui_click": "res://assets/placeholder/sfx/ui_click.wav"
+	}
+}

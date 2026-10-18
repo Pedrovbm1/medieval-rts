@@ -10,7 +10,7 @@ contenido propio, siempre.
 ## Estado
 - [x] Investigación + plan de construcción → `docs/PLAN-CONSTRUCCION-RTS.md`
 - [x] F0 — Setup + mundo mínimo (aprobada 2026-10-17; probada en Galaxy S10)
-- [ ] F1 — Selección y órdenes
+- [ ] F1 — Selección y órdenes (implementada; falta gate humano en teléfono)
 - [ ] F2 — Pathfinding
 - [ ] F3 — Economía
 - [ ] F4 — Construcción
@@ -56,6 +56,7 @@ El mouse emula un dedo (pan con clic izquierdo arrastrando); la rueda hace zoom.
 ```bash
 godot --headless --path game tests/run_tests.tscn
 ```
+Estado detallado y decisiones: `docs/BUILD-STATE.md`. Bitácora por fase: `docs/BUILD-LOG.md`.
 Sale con código 0 si todo pasa.
 
 ## Exportar e instalar en Android (debug)

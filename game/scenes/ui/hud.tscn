@@ -1,0 +1,81 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
+bg_color = Color(0.1, 0.09, 0.08, 0.82)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_box"]
+bg_color = Color(0.4, 1, 0.4, 0.12)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 1, 0.45, 0.9)
+
+[sub_resource type="Theme" id="Theme_hud"]
+default_font_size = 20
+
+[node name="Hud" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+[node name="BoxRect" type="Panel" parent="."]
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_box")
+
+[node name="SelectionPanel" type="PanelContainer" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -420.0
+offset_top = -150.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+theme = SubResource("Theme_hud")
+theme_override_styles/panel = SubResource("StyleBox_panel")
+
+[node name="Margin" type="MarginContainer" parent="SelectionPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="SelectionPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SelectionLabel" type="Label" parent="SelectionPanel/Margin/VBox"]
+layout_mode = 2
+text = "-"
+
+[node name="Buttons" type="HBoxContainer" parent="SelectionPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StopButton" type="Button" parent="SelectionPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 72)
+layout_mode = 2
+focus_mode = 0
+text = "Stop"
+
+[node name="HoldButton" type="Button" parent="SelectionPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 72)
+layout_mode = 2
+focus_mode = 0
+text = "Hold"
+
+[node name="DeselectButton" type="Button" parent="SelectionPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 72)
+layout_mode = 2
+focus_mode = 0
+text = "X"

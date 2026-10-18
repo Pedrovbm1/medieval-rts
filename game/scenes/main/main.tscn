@@ -1,17 +1,32 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/main/world.tscn" id="2_world"]
 [ext_resource type="Script" path="res://scenes/main/camera_controller.gd" id="3_camera"]
 [ext_resource type="Script" path="res://scenes/ui/debug_overlay.gd" id="4_debug"]
+[ext_resource type="Script" path="res://scenes/ui/order_marker.gd" id="5_marker"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="6_hud"]
+[ext_resource type="Script" path="res://systems/selection/selection_controller.gd" id="7_selection"]
+[ext_resource type="Script" path="res://systems/selection/pointer_manager.gd" id="8_pointer"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
 
 [node name="World" parent="." instance=ExtResource("2_world")]
 
+[node name="OrderMarker" type="Node2D" parent="World"]
+script = ExtResource("5_marker")
+
 [node name="CameraController" type="Camera2D" parent="."]
 script = ExtResource("3_camera")
+
+[node name="SelectionController" type="Node" parent="."]
+script = ExtResource("7_selection")
+
+[node name="PointerManager" type="Node" parent="."]
+script = ExtResource("8_pointer")
+
+[node name="Hud" parent="." instance=ExtResource("6_hud")]
 
 [node name="DebugOverlay" type="CanvasLayer" parent="."]
 script = ExtResource("4_debug")

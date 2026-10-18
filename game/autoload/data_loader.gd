@@ -9,6 +9,8 @@ const TABLE_FILES: Dictionary = {
 	"techs": "techs.json",
 	"civs": "civs.json",
 	"terrain": "terrain.json",
+	"rules": "rules.json",
+	"audio": "audio.json",
 }
 const MAPS_DIR: String = "res://data/maps/"
 
@@ -45,6 +47,13 @@ func get_table(table_name: String) -> Dictionary:
 func get_entry(table_name: String, entry_id: String) -> Dictionary:
 	var table: Dictionary = get_table(table_name)
 	return table.get(entry_id, {})
+
+
+## Reads a tunable from rules.json, e.g. rule("input", "drag_threshold_px", 30).
+func rule(section: String, key: String, fallback: Variant) -> Variant:
+	var rules: Dictionary = get_table("rules")
+	var block: Dictionary = rules.get(section, {})
+	return block.get(key, fallback)
 
 
 ## Returns a map definition by id (file name without .json).

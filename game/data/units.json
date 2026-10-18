@@ -1,1 +1,26 @@
-{}
+{
+	"villager": {
+		"name_key": "UNIT_VILLAGER_NAME",
+		"class": "civilian",
+		"hp": 40,
+		"speed": 0.9,
+		"radius_px": 12,
+		"placeholder_glyph": "A"
+	},
+	"scout": {
+		"name_key": "UNIT_SCOUT_NAME",
+		"class": "cavalry",
+		"hp": 75,
+		"speed": 1.6,
+		"radius_px": 15,
+		"placeholder_glyph": "E"
+	},
+	"militia": {
+		"name_key": "UNIT_MILITIA_NAME",
+		"class": "infantry",
+		"hp": 60,
+		"speed": 1.0,
+		"radius_px": 13,
+		"placeholder_glyph": "M"
+	}
+}

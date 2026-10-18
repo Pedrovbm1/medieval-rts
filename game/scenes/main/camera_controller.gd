@@ -1,19 +1,16 @@
 class_name CameraController
 extends Camera2D
-## Touch-first RTS camera: one-finger pan, two-finger pinch zoom (0.5x-1.5x),
-## always clamped so the view never leaves the map.
-## Mouse wheel zoom is kept for desktop testing only.
+## RTS camera. Since F1 it does not read touch input itself: PointerManager owns
+## every finger and calls pan_screen / zoom_at. The camera only moves, zooms and
+## stays clamped inside the map. Mouse wheel zoom is kept for desktop testing.
 
 const ZOOM_MIN: float = 0.5
 const ZOOM_MAX: float = 1.5
 const WHEEL_ZOOM_STEP: float = 0.1
+const CENTER_TWEEN_SECONDS: float = 0.25
 
 var map_bounds: Rect2 = Rect2()
-
-## Active pointers: touch index -> last known screen position.
-var _touches: Dictionary = {}
-var _pinch_start_distance: float = 0.0
-var _pinch_start_zoom: float = 1.0
+var _center_tween: Tween = null
 
 
 func _ready() -> void:
@@ -29,11 +26,26 @@ func set_map_bounds(bounds: Rect2) -> void:
 
 
 func center_on(world_pos: Vector2) -> void:
+	_kill_tween()
 	position = _clamped(world_pos)
+
+
+## Glides to a world position (double tap on ground, idle bell, minimap...).
+func center_on_smooth(world_pos: Vector2) -> void:
+	_kill_tween()
+	_center_tween = create_tween()
+	_center_tween.tween_property(self, "position", _clamped(world_pos), CENTER_TWEEN_SECONDS) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func get_zoom_factor() -> float:
 	return zoom.x
+
+
+## Moves the view so the map follows a finger that moved by screen_delta.
+func pan_screen(screen_delta: Vector2) -> void:
+	_kill_tween()
+	position = _clamped(position - screen_delta / zoom.x)
 
 
 ## Sets the zoom factor keeping the world point under screen_point fixed.
@@ -41,6 +53,7 @@ func zoom_at(screen_point: Vector2, new_factor: float) -> void:
 	var factor: float = clampf(new_factor, ZOOM_MIN, ZOOM_MAX)
 	if is_equal_approx(factor, zoom.x):
 		return
+	_kill_tween()
 	var before: Vector2 = screen_to_world(screen_point)
 	zoom = Vector2(factor, factor)
 	var after: Vector2 = screen_to_world(screen_point)
@@ -53,62 +66,31 @@ func screen_to_world(screen_point: Vector2) -> Vector2:
 	return position + (screen_point - view_size * 0.5) / zoom.x
 
 
+func world_to_screen(world_pos: Vector2) -> Vector2:
+	var view_size: Vector2 = get_viewport_rect().size
+	return (world_pos - position) * zoom.x + view_size * 0.5
+
+
+## World rectangle currently visible on screen.
+func visible_world_rect() -> Rect2:
+	var view_size: Vector2 = get_viewport_rect().size / zoom.x
+	return Rect2(position - view_size * 0.5, view_size)
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventScreenTouch:
-		_on_touch(event as InputEventScreenTouch)
-	elif event is InputEventScreenDrag:
-		_on_drag(event as InputEventScreenDrag)
-	elif event is InputEventMouseButton:
-		_on_mouse_button(event as InputEventMouseButton)
-
-
-func _on_touch(event: InputEventScreenTouch) -> void:
-	if event.pressed:
-		_touches[event.index] = event.position
-		if _touches.size() == 2:
-			_begin_pinch()
-	else:
-		_touches.erase(event.index)
-		if _touches.size() == 2:
-			_begin_pinch()
-
-
-func _on_drag(event: InputEventScreenDrag) -> void:
-	if not _touches.has(event.index):
-		_touches[event.index] = event.position
+	var mouse: InputEventMouseButton = event as InputEventMouseButton
+	if mouse == null or not mouse.pressed or mouse.device == InputEvent.DEVICE_ID_EMULATION:
 		return
-	if _touches.size() == 1:
-		_touches[event.index] = event.position
-		position = _clamped(position - event.relative / zoom.x)
-		return
-	# Two or more fingers: pan by the midpoint delta, zoom by the distance ratio.
-	var ids: Array = _touches.keys()
-	var old_mid: Vector2 = (_touches[ids[0]] + _touches[ids[1]]) * 0.5
-	_touches[event.index] = event.position
-	var a: Vector2 = _touches[ids[0]]
-	var b: Vector2 = _touches[ids[1]]
-	var new_mid: Vector2 = (a + b) * 0.5
-	position = _clamped(position - (new_mid - old_mid) / zoom.x)
-	if _pinch_start_distance > 0.0:
-		var ratio: float = a.distance_to(b) / _pinch_start_distance
-		zoom_at(new_mid, _pinch_start_zoom * ratio)
+	if mouse.button_index == MOUSE_BUTTON_WHEEL_UP:
+		zoom_at(mouse.position, zoom.x + WHEEL_ZOOM_STEP)
+	elif mouse.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		zoom_at(mouse.position, zoom.x - WHEEL_ZOOM_STEP)
 
 
-func _on_mouse_button(event: InputEventMouseButton) -> void:
-	if not event.pressed:
-		return
-	if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-		zoom_at(event.position, zoom.x + WHEEL_ZOOM_STEP)
-	elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-		zoom_at(event.position, zoom.x - WHEEL_ZOOM_STEP)
-
-
-func _begin_pinch() -> void:
-	var ids: Array = _touches.keys()
-	var a: Vector2 = _touches[ids[0]]
-	var b: Vector2 = _touches[ids[1]]
-	_pinch_start_distance = maxf(a.distance_to(b), 1.0)
-	_pinch_start_zoom = zoom.x
+func _kill_tween() -> void:
+	if _center_tween != null and _center_tween.is_valid():
+		_center_tween.kill()
+	_center_tween = null
 
 
 func _clamped(world_pos: Vector2) -> Vector2:

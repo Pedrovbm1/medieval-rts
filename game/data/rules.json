@@ -1,0 +1,24 @@
+{
+	"input": {
+		"drag_threshold_px": 30,
+		"box_hold_ms": 350,
+		"double_tap_ms": 320,
+		"double_tap_px": 48,
+		"pick_radius_px": 40,
+		"box_arm_vibration_ms": 25
+	},
+	"movement": {
+		"base_speed_px": 96,
+		"arrive_distance_px": 3,
+		"formation_spacing_px": 40
+	},
+	"feedback": {
+		"order_marker_seconds": 0.6
+	},
+	"players": {
+		"colors": ["#3a6fd8", "#d84a3a"]
+	},
+	"debug": {
+		"log_input": true
+	}
+}
