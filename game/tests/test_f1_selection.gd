@@ -122,7 +122,7 @@ func test_05_stop_and_hold() -> void:
 	hud.stop_button.pressed.emit()
 	check(selection.selected.all(func(u: Unit) -> bool: return not u.is_moving()), "Stop halts every selected unit")
 	hud.hold_button.pressed.emit()
-	check(selection.selected.all(func(u: Unit) -> bool: return u.stance == Unit.Stance.HOLD), "Hold sets stance HOLD")
+	check(selection.selected.all(func(u: Unit) -> bool: return u.stance == "hold"), "Hold sets stance HOLD")
 
 
 func test_06_touch_on_hud_does_not_leak() -> void:

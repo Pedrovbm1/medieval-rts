@@ -14,7 +14,7 @@ contenido propio, siempre.
 - [x] F2 — Pathfinding (S10: 150 unidades a 60 fps, 50/50 rodean el lago)
 - [x] F3 — Economía (12 aldeanos 10 min sin trabarse; 60 fps y 15 draw calls en S10)
 - [x] F4 — Construcción (base completa en 64 s de juego; probado con toques reales en S10)
-- [ ] F5 — Combate
+- [x] F5 — Combate (counters del plan; 20v20 en 49 s; sin fugas; 60 fps en S10)
 - [ ] F6 — IA enemiga
 - [ ] F7 — Eras y tecnologías
 - [ ] F8 — Fog of war + UX

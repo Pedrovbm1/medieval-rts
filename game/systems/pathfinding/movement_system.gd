@@ -73,6 +73,7 @@ func move_unit(unit: Unit, target: Vector2) -> void:
 func stop(unit: Unit) -> void:
 	queue.cancel(unit.get_instance_id())
 	unit.clear_move()
+	unit.attack_move = false
 
 
 func _begin(unit: Unit, goal: Vector2, group_id: int) -> void:

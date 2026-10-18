@@ -8,8 +8,6 @@ signal arrived(unit: Unit)
 signal move_failed(unit: Unit)
 signal died(unit: Unit)
 
-enum Stance { AGGRESSIVE, HOLD }
-
 const OWNER_GAIA: int = -1
 
 var unit_type: String = ""
@@ -20,7 +18,8 @@ var speed_px: float = 96.0
 var arrive_distance: float = 3.0
 var hp: int = 1
 var max_hp: int = 1
-var stance: Stance = Stance.AGGRESSIVE
+## Stance id from data/stances.json: aggressive | defensive | hold | passive.
+var stance: String = "aggressive"
 var selected: bool = false:
 	set(value):
 		if selected != value:
@@ -51,6 +50,15 @@ var is_dead: bool = false
 ## Free-form memory for simple brains (animals now, AI micro later).
 var brain: Dictionary = {}
 
+## Attack-move: while walking, engage enemies met on the way.
+var attack_move: bool = false
+
+# --- combat visuals (CombatSystem drives the timers) ---
+var winding_up: bool = false
+var facing_target: Vector2 = Vector2.ZERO
+var flash_t: float = 0.0
+var corpse_t: float = 0.0
+
 
 ## Must be called before adding the unit to the tree.
 func setup(type_id: String, player_id: int, world_pos: Vector2) -> void:
@@ -63,9 +71,38 @@ func setup(type_id: String, player_id: int, world_pos: Vector2) -> void:
 	radius = float(data.get("radius_px", 12))
 	max_hp = int(data.get("hp", 1))
 	hp = max_hp
+	stance = String(data.get("stance", "aggressive"))
 	speed_px = float(data.get("speed", 1.0)) * float(DataLoader.rule("movement", "base_speed_px", 96))
 	arrive_distance = float(DataLoader.rule("movement", "arrive_distance_px", 3))
 	name = "%s_%d" % [type_id, get_instance_id()]
+
+
+func stance_data() -> Dictionary:
+	return DataLoader.get_entry("stances", stance)
+
+
+## Clears every runtime field and signal connection so the node can be reused.
+func reset_for_pool() -> void:
+	for sig: Signal in [arrived, move_failed, died]:
+		for c: Dictionary in sig.get_connections():
+			sig.disconnect(c["callable"])
+	selected = false
+	clear_move()
+	repaths = 0
+	stall_timer = 0.0
+	best_goal_dist = INF
+	task = null
+	carry_type = ""
+	carry_amount = 0.0
+	attack_cooldown = 0.0
+	last_attacker = null
+	attack_move = false
+	is_dead = false
+	brain = {}
+	winding_up = false
+	flash_t = 0.0
+	corpse_t = 0.0
+	modulate = Color.WHITE
 
 
 func is_moving() -> bool:
@@ -122,11 +159,23 @@ func change_owner(new_owner: int) -> void:
 
 
 func _draw() -> void:
-	if selected:
-		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 32, Color(0.35, 1.0, 0.35), 3.0, true)
 	var tex: Texture2D = PlaceholderArt.texture()
 	var region: Rect2 = PlaceholderArt.unit_region(unit_type, owner_id)
-	draw_texture_rect_region(tex, Rect2(-region.size * 0.5, region.size), region)
+	if is_dead:
+		# Corpse: flattened, darkened and fading out before going to the pool.
+		var fade: float = clampf(corpse_t / 0.8, 0.0, 1.0)
+		draw_texture_rect_region(tex, Rect2(Vector2(-region.size.x * 0.5, -region.size.y * 0.25), Vector2(region.size.x, region.size.y * 0.5)), region, Color(0.35, 0.3, 0.3, fade))
+		return
+	if selected:
+		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 32, Color(0.35, 1.0, 0.35), 3.0, true)
+	var tint: Color = Color(1.0, 0.45, 0.45) if flash_t > 0.0 else Color.WHITE
+	draw_texture_rect_region(tex, Rect2(-region.size * 0.5, region.size), region, tint)
+	if winding_up and facing_target != Vector2.ZERO:
+		# Wind-up tell: a short bright stroke toward the target before the hit lands.
+		var dir: Vector2 = (facing_target - position).normalized()
+		draw_set_transform(dir * (radius + 3.0), dir.angle(), Vector2.ONE)
+		draw_texture_rect_region(tex, Rect2(0, -2, 10, 4), PlaceholderArt.WHITE_RECT, Color(1, 0.95, 0.6))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if hp < max_hp:
 		# HP bar from the atlas' white texel: same texture, so it still batches.
 		var w: float = radius * 2.0

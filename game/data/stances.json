@@ -1,0 +1,30 @@
+{
+	"aggressive": {
+		"name_key": "STANCE_AGGRESSIVE",
+		"auto_acquire": true,
+		"chase": true,
+		"leash_px": 768,
+		"respond_when_hit": true
+	},
+	"defensive": {
+		"name_key": "STANCE_DEFENSIVE",
+		"auto_acquire": true,
+		"chase": true,
+		"leash_px": 256,
+		"respond_when_hit": true
+	},
+	"hold": {
+		"name_key": "STANCE_HOLD",
+		"auto_acquire": true,
+		"chase": false,
+		"leash_px": 0,
+		"respond_when_hit": true
+	},
+	"passive": {
+		"name_key": "STANCE_PASSIVE",
+		"auto_acquire": false,
+		"chase": false,
+		"leash_px": 0,
+		"respond_when_hit": false
+	}
+}

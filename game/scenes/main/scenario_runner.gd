@@ -198,11 +198,24 @@ func _physics_process(delta: float) -> void:
 		if elapsed >= float(order.get("after_s", 0.0)):
 			_pending_orders.erase(order)
 			var target: Array = order["target"]
-			world.movement.command_move(spawned, Vector2(float(target[0]), float(target[1])) * float(world.tile_size))
+			var group: Array[Unit] = spawned.filter(func(u: Unit) -> bool:
+				return world.units.has(u) and (not order.has("player") or u.owner_id == int(order["player"])))
+			var dest: Vector2 = Vector2(float(target[0]), float(target[1])) * float(world.tile_size)
+			if bool(order.get("attack_move", false)):
+				world.combat.attack_move(group, dest)
+			else:
+				world.movement.command_move(group, dest)
 			_ordered = true
 			_log("order target=(%d,%d)" % [int(target[0]), int(target[1])])
 	if def.has("wander"):
 		_wander(delta)
+	if bool(def.get("report_battle", false)):
+		_report_timer += delta
+		if _report_timer >= 2.0:
+			_report_timer = 0.0
+			var a: int = world.units.filter(func(u: Unit) -> bool: return u.owner_id == 0).size()
+			var b: int = world.units.filter(func(u: Unit) -> bool: return u.owner_id == 1).size()
+			_log("battle t=%.0f p0=%d p1=%d kills=%d arrows=%d" % [elapsed, a, b, world.combat.kills, world.combat.shots_fired])
 	if bool(def.get("report_arrival", false)) and _ordered:
 		_report_timer += delta
 		if _report_timer >= 1.0:

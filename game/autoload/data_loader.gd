@@ -13,6 +13,7 @@ const TABLE_FILES: Dictionary = {
 	"audio": "audio.json",
 	"scenarios": "scenarios.json",
 	"resources": "resources.json",
+	"stances": "stances.json",
 }
 const MAPS_DIR: String = "res://data/maps/"
 

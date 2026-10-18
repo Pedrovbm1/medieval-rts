@@ -29,6 +29,13 @@
 		"extra_builder_factor": 0.6,
 		"foundation_hp_ratio": 0.1
 	},
+	"combat": {
+		"melee_reach_px": 10,
+		"acquire_interval_s": 0.25,
+		"corpse_seconds": 0.8,
+		"hit_flash_s": 0.12,
+		"chase_repath_px": 48
+	},
 	"production": {
 		"queue_max": 5,
 		"cancel_refund": 1.0

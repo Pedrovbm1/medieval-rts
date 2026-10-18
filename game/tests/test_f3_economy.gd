@@ -188,7 +188,7 @@ func test_g_sheep_join_and_get_eaten() -> void:
 	var sheep_id: int = sheep.get_instance_id()
 	world.behavior.assign(v, HuntTask.new(v, world, sheep))
 	await _run(25.0, 4.0)
-	check(instance_from_id(sheep_id) == null, "the villager slaughters the sheep")
+	check(_gone(sheep_id), "the villager slaughters the sheep")
 	check(v.task is GatherTask and v.carry_type == "food" or GameState.gathered(0, "food") > 0, "then gathers its meat")
 	await _close()
 
@@ -203,10 +203,10 @@ func test_h_deer_flees_but_is_hunted() -> void:
 	var fled: Array[bool] = [false]
 	await _run(40.0, 4.0, 0.5, func(_t: float) -> void:
 		var d: Unit = instance_from_id(deer_id) as Unit
-		if d != null and d.position.distance_to(start) > 100.0:
+		if d != null and world.units.has(d) and d.position.distance_to(start) > 100.0:
 			fled[0] = true)
 	check(fled[0], "the deer ran away when hit")
-	check(instance_from_id(deer_id) == null, "the hunter still brought it down")
+	check(_gone(deer_id), "the hunter still brought it down")
 	check(v.carry_type == "food" and (v.carry_amount > 0.0 or GameState.gathered(0, "food") > 0), "and gathers venison")
 	await _close()
 
@@ -232,11 +232,17 @@ func test_i_boar_lure_with_helpers() -> void:
 	await _run(90.0, 4.0, 0.1, func(_t: float) -> void:
 		var n: int = _villagers().filter(func(u: Unit) -> bool: return u.task is HuntTask).size()
 		max_helpers[0] = maxi(max_helpers[0], n))
-	check(instance_from_id(boar_id) == null, "the boar is killed")
+	check(_gone(boar_id), "the boar is killed")
 	check(max_helpers[0] >= 2, "villagers near home joined the boar hunt (max hunters %d)" % max_helpers[0])
 	var carcass: Array = world.resource_nodes.filter(func(n: ResourceNode) -> bool: return n.resource_type == "carcass_boar")
 	check(carcass.is_empty() or carcass[0].position.distance_to(home) < 900.0, "the boar fell near the Town Center (lured)")
 	await _close()
+
+
+## Dead units are pooled, not freed: "gone" means no longer alive in the match.
+func _gone(id: int) -> bool:
+	var o: Object = instance_from_id(id)
+	return o == null or not world.units.has(o)
 
 
 func _count_forest() -> int:

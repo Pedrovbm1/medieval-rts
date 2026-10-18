@@ -119,8 +119,8 @@ func _fight_back(animal: Unit, cfg: Dictionary) -> void:
 	if animal.is_moving():
 		world.movement.stop(animal)
 	if animal.attack_cooldown <= 0.0:
-		animal.attack_cooldown = float(animal.data.get("attack_interval", 1.5))
-		foe.take_damage(int(animal.data.get("attack", 1)), animal)
+		animal.attack_cooldown = float(Dictionary(animal.data.get("combat", {})).get("repeat_s", 1.5))
+		world.combat.apply_hit(animal, foe, Combat.hit_damage(animal, foe))
 		_call_helpers(animal, foe)
 
 

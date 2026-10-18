@@ -13,6 +13,8 @@ const ORDER_COLORS: Dictionary = {
 	"gather": Color(1.0, 0.85, 0.3),
 	"hunt": Color(1.0, 0.45, 0.35),
 	"deliver": Color(0.5, 0.8, 1.0),
+	"attack": Color(1.0, 0.3, 0.25),
+	"build": Color(1.0, 0.85, 0.3),
 }
 
 var world: World
@@ -131,7 +133,7 @@ func issue_order(world_pos: Vector2, target: Dictionary) -> void:
 			order_kind = task.kind if task.kind != "gather" or kind != "own_building" else "deliver"
 		else:
 			world.behavior.assign(unit, null)
-			unit.stance = Unit.Stance.AGGRESSIVE
+			unit.attack_move = false
 			movers.append(unit)
 	if not movers.is_empty():
 		world.movement.command_move(movers, world_pos)
@@ -150,7 +152,15 @@ func order_move(world_pos: Vector2) -> void:
 
 
 func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
+	if kind == "enemy_unit" or kind == "enemy_building":
+		if unit.data.get("combat", {}).is_empty():
+			return null
+		if bool(Dictionary(unit.data["combat"]).get("buildings_only", false)) and kind == "enemy_unit":
+			return null
+		return AttackTask.new(unit, world, ref, true)
 	if not unit.can_gather():
+		if kind == "animal" and not unit.data.get("combat", {}).is_empty():
+			return AttackTask.new(unit, world, ref, true)
 		return null
 	match kind:
 		"tree":
@@ -194,7 +204,7 @@ func order_hold() -> void:
 	for unit: Unit in selected:
 		world.behavior.assign(unit, null)
 		world.movement.stop(unit)
-		unit.stance = Unit.Stance.HOLD
+		unit.stance = "hold"
 	if not selected.is_empty():
 		Sfx.play("order_stop")
 	_trace("hold", Vector2.ZERO)

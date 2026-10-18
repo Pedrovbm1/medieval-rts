@@ -109,3 +109,22 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 - El panel no crecía cuando los botones pasaban a otra fila → se mide tras el acomodo y se ancla abajo a la derecha.
 - El test del jabalí dependía de la posición de los aldeanos y de la correa de 900 px; el cazador mataba al jabalí durante el lure → correa 1600 px, no ataca mientras lurea, muestreo cada 0.1 s.
 - La sesión programada de las 2:05 quedó esperando un permiso sin hacer cambios; se continuó en la sesión original.
+
+---
+
+## F5 — Combate core (2026-10-18, ~2 h)
+
+**Qué se hizo**
+- `Combat` (reglas puras): daño tipado con armadura por tipo, bonus por clase, mínimo 1; bonus de techs ya contemplados.
+- `AttackTask`: perseguir, wind-up visible, golpe o disparo, cadencia; postura (perseguir, correa, quieta); siguiente objetivo al matar; reanuda el attack-move.
+- `CombatSystem`: adquisición de objetivos por postura cada 0.25 s, respuesta al ser atacado, attack-move, flechas en pool con seguimiento, destello al recibir daño, cadáveres y reciclaje de unidades.
+- Unidades: miliciano, lancero, arquero, caballero, ariete (+ aldeano, explorador, jabalí con datos de combate). Edificios: Galería de tiro, Establo, Taller de asedio. Posturas en `stances.json`.
+- Edificios con armadura y clase "building"; destruirlos libera el terreno.
+- Tocar un enemigo con militares seleccionados = atacar.
+
+**Tests**: 192/192 headless. Counters del plan cumplidos con margen; 20v20 en 49 s; 216 muertes sin fugas. S10: 20v20 a 60 fps y 15 DC.
+
+**Problemas**
+- `target_alive` recibía edificios ya liberados con un tipo estricto → acepta cualquier valor.
+- La batalla 20v20 se estancaba (ejércitos fuera de vista) → attack-move y reenganche cada 5 s en el test.
+- Los tests de caza esperaban animales liberados; ahora se reciclan → se comprueba "ya no vive".

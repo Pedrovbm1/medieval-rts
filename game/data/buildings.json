@@ -25,7 +25,15 @@
 			"villager",
 			"scout"
 		],
-		"buildable": false
+		"buildable": false,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
 	},
 	"house": {
 		"name_key": "BLDG_HOUSE_NAME",
@@ -42,7 +50,15 @@
 		"era": 1,
 		"color": "#a0794e",
 		"placeholder_glyph": "C",
-		"buildable": true
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
 	},
 	"lumber_camp": {
 		"name_key": "BLDG_LUMBER_CAMP_NAME",
@@ -61,7 +77,15 @@
 		"era": 1,
 		"color": "#6e5a3c",
 		"placeholder_glyph": "As",
-		"buildable": true
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
 	},
 	"mining_camp": {
 		"name_key": "BLDG_MINING_CAMP_NAME",
@@ -81,7 +105,15 @@
 		"era": 1,
 		"color": "#7a7468",
 		"placeholder_glyph": "Ca",
-		"buildable": true
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
 	},
 	"farm": {
 		"name_key": "BLDG_FARM_NAME",
@@ -103,7 +135,15 @@
 		"era": 1,
 		"color": "#c9a85c",
 		"placeholder_glyph": "G",
-		"buildable": true
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
 	},
 	"barracks": {
 		"name_key": "BLDG_BARRACKS_NAME",
@@ -118,10 +158,101 @@
 		"build_time": 40,
 		"era": 1,
 		"trains": [
-			"militia"
+			"militia",
+			"spearman"
 		],
 		"color": "#7d5a4a",
 		"placeholder_glyph": "CU",
-		"buildable": true
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
+	},
+	"archery_range": {
+		"name_key": "BLDG_ARCHERY_RANGE_NAME",
+		"cost": {
+			"wood": 175
+		},
+		"hp": 1500,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 40,
+		"era": 2,
+		"trains": [
+			"archer"
+		],
+		"color": "#6a7a4a",
+		"placeholder_glyph": "GT",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
+	},
+	"stable": {
+		"name_key": "BLDG_STABLE_NAME",
+		"cost": {
+			"wood": 175
+		},
+		"hp": 1500,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 40,
+		"era": 3,
+		"trains": [
+			"scout",
+			"knight"
+		],
+		"color": "#7a6250",
+		"placeholder_glyph": "E",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
+	},
+	"siege_workshop": {
+		"name_key": "BLDG_SIEGE_WORKSHOP_NAME",
+		"cost": {
+			"wood": 200
+		},
+		"hp": 1500,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 45,
+		"era": 4,
+		"trains": [
+			"ram"
+		],
+		"color": "#5f5a52",
+		"placeholder_glyph": "TA",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		}
 	}
 }

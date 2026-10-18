@@ -6,8 +6,6 @@
 		"speed": 0.9,
 		"radius_px": 12,
 		"placeholder_glyph": "A",
-		"attack": 3,
-		"attack_interval": 1.2,
 		"hunt_attack": 6,
 		"hunt_range_px": 112,
 		"carry_capacity": 10,
@@ -24,7 +22,25 @@
 			"food": 50
 		},
 		"train_time": 20,
-		"pop": 1
+		"pop": 1,
+		"classes": [
+			"civilian"
+		],
+		"stance": "passive",
+		"armor": {
+			"hack": 0,
+			"pierce": 0,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"hack": 3
+			},
+			"range_px": 0,
+			"prepare_s": 0.3,
+			"repeat_s": 1.5,
+			"bonus": {}
+		}
 	},
 	"scout": {
 		"name_key": "UNIT_SCOUT_NAME",
@@ -33,13 +49,31 @@
 		"speed": 1.6,
 		"radius_px": 15,
 		"placeholder_glyph": "E",
-		"attack": 5,
-		"attack_interval": 1.6,
 		"cost": {
 			"food": 80
 		},
 		"train_time": 28,
-		"pop": 1
+		"pop": 1,
+		"classes": [
+			"cavalry",
+			"light"
+		],
+		"stance": "aggressive",
+		"armor": {
+			"hack": 0,
+			"pierce": 2,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"hack": 4
+			},
+			"range_px": 0,
+			"prepare_s": 0.3,
+			"repeat_s": 1.6,
+			"bonus": {}
+		},
+		"sight_px": 448
 	},
 	"militia": {
 		"name_key": "UNIT_MILITIA_NAME",
@@ -48,14 +82,32 @@
 		"speed": 1.0,
 		"radius_px": 13,
 		"placeholder_glyph": "M",
-		"attack": 7,
-		"attack_interval": 1.6,
 		"cost": {
 			"food": 60,
 			"gold": 20
 		},
 		"train_time": 21,
-		"pop": 1
+		"pop": 1,
+		"classes": [
+			"infantry"
+		],
+		"stance": "aggressive",
+		"armor": {
+			"hack": 1,
+			"pierce": 3,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"hack": 6
+			},
+			"range_px": 0,
+			"prepare_s": 0.35,
+			"repeat_s": 1.4,
+			"bonus": {}
+		},
+		"sight_px": 288,
+		"era": 1
 	},
 	"sheep": {
 		"name_key": "UNIT_SHEEP_NAME",
@@ -69,6 +121,14 @@
 			"convert_radius_px": 192,
 			"carcass": "carcass_sheep",
 			"color": "#f2f0e6"
+		},
+		"classes": [
+			"animal"
+		],
+		"armor": {
+			"hack": 0,
+			"pierce": 0,
+			"crush": 0
 		}
 	},
 	"deer": {
@@ -83,6 +143,14 @@
 			"flee_distance_px": 224,
 			"carcass": "carcass_deer",
 			"color": "#b07b48"
+		},
+		"classes": [
+			"animal"
+		],
+		"armor": {
+			"hack": 0,
+			"pierce": 0,
+			"crush": 0
 		}
 	},
 	"boar": {
@@ -92,13 +160,178 @@
 		"speed": 0.85,
 		"radius_px": 15,
 		"placeholder_glyph": "J",
-		"attack": 4,
-		"attack_interval": 1.5,
 		"animal": {
 			"behavior": "aggressive",
 			"carcass": "carcass_boar",
 			"leash_px": 1600,
 			"color": "#5a3b2c"
+		},
+		"classes": [
+			"animal"
+		],
+		"armor": {
+			"hack": 0,
+			"pierce": 1,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"hack": 4
+			},
+			"range_px": 0,
+			"prepare_s": 0.3,
+			"repeat_s": 1.5,
+			"bonus": {}
 		}
+	},
+	"spearman": {
+		"name_key": "UNIT_SPEARMAN_NAME",
+		"class": "infantry",
+		"classes": [
+			"infantry",
+			"spear"
+		],
+		"stance": "aggressive",
+		"hp": 60,
+		"speed": 1.0,
+		"radius_px": 13,
+		"placeholder_glyph": "L",
+		"pop": 1,
+		"cost": {
+			"food": 35,
+			"wood": 25
+		},
+		"train_time": 22,
+		"era": 2,
+		"armor": {
+			"hack": 1,
+			"pierce": 0,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"pierce": 3
+			},
+			"range_px": 0,
+			"prepare_s": 0.35,
+			"repeat_s": 1.4,
+			"bonus": {
+				"cavalry": 18
+			}
+		},
+		"sight_px": 288
+	},
+	"archer": {
+		"name_key": "UNIT_ARCHER_NAME",
+		"class": "archer",
+		"classes": [
+			"archer",
+			"ranged"
+		],
+		"stance": "aggressive",
+		"hp": 35,
+		"speed": 1.0,
+		"radius_px": 12,
+		"placeholder_glyph": "R",
+		"pop": 1,
+		"cost": {
+			"wood": 25,
+			"gold": 45
+		},
+		"train_time": 30,
+		"era": 2,
+		"armor": {
+			"hack": 0,
+			"pierce": 0,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"pierce": 5
+			},
+			"range_px": 352,
+			"prepare_s": 0.45,
+			"repeat_s": 1.6,
+			"bonus": {
+				"spear": 4
+			},
+			"projectile": {
+				"speed_px": 640
+			}
+		},
+		"sight_px": 416
+	},
+	"knight": {
+		"name_key": "UNIT_KNIGHT_NAME",
+		"class": "cavalry",
+		"classes": [
+			"cavalry"
+		],
+		"stance": "aggressive",
+		"hp": 110,
+		"speed": 1.5,
+		"radius_px": 16,
+		"placeholder_glyph": "K",
+		"pop": 1,
+		"cost": {
+			"food": 60,
+			"gold": 75
+		},
+		"train_time": 30,
+		"era": 3,
+		"armor": {
+			"hack": 2,
+			"pierce": 2,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"hack": 8
+			},
+			"range_px": 0,
+			"prepare_s": 0.3,
+			"repeat_s": 1.8,
+			"bonus": {
+				"archer": 4
+			}
+		},
+		"sight_px": 384
+	},
+	"ram": {
+		"name_key": "UNIT_RAM_NAME",
+		"class": "siege",
+		"classes": [
+			"siege"
+		],
+		"stance": "aggressive",
+		"hp": 175,
+		"speed": 0.7,
+		"radius_px": 18,
+		"placeholder_glyph": "T",
+		"pop": 2,
+		"cost": {
+			"wood": 160,
+			"gold": 75
+		},
+		"train_time": 36,
+		"era": 4,
+		"armor": {
+			"hack": 0,
+			"pierce": 8,
+			"crush": 0
+		},
+		"combat": {
+			"damage": {
+				"crush": 2
+			},
+			"range_px": 0,
+			"prepare_s": 0.8,
+			"repeat_s": 3.0,
+			"bonus": {
+				"building": 75
+			},
+			"buildings_only": true
+		},
+		"sight_px": 256
 	}
 }

@@ -12,6 +12,7 @@ const UNIT_SCENE: PackedScene = preload("res://scenes/units/unit.tscn")
 @onready var movement: MovementSystem = $MovementSystem
 @onready var behavior: BehaviorSystem = $BehaviorSystem
 @onready var construction: ConstructionSystem = $ConstructionSystem
+@onready var combat: CombatSystem = $CombatSystem
 
 var map_id: String = ""
 var map_def: Dictionary = {}
@@ -25,6 +26,9 @@ var buildings: Array[Building] = []
 var resource_nodes: Array[ResourceNode] = []
 var nav: NavGrid = NavGrid.new()
 var economy: EconomySystem = EconomySystem.new()
+## Dead units waiting for reuse, by type: type_id -> Array[Unit] (out of the tree).
+var unit_pool: Dictionary = {}
+var units_created: int = 0
 
 var _grass_id: int = 0
 var _forest_id: int = 2
@@ -59,6 +63,7 @@ func build_from_map(p_map_id: String) -> void:
 	economy.setup(self)
 	behavior.setup(self)
 	construction.setup(self)
+	combat.setup(self)
 	EventBus.map_generated.emit(map_width, map_height, tile_size)
 
 
@@ -160,7 +165,13 @@ func _has_open_neighbour(cell: Vector2i) -> bool:
 # ---------------------------------------------------------------- units
 
 func spawn_unit(type_id: String, player_id: int, world_pos: Vector2) -> Unit:
-	var unit: Unit = UNIT_SCENE.instantiate() as Unit
+	var unit: Unit = null
+	var pool: Array = unit_pool.get(type_id, [])
+	if not pool.is_empty():
+		unit = pool.pop_back()
+	else:
+		unit = UNIT_SCENE.instantiate() as Unit
+		units_created += 1
 	unit.setup(type_id, player_id, world_pos)
 	entities.add_child(unit)
 	units.append(unit)
@@ -170,22 +181,54 @@ func spawn_unit(type_id: String, player_id: int, world_pos: Vector2) -> Unit:
 	return unit
 
 
-func remove_unit(unit: Unit) -> void:
+## Takes a unit out of the match. Dead units linger as a corpse (CombatSystem)
+## before recycling; others go straight back to the pool.
+func remove_unit(unit: Unit, as_corpse: bool = false) -> void:
 	if not units.has(unit):
 		return
 	units.erase(unit)
 	movement.stop(unit)
 	behavior.release(unit)
 	EventBus.unit_removed.emit(unit)
-	unit.queue_free()
 	economy.refresh_population()
+	if as_corpse:
+		combat.add_corpse(unit)
+	else:
+		recycle_unit(unit)
+
+
+## Puts a unit node back in the pool (removed from the tree, state cleared).
+func recycle_unit(unit: Unit) -> void:
+	if unit.get_parent() == entities:
+		entities.remove_child(unit)
+	unit.reset_for_pool()
+	var pool: Array = unit_pool.get(unit.unit_type, [])
+	pool.append(unit)
+	unit_pool[unit.unit_type] = pool
+
+
+func pooled_units() -> int:
+	var n: int = 0
+	for key: String in unit_pool.keys():
+		n += (unit_pool[key] as Array).size()
+	return n
+
+
+func _exit_tree() -> void:
+	# Pooled nodes live outside the tree: free them with the match.
+	if combat != null:
+		combat.clear()
+	for key: String in unit_pool.keys():
+		for u: Unit in unit_pool[key]:
+			u.free()
+	unit_pool.clear()
 
 
 func _on_unit_died(unit: Unit) -> void:
 	var carcass: String = String(Dictionary(unit.data.get("animal", {})).get("carcass", ""))
 	if carcass != "":
 		spawn_carcass(carcass, unit.position)
-	remove_unit(unit)
+	remove_unit(unit, true)
 
 
 ## Closest unit of `player_id` within `radius` of world_pos, or null.

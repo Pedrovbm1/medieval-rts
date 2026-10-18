@@ -51,3 +51,14 @@ ERR_OCCUPIED,Lugar ocupado,Blocked
 ERR_COST,Faltan recursos,Not enough resources
 ERR_ERA,Requiere otra era,Needs a later era
 HUD_REMOVE,Quitar,Remove
+UNIT_SPEARMAN_NAME,Lancero,Spearman
+UNIT_ARCHER_NAME,Arquero,Archer
+UNIT_KNIGHT_NAME,Caballero,Knight
+UNIT_RAM_NAME,Ariete,Ram
+BLDG_ARCHERY_RANGE_NAME,Galería de tiro,Archery range
+BLDG_STABLE_NAME,Establo,Stable
+BLDG_SIEGE_WORKSHOP_NAME,Taller de asedio,Siege workshop
+STANCE_AGGRESSIVE,Agresiva,Aggressive
+STANCE_DEFENSIVE,Defensiva,Defensive
+STANCE_HOLD,Quieta,Hold
+STANCE_PASSIVE,Pasiva,Passive

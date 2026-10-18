@@ -51,9 +51,9 @@ func tick(_delta: float) -> void:
 func _strike_if_ready(dist: float, reach: float) -> void:
 	if dist > reach or unit.attack_cooldown > 0.0:
 		return
-	var dmg: int = int(unit.data.get("hunt_attack", unit.data.get("attack", 1)))
-	unit.attack_cooldown = float(unit.data.get("attack_interval", 1.2))
-	prey.take_damage(dmg, unit)
+	var dmg: int = int(unit.data.get("hunt_attack", Combat.hit_damage(unit, prey)))
+	unit.attack_cooldown = float(Dictionary(unit.data.get("combat", {})).get("repeat_s", 1.2))
+	world.combat.apply_hit(unit, prey, dmg)
 
 
 ## Lure only aggressive prey that is chasing this hunter, far from home.
