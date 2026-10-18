@@ -1,0 +1,69 @@
+{
+	"steps": [
+		{
+			"id": "select",
+			"mission": 1,
+			"title_key": "TUT_1_TITLE",
+			"tip_key": "TUT_1_TIP",
+			"goal": "select",
+			"unit": "villager",
+			"arrow": "own_villager"
+		},
+		{
+			"id": "move",
+			"mission": 1,
+			"title_key": "TUT_1_TITLE",
+			"tip_key": "TUT_1B_TIP",
+			"goal": "move",
+			"distance_px": 160,
+			"arrow": "none"
+		},
+		{
+			"id": "gather",
+			"mission": 2,
+			"title_key": "TUT_2_TITLE",
+			"tip_key": "TUT_2_TIP",
+			"goal": "delivered",
+			"resource": "food",
+			"amount": 10,
+			"arrow": "berries"
+		},
+		{
+			"id": "house",
+			"mission": 3,
+			"title_key": "TUT_3_TITLE",
+			"tip_key": "TUT_3_TIP",
+			"goal": "building_completed",
+			"building": "house",
+			"arrow": "own_villager"
+		},
+		{
+			"id": "train",
+			"mission": 4,
+			"title_key": "TUT_4_TITLE",
+			"tip_key": "TUT_4_TIP",
+			"goal": "unit_trained",
+			"unit": "villager",
+			"arrow": "town_center"
+		},
+		{
+			"id": "fight",
+			"mission": 5,
+			"title_key": "TUT_5_TITLE",
+			"tip_key": "TUT_5_TIP",
+			"goal": "enemies_dead",
+			"spawn_own": {
+				"militia": 4
+			},
+			"spawn_enemy": {
+				"militia": 2
+			},
+			"enemy_offset_cells": [
+				10,
+				8
+			],
+			"arrow": "enemies"
+		}
+	],
+	"missions": 5
+}

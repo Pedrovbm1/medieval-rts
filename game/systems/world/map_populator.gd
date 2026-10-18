@@ -12,11 +12,31 @@ static func populate(world: World, map_def: Dictionary) -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = int(map_def.get("seed", 1)) * 7919 + 17
 	var starts: Array[Vector2i] = starts_of(map_def)
+	if String(map_def.get("symmetry", "")) == "point" and starts.size() == 2:
+		# Fair curated maps: lay out the first player's half, then mirror it.
+		var nodes_before: int = world.resource_nodes.size()
+		var units_before: int = world.units.size()
+		for entry: Variant in map_def.get("start_layout", []):
+			_place_around(world, rng, starts[0], entry)
+		for entry: Variant in map_def.get("extra_resources", []):
+			_place_extra(world, rng, starts, entry, true)
+		_mirror_new(world, nodes_before, units_before)
+		return
 	for start: Vector2i in starts:
 		for entry: Variant in map_def.get("start_layout", []):
 			_place_around(world, rng, start, entry)
 	for entry: Variant in map_def.get("extra_resources", []):
 		_place_extra(world, rng, starts, entry)
+
+
+## Copies every node and animal placed since the given counts to the
+## point-mirrored spot (same footprint, rotated 180 degrees).
+static func _mirror_new(world: World, nodes_before: int, units_before: int) -> void:
+	var size: Vector2i = Vector2i(world.map_width, world.map_height)
+	for n: ResourceNode in world.resource_nodes.slice(nodes_before, world.resource_nodes.size()):
+		world.place_resource(n.resource_type, size - n.cell - n.footprint)
+	for u: Unit in world.units.slice(units_before, world.units.size()):
+		world.spawn_unit(u.unit_type, Unit.OWNER_GAIA, world.map_size_px - u.position)
 
 
 static func starts_of(map_def: Dictionary) -> Array[Vector2i]:
@@ -53,7 +73,8 @@ static func _place_around(world: World, rng: RandomNumberGenerator, start: Vecto
 				break
 
 
-static func _place_extra(world: World, rng: RandomNumberGenerator, starts: Array[Vector2i], entry: Dictionary) -> void:
+## `half`: only in the first half of a point-symmetric map (it gets mirrored).
+static func _place_extra(world: World, rng: RandomNumberGenerator, starts: Array[Vector2i], entry: Dictionary, half: bool = false) -> void:
 	var type_id: String = String(entry.get("type", ""))
 	var min_from_start: float = float(entry.get("min_from_start", 18))
 	var is_animal: bool = String(entry.get("kind", "node")) == "animal"
@@ -61,6 +82,8 @@ static func _place_extra(world: World, rng: RandomNumberGenerator, starts: Array
 	for i: int in int(entry.get("count", 1)):
 		for attempt: int in 80:
 			var cell: Vector2i = Vector2i(rng.randi_range(margin, world.map_width - margin), rng.randi_range(margin, world.map_height - margin))
+			if half and cell.x + cell.y > world.map_width - 6:
+				continue
 			var far: bool = true
 			for s: Vector2i in starts:
 				if Vector2(cell - s).length() < min_from_start:

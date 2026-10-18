@@ -122,6 +122,7 @@ func _tick_gathering(delta: float) -> void:
 			world.economy.record_dropped(unit.owner_id, unit.carry_type, unit.carry_amount)
 		unit.carry_type = resource
 		unit.carry_amount = 0.0
+	unit.mark_working(_work_sfx())
 	var before: int = int(unit.carry_amount)
 	var want: float = world.economy.gather_rate(unit, subtype) * delta
 	var got: float = _take(want)
@@ -141,6 +142,7 @@ func _tick_to_dropoff() -> void:
 	var rect: Rect2 = dropoff.rect()
 	if World.distance_to_rect(unit.position, rect) <= unit.radius + REACH_SLACK:
 		world.movement.stop(unit)
+		Sfx.play_at("deposit", unit.position)
 		world.economy.deliver(unit)
 		unit.queue_redraw()
 		_attempts = 0
@@ -163,6 +165,17 @@ func _tick_to_dropoff() -> void:
 		return
 	_attempts += 1
 	go_to(world.approach_point(rect, unit.position))
+
+
+## Sound of the work swing for this target (played by the unit's animation).
+func _work_sfx() -> String:
+	if target == Target.TREE:
+		return "chop"
+	if target == Target.FARM:
+		return "farm"
+	if resource == "gold" or resource == "stone":
+		return "mine"
+	return "forage"
 
 
 func _begin_dropoff() -> void:

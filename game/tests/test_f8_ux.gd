@@ -98,7 +98,13 @@ func test_d_save_and_load_identical() -> void:
 	var data: Dictionary = SaveManager.load_payload("test_match")
 	var before: Dictionary = _summary(world, rules)
 	await _close()
-	await _open(String(data["scenario"]), {1: "normal"}, data)
+	# Compare right after loading, before any physics step advances the match.
+	main = load("res://scenes/main/main.tscn").instantiate()
+	main.scenario = String(data["scenario"])
+	main.ai_override = {1: "normal"}
+	main.load_data = data
+	add_to_tree(main)
+	world = main.get_node("World")
 	var after: Dictionary = _summary(world, main.get_node("MatchRules"))
 	var diffs: PackedStringArray = PackedStringArray()
 	for key: String in before.keys():

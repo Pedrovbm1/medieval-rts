@@ -4,7 +4,7 @@
 > Una sesión nueva retoma desde aquí.
 
 ## Fase actual
-**F8 — Fog, minimapa, UX y guardado** (siguiente; F6 y F7 cerradas)
+**F9 — Arte, audio y contenido** (en curso; F8 cerrada)
 
 ## Completadas
 | Fase | Commit | Fecha | Gate |
@@ -18,11 +18,10 @@
 | F5.5 | ver BUILD-LOG | 2026-10-18 | 205/205 headless. Roster de 12: aldeano, explorador, miliciano, lancero, espadachín, arquero, escaramuzador, caballero, camellero (única de Northvale), ariete, mangonel, monje; cada nueva gana su duelo de rol y las 12 actúan en el ejército mixto |
 | F6 | ver BUILD-LOG | 2026-10-18 | Pasivo pierde vs IA Normal en ~19.8 min; IA sin map hack (0 ataques sin explorar; ataca al ver la base); pantalla de fin. Difícil vs Normal: NO cumplido: 3 duelos de 45 min terminaron en empate tras 3 rondas de ajustes (ver Blockers) |
 | F7 | ver BUILD-LOG | 2026-10-18 | 4 eras con requisito de 2 edificios; 24 techs en 3 ramas sin huérfanas, cada una cambia un número visible; IA Difícil llega a Era IV en ~22-24 min; torres |
+| F8 | ver BUILD-LOG | 2026-10-18 | Niebla por jugador (textura de 1 texel por celda), minimapa con alertas, grupos de control, menú de pausa, guardar/cargar (cargar = mismo estado, 24/24), autoguardado 120 s, menú principal. Partida completa Difícil vs Fácil con niebla y autoguardado: termina en 28-29 min, gana Difícil, 0 errores (tras arreglar F9-D50). Medición en S10 pendiente (teléfono ocupado por Pedro/AppScanner) |
 
 ## Siguiente
-**Detenido por el gate de F6 (ver Blockers): esperar decisión de Pedro.**
-Si se sigue con F8: el código ya escrito y sin probar está en la rama `wip/f8` (niebla `fog_layer.gd`, `minimap.gd`, `save_game.gd`, `main_menu.*`, `test_f8_ux.gd`, `tools/device_test_f8.sh`, `docs/f8_wire.py` con el cableado pendiente: HUD minimapa/grupos/menú de pausa, Main launch/autosave/load, visibilidad de enemigos, `project.godot` → main_menu).
-Gates F8: fog < 0.5 s; cargar = mismo estado; partida completa sin crash.
+F9 en curso. Hecho: arte por código integrado (atlas, poses, terreno con variantes, íconos), audio (47 SFX + 3 temas, música de batalla), tutorial de 5 misiones, 3 mapas curados simétricos con selector, inventario de licencias, playtest humano documentado (`docs/PLAYTEST-F9.md`), IA con dificultades reales. Falta: revisar el duelo Difícil vs Normal (gate F6) con los arreglos nuevos, medir F8/F9 en el S10 cuando Pedro lo suelte (`tools/device_test_f8.sh`, `device_bench.sh stress150`), gate humano de F9 (Pedro). Después F10 (necesita cuenta de Play Console de Pedro).
 
 ## Entorno
 | Pieza | Valor |
@@ -101,15 +100,26 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D44 | F7 | Costos de era bajados (II 350C; III 600C+200O; IV 800C+500O) | Con los originales la IA no podía tener ejército y llegar a Era IV en 25 min (partidas de 20-30 min) |
 | D45 | F7 | IA: ahorra para la era manteniendo un ejército mínimo por fase; pausa aldeanos al "subir" (18/26/34); turno de investigación (la más barata) | Equilibra "pasivo pierde en 15-20" y "Era IV en 25" |
 | D46 | F7 | Torre de vigía con flechas propias; Almenas/Química la mejoran | Plan 2.4 (defensa) |
+| D47 | F8 | Niebla configurable por escenario (`"fog": false` en pruebas/demos); `VisionSystem` oculta enemigos no visibles | Las pruebas de rendimiento no miden la niebla por accidente |
+| D48 | F8 | Menú principal como escena inicial; la partida se lanza con `GameState.launch` (escenario, IA, mapa o slot a cargar); autoguardado cada 120 s solo con IA; grupos 1-5: tocar = recuperar, mantener 0.5 s = asignar | Patrón móvil: un toque hace lo común, mantener hace lo raro |
+| D49 | F8 | `SaveGame` guarda unidades/edificios/recursos/techs/IA y regenera el terreno desde la semilla del mapa + celdas cortadas | Guardados chicos (KB) y deterministas |
+| D50 | F9 | Unidades que eligieron un edificio por su cuenta lo sueltan si llega un soldado enemigo (las órdenes explícitas se respetan) | Causa real de los empates IA vs IA: los atacantes golpeaban muros mientras los mataban |
+| D51 | F9 | Dificultades con perillas reales en `ai.json`: aldeanos (×0.6/×1.0), era máxima (Fácil III), probabilidad de investigar, tope de ejército (Fácil 18), multiplicador de producción (Difícil ×1.5) y +1 edificio militar por cada 1200 recursos acumulados | Antes Fácil ≈ Normal y Difícil no convertía economía en ejército |
+| D52 | F9 | Arte 100% por código (`systems/render/*_painter.gd`) horneado en un atlas de 2048x1024 al arrancar; 6 poses por unidad; espejo con ancho negativo; 3 variantes de terreno por celda con hash estable | Original, sin archivos binarios, 32-35 draw calls con HUD |
+| D53 | F9 | Audio sintetizado por `tools/gen_audio.py` (stdlib), WAV importado como QOA; sonidos del mundo solo si se ven en pantalla, con espacio mínimo por id; música cambia a batalla al ver combate entre jugadores (no caza) | Original y sin licencias; sin ruido en batallas grandes |
+| D54 | F9 | Mapas curados con simetría puntual (`"symmetry": "point"`): se genera y puebla la mitad y se refleja | Justicia exacta entre las dos bases |
+| D55 | F9 | Tutorial data-driven (`tutorial.json`) con metas que escuchan señales existentes del EventBus; no se guarda | Cero rutas especiales en los sistemas que enseña |
+| D56 | F9 | IA reparte de nuevo a los recolectores: si ahorra para una era (o un recurso baja de 150) mueve hasta 2 aldeanos por turno del recurso que sobra (≥600) al que falta | Solo se asignaban aldeanos ociosos: sobraban 2000 de madera y faltaba oro para la Era IV |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
-- **Gate F6 "Difícil gana a Normal 3 de 4" NO cumplido** (regla del prompt: 3 intentos → documentar y detener). Datos: 3 duelos Difícil vs Normal (semilla 11) llegaron al tope de 45 min sin ganador. Intentos: (1) oleadas completas en vez de refuerzos sueltos; (2) oleadas que crecen tras fallar + más asedio + destrabe del ahorro (oro agotado) y oleada alcanzable; (3) Difícil con las mismas fases que Normal. Diagnóstico: la defensa en casa es demasiado fuerte (producción al lado, refuerzos inmediatos) y la IA no ataca la economía enemiga ni usa asedio a tiempo; la ventaja económica de Difícil (+20%) no se convierte en victoria. Opciones para Pedro: (a) aceptar el hueco y seguir con F8, retomando el balance IA vs IA en F9 ("balance final"); (b) invertir en tácticas de IA (atacar aldeanos/campamentos, asedio temprano, retirada y reagrupamiento, flechas desde la Plaza Mayor); (c) redefinir el gate (p. ej. "Difícil termina con más recursos/población que Normal"). Correr: `godot --headless --path game tests/run_tests.tscn -- slow`.
-- Ninguno. Nota: el S10 se comparte con otra sesión (juego de Mateo); turnarse por mensaje.
+- **Gate F6 "Difícil gana a Normal 3 de 4"**: Pedro decidió seguir ("Si avanza,") y revisarlo en F9. En F9 se encontró la causa (D50) y se dieron perillas reales a las dificultades (D51): Difícil ya gana a Fácil en 28 min. Falta volver a correr el duelo Difícil vs Normal (`-- suite=test_f6_slow`).
+- S10 ocupado por Pedro probando AppScanner (aviso de la sesión "F6 PDF multipágina", 2026-10-18): no tomarlo hasta que lo suelte. Mediciones F8/F9 en device pendientes.
 - 2026-10-18: el S10 se desconectó de adb; el script de F7 alcanzó otro dispositivo por red (192.168.100.10:5555, Fire TV de otra sesión): mandó 1 toque, 1 captura y Home. Ya corregido: todos los scripts fijan `ANDROID_SERIAL=R58M154WY9A` y abortan si no está.
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
+- F9 (parcial): suite normal F0-F9 318/318 (F6 y F7 re-corridas solas tras el ajuste de IA), 0 errores de script. F9 art+audio 19/19, mapas+tutorial 29/29, balance 3/3. Gate F8 lento: Difícil gana a Fácil en 28.4 y 29.3 min. PC 1280x720: stress150 60 fps / 32 DC; battle20 60 fps / 33-35 DC; APK debug 29.9 MB.
 - F0: 22/22 headless. Device: arranque 0.6-0.9 s, 60 fps en pan.
 - F6+F7: suite normal F0-F5.5 sin cambios + F2 29/29, F6 17/17, F7 21/21 corridas solas. Nota: tiempos y economía de la IA dependen de la carga de CPU (la cola de rutas tiene tope de tiempo real); correr las suites de IA sin otras corridas en paralelo.
 - F5.5: 205/205 headless (~8 min).

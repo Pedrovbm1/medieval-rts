@@ -18,8 +18,8 @@ contenido propio, siempre.
 - [x] F5.5 — Roster de 12 unidades con roles
 - [x] F6 — IA enemiga (pasivo pierde en ~20 min; sin map hack)
 - [x] F7 — Eras y 24 tecnologías
-- [ ] F8 — Fog of war + UX
-- [ ] F9 — Arte y contenido
+- [x] F8 — Fog of war + UX (niebla, minimapa, guardado; Difícil gana a Fácil en ~29 min)
+- [ ] F9 — Arte y contenido (en curso: arte, audio, tutorial y 3 mapas listos; falta playtest humano)
 - [ ] F10 — Publicación
 
 ## Cómo trabajar
@@ -36,15 +36,18 @@ Requisitos para exportar a Android:
 
 ## Estructura
 ```
-game/                 proyecto Godot (abrir esta carpeta en el editor)
+game/
 ├─ project.godot
-├─ autoload/          EventBus, DataLoader, GameState, SaveManager
-├─ scenes/main/       main.tscn, world.tscn, camera_controller.gd
-├─ scenes/ui/         debug_overlay.gd (FPS / zoom en pantalla)
-├─ systems/world/     map_generator.gd (ruido → terreno), placeholder_tileset.gd
-├─ data/              terrain.json, civs.json, units/buildings/techs.json, maps/, i18n/ui.csv
-├─ assets/placeholder/
-└─ tests/run_tests.gd
+├─ autoload/          EventBus, DataLoader, GameState, SaveManager, Sfx, Music
+├─ scenes/main/       main (partida), world, scenario_runner, cámara
+├─ scenes/ui/         main_menu, hud, minimap
+├─ systems/           selection, pathfinding, economy, construction, combat,
+│                     ai, fog, tech, save, tutorial, world (mapas), render (arte por código)
+├─ data/              units/buildings/techs/eras/ai/audio/tutorial.json, maps/, i18n/ui.csv
+├─ assets/audio/      sfx/ y music/ generados por tools/gen_audio.py
+└─ tests/             run_tests.tscn + test_f*.gd (suites lentas: *_slow*)
+tools/                gen_audio.py, scripts adb para el S10 (device_*.sh)
+docs/                 BUILD-STATE, BUILD-LOG, LICENSES, plan y prompts
 ```
 
 ## Correr en escritorio

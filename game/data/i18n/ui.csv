@@ -144,3 +144,34 @@ STAT_ATTACK,ATQ,ATK
 STAT_ARMOR,ARM,ARM
 STAT_RANGE,ALC,RNG
 STAT_SPEED,VEL,SPD
+MENU_CONTINUE,Continuar partida,Continue
+MENU_NEW_GAME,Nueva partida,New game
+MENU_TUTORIAL,Tutorial,Tutorial
+MENU_RESUME,Reanudar,Resume
+MENU_SAVE,Guardar partida,Save game
+MENU_SAVED,Partida guardada,Game saved
+MENU_QUIT,Salir al menú,Quit to menu
+ALERT_UNDER_ATTACK,¡Te atacan!,Under attack!
+HUD_GROUP_HINT,Mantén para asignar,Hold to assign
+MENU_SOUND_ON,Sonido: Sí,Sound: On
+MENU_SOUND_OFF,Sonido: No,Sound: Off
+MAP_VALLE_RIO,Valle del Río,River Valley
+MAP_BOSQUE_CERRADO,Bosque Cerrado,Deep Forest
+MAP_TIERRAS_DORADAS,Tierras Doradas,Golden Lands
+MENU_CHOOSE_MAP,Elige el mapa,Choose the map
+MENU_CHOOSE_DIFFICULTY,Elige la dificultad,Choose the difficulty
+TUT_1_TITLE,Misión 1: Tus aldeanos,Mission 1: Your villagers
+TUT_1_TIP,Toca a un aldeano (la flecha lo señala) para seleccionarlo. Para elegir a varios, deja el dedo quieto un momento y luego arrastra un recuadro.,Tap a villager (the arrow points at it) to select it. To pick several, hold your finger still a moment, then drag a box.
+TUT_1B_TIP,Ahora toca el suelo en otro lugar: el aldeano caminará hasta allí. Desliza un dedo para mover la cámara y pellizca para hacer zoom.,Now tap the ground somewhere else: the villager walks there. Slide one finger to move the camera and pinch to zoom.
+TUT_2_TITLE,Misión 2: Comida,Mission 2: Food
+TUT_2_TIP,"Con un aldeano seleccionado, toca los arbustos de bayas. Recogerá comida y la llevará al Centro Urbano.","With a villager selected, tap the berry bushes. It gathers food and carries it to the Town Center."
+TUT_3_TITLE,Misión 3: Construir,Mission 3: Build
+TUT_3_TIP,"Selecciona un aldeano, toca Construir y elige Casa. Toca dónde ponerla y luego Confirmar. Las casas suben tu población.","Select a villager, tap Build and choose House. Tap where to place it, then Confirm. Houses raise your population."
+TUT_4_TITLE,Misión 4: Entrenar,Mission 4: Train
+TUT_4_TIP,Toca tu Centro Urbano y pulsa Aldeano para entrenar uno nuevo. Más aldeanos = más recursos.,Tap your Town Center and press Villager to train a new one. More villagers = more resources.
+TUT_5_TITLE,Misión 5: Defender,Mission 5: Defend
+TUT_5_TIP,¡Llegaron bandidos! Selecciona a tus milicianos (dedo quieto y recuadro) y toca a un enemigo para atacarlo.,Bandits are here! Select your militia (hold, then drag a box) and tap an enemy to attack it.
+TUT_DONE,"¡Tutorial completado! Ya conoces lo básico: recolecta, construye, entrena y defiende.","Tutorial complete! You know the basics: gather, build, train and defend."
+TUT_SKIP,Saltar,Skip
+TUT_MISSION,Misión %d de %d,Mission %d of %d
+TUT_FINISH,Volver al menú,Back to menu

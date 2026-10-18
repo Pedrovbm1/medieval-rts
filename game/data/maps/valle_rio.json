@@ -1,0 +1,168 @@
+{
+	"id": "valle_rio",
+	"name_key": "MAP_VALLE_RIO",
+	"width": 120,
+	"height": 120,
+	"seed": 20261101,
+	"symmetry": "point",
+	"height_noise": {
+		"frequency": 0.035,
+		"octaves": 3
+	},
+	"forest_noise": {
+		"frequency": 0.08,
+		"octaves": 2
+	},
+	"water_threshold": -0.55,
+	"forest_threshold": 0.3,
+	"shore_margin": 0.1,
+	"starts": [
+		[
+			22,
+			22
+		],
+		[
+			97,
+			97
+		]
+	],
+	"features": [
+		{
+			"type": "line",
+			"terrain": "water",
+			"from": [
+				0,
+				119
+			],
+			"to": [
+				119,
+				0
+			],
+			"width": 6
+		},
+		{
+			"type": "line",
+			"terrain": "water",
+			"from": [
+				30,
+				89
+			],
+			"to": [
+				8,
+				75
+			],
+			"width": 3
+		},
+		{
+			"type": "circle",
+			"terrain": "grass",
+			"center": [
+				38,
+				81
+			],
+			"radius": 4.5
+		},
+		{
+			"type": "circle",
+			"terrain": "grass",
+			"center": [
+				60,
+				59
+			],
+			"radius": 4
+		},
+		{
+			"type": "circle",
+			"terrain": "forest",
+			"center": [
+				34,
+				12
+			],
+			"radius": 4.5
+		},
+		{
+			"type": "circle",
+			"terrain": "forest",
+			"center": [
+				12,
+				35
+			],
+			"radius": 4
+		},
+		{
+			"type": "circle",
+			"terrain": "grass",
+			"center": [
+				22,
+				22
+			],
+			"radius": 10
+		}
+	],
+	"start_layout": [
+		{
+			"type": "gold_mine",
+			"count": 2,
+			"min": 7,
+			"max": 9,
+			"cluster": true
+		},
+		{
+			"type": "stone_mine",
+			"count": 1,
+			"min": 8,
+			"max": 10
+		},
+		{
+			"type": "berry_bush",
+			"count": 5,
+			"min": 5,
+			"max": 7,
+			"cluster": true
+		},
+		{
+			"type": "sheep",
+			"count": 4,
+			"min": 4,
+			"max": 7,
+			"kind": "animal"
+		},
+		{
+			"type": "deer",
+			"count": 3,
+			"min": 11,
+			"max": 15,
+			"kind": "animal"
+		},
+		{
+			"type": "boar",
+			"count": 1,
+			"min": 13,
+			"max": 16,
+			"kind": "animal"
+		}
+	],
+	"extra_resources": [
+		{
+			"type": "gold_mine",
+			"count": 2,
+			"min_from_start": 20
+		},
+		{
+			"type": "stone_mine",
+			"count": 2,
+			"min_from_start": 20
+		},
+		{
+			"type": "berry_bush",
+			"count": 2,
+			"min_from_start": 18
+		},
+		{
+			"type": "deer",
+			"count": 4,
+			"min_from_start": 16,
+			"kind": "animal"
+		}
+	]
+}

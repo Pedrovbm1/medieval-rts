@@ -38,6 +38,7 @@ func tick(delta: float) -> void:
 	if unit.is_moving():
 		world.movement.stop(unit)
 	_attempts = 0
+	unit.mark_working("hammer")
 	if not building.builders.has(unit):
 		building.builders.append(unit)
 	var index: int = building.builders.find(unit)

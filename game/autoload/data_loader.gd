@@ -16,6 +16,7 @@ const TABLE_FILES: Dictionary = {
 	"stances": "stances.json",
 	"ai": "ai.json",
 	"eras": "eras.json",
+	"tutorial": "tutorial.json",
 }
 const MAPS_DIR: String = "res://data/maps/"
 

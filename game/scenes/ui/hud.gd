@@ -22,6 +22,10 @@ signal dequeue_pressed
 signal cancel_construction_pressed
 signal retry_pressed
 signal research_pressed(item: String)
+signal group_pressed(n: int)
+signal group_held(n: int)
+signal menu_save_pressed
+signal menu_quit_pressed
 
 const RESOURCE_ORDER: PackedStringArray = ["food", "wood", "gold", "stone"]
 const BUTTON_SIZE: Vector2 = Vector2(120, 72)
@@ -43,6 +47,13 @@ var mode: Mode = Mode.NONE
 var tech: TechSystem = null
 var era_label: Label
 var banner: Label
+var minimap: Minimap
+var group_buttons: Array[Button] = []
+var menu_button: Button
+var pause_panel: PanelContainer = null
+var _group_down_ms: Dictionary = {}
+var _last_alert_ms: int = -100000
+const GROUP_HOLD_MS: int = 500
 var stop_button: Button
 var hold_button: Button
 var deselect_button: Button
@@ -78,6 +89,18 @@ func _ready() -> void:
 	banner.visible = false
 	add_child(banner)
 	EventBus.era_changed.connect(_on_era_changed)
+	EventBus.building_completed.connect(func(b: Building) -> void:
+		if b.owner_id == player_id:
+			Sfx.play("build_done"))
+	EventBus.unit_trained.connect(func(u: Unit, _b: Building) -> void:
+		if u.owner_id == player_id:
+			Sfx.play("unit_ready"))
+	EventBus.tech_researched.connect(func(p: int, _id: String) -> void:
+		if p == player_id:
+			Sfx.play("research_done"))
+	_build_minimap()
+	_build_groups()
+	_build_menu_button()
 	box_rect.visible = false
 	EventBus.resource_changed.connect(_on_resource_changed)
 	EventBus.population_changed.connect(_on_population_changed)
@@ -103,7 +126,7 @@ func _on_era_changed(p: int, era: int) -> void:
 		return
 	_refresh_era()
 	show_banner("%s: %s" % [tr("ERA_REACHED"), tr(String(DataLoader.get_entry("eras", str(era)).get("name_key", "")))])
-	Sfx.play("order_move")
+	Sfx.play("era_up")
 	if mode == Mode.BUILDING:
 		_set_mode(Mode.BUILDING)
 
@@ -174,8 +197,15 @@ func show_box(active: bool, from_screen: Vector2, to_screen: Vector2) -> void:
 
 ## True when a screen point lands on an interactive HUD element.
 func is_point_over_ui(screen_pos: Vector2) -> bool:
-	if end_panel != null:
+	if end_panel != null or pause_panel != null:
 		return true
+	if minimap != null and minimap.visible and minimap.get_global_rect().grow(4.0).has_point(screen_pos):
+		return true
+	if menu_button != null and menu_button.get_global_rect().has_point(screen_pos):
+		return true
+	for b: Button in group_buttons:
+		if b.get_global_rect().has_point(screen_pos):
+			return true
 	if selection_panel.visible and selection_panel.get_global_rect().has_point(screen_pos):
 		return true
 	return top_bar.get_global_rect().has_point(screen_pos)
@@ -389,9 +419,12 @@ func _add_button(text: String, sig: Signal, size: Vector2 = BUTTON_SIZE) -> Butt
 
 func _build_resource_row() -> void:
 	for res: String in RESOURCE_ORDER:
-		var chip: ColorRect = ColorRect.new()
-		chip.custom_minimum_size = Vector2(18, 18)
-		chip.color = ResourceColors.color(res)
+		# Icon from the shared atlas (same texture as the map: no extra draw call).
+		var chip: TextureRect = TextureRect.new()
+		chip.texture = PlaceholderArt.icon_texture(res)
+		chip.custom_minimum_size = Vector2(28, 28)
+		chip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		chip.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var label: Label = Label.new()
 		label.custom_minimum_size = Vector2(72, 0)
@@ -451,6 +484,8 @@ func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary) -
 	if end_panel != null:
 		return
 	_set_mode(Mode.NONE)
+	Music.stop()
+	Sfx.play("victory" if won else "defeat")
 	end_panel = PanelContainer.new()
 	end_panel.set_anchors_preset(Control.PRESET_CENTER)
 	end_panel.theme = selection_panel.theme
@@ -527,3 +562,141 @@ static func unit_stats_text(u: Unit) -> String:
 	parts.append("%s %d" % [TranslationServer.translate("STAT_SPEED"), int(u.speed_px)])
 	parts.append("HP %d/%d" % [u.hp, u.max_hp])
 	return "  ".join(parts)
+
+
+# ------------------------------------------------------------------ F8: minimap, groups, menu
+
+func _build_minimap() -> void:
+	minimap = Minimap.new()
+	minimap.custom_minimum_size = Vector2(200, 200)
+	minimap.size = Vector2(200, 200)
+	minimap.position = Vector2(12, get_viewport().get_visible_rect().size.y - 212 - 40)
+	minimap.set_anchors_preset(Control.PRESET_BOTTOM_LEFT, true)
+	minimap.offset_left = 12
+	minimap.offset_right = 212
+	minimap.offset_top = -252
+	minimap.offset_bottom = -52
+	add_child(minimap)
+	EventBus.under_attack.connect(_on_under_attack)
+
+
+func _on_under_attack(p: int, world_pos: Vector2) -> void:
+	if p != player_id or minimap == null:
+		return
+	minimap.alert(world_pos)
+	Music.combat_ping()
+	var now: int = Time.get_ticks_msec()
+	if now - _last_alert_ms > int(float(DataLoader.rule("alerts", "cooldown_s", 6.0)) * 1000.0):
+		_last_alert_ms = now
+		Sfx.play("alert")
+		show_banner(tr("ALERT_UNDER_ATTACK"))
+
+
+func _build_groups() -> void:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	column.position = Vector2(12, 92)
+	for n: int in range(1, 6):
+		var b: Button = Button.new()
+		b.text = str(n)
+		b.custom_minimum_size = Vector2(64, 64)
+		b.focus_mode = Control.FOCUS_NONE
+		b.tooltip_text = tr("HUD_GROUP_HINT")
+		b.add_theme_font_size_override("font_size", 22)
+		b.button_down.connect(func() -> void: _group_down_ms[n] = Time.get_ticks_msec())
+		b.button_up.connect(func() -> void: _group_released(n))
+		column.add_child(b)
+		group_buttons.append(b)
+	add_child(column)
+
+
+## Short tap recalls the group; holding >= 0.5 s assigns the selection to it.
+func _group_released(n: int) -> void:
+	var held: int = Time.get_ticks_msec() - int(_group_down_ms.get(n, Time.get_ticks_msec()))
+	if held >= GROUP_HOLD_MS:
+		group_held.emit(n)
+	else:
+		group_pressed.emit(n)
+
+
+func set_group_count(n: int, count: int) -> void:
+	if n >= 1 and n <= group_buttons.size():
+		group_buttons[n - 1].text = str(n) if count == 0 else "%d\n%d" % [n, count]
+
+
+func _build_menu_button() -> void:
+	menu_button = Button.new()
+	menu_button.text = "≡"
+	menu_button.custom_minimum_size = Vector2(72, 72)
+	menu_button.focus_mode = Control.FOCUS_NONE
+	menu_button.add_theme_font_size_override("font_size", 32)
+	menu_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	menu_button.offset_left = -84
+	menu_button.offset_right = -12
+	menu_button.offset_top = 8
+	menu_button.offset_bottom = 80
+	menu_button.pressed.connect(open_pause_menu)
+	add_child(menu_button)
+
+
+## Pause panel: Resume / Save / Quit to menu. The tree is paused while open.
+func open_pause_menu() -> void:
+	if pause_panel != null or end_panel != null:
+		return
+	Sfx.play("ui_click")
+	pause_panel = PanelContainer.new()
+	pause_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	pause_panel.theme = selection_panel.theme
+	pause_panel.add_theme_stylebox_override("panel", selection_panel.get_theme_stylebox("panel"))
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	var margin: MarginContainer = MarginContainer.new()
+	for side: String in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 24)
+	margin.add_child(box)
+	pause_panel.add_child(margin)
+	Sfx.play("ui_open")
+	for entry: Array in [["MENU_RESUME", close_pause_menu], ["MENU_SAVE", func() -> void: menu_save_pressed.emit()], ["MENU_QUIT", func() -> void: menu_quit_pressed.emit()]]:
+		var b: Button = Button.new()
+		b.text = tr(String(entry[0]))
+		b.custom_minimum_size = Vector2(300, 76)
+		b.focus_mode = Control.FOCUS_NONE
+		b.process_mode = Node.PROCESS_MODE_ALWAYS
+		var action: Callable = entry[1]
+		b.pressed.connect(func() -> void:
+			Sfx.play("ui_click")
+			action.call())
+		box.add_child(b)
+		if OS.is_debug_build():
+			_log_named.call_deferred(b, b.text)
+	var sound: Button = Button.new()
+	sound.custom_minimum_size = Vector2(300, 76)
+	sound.focus_mode = Control.FOCUS_NONE
+	sound.process_mode = Node.PROCESS_MODE_ALWAYS
+	sound.text = tr("MENU_SOUND_OFF") if Sfx.muted else tr("MENU_SOUND_ON")
+	sound.pressed.connect(func() -> void:
+		Sfx.muted = not Sfx.muted
+		Music.set_muted(Sfx.muted)
+		sound.text = tr("MENU_SOUND_OFF") if Sfx.muted else tr("MENU_SOUND_ON")
+		Sfx.play("ui_click"))
+	box.add_child(sound)
+	box.move_child(sound, box.get_child_count() - 2)
+	add_child(pause_panel)
+	pause_panel.reset_size()
+	pause_panel.position = (get_viewport().get_visible_rect().size - pause_panel.size) * 0.5
+	get_tree().paused = true
+
+
+func _log_named(b: Button, label: String) -> void:
+	await get_tree().process_frame
+	if is_instance_valid(b):
+		var c: Vector2 = b.get_global_rect().get_center()
+		print("[REALM] hud btn %s=(%d,%d)" % [label, int(c.x), int(c.y)])
+
+
+func close_pause_menu() -> void:
+	if pause_panel == null:
+		return
+	pause_panel.queue_free()
+	pause_panel = null
+	get_tree().paused = false

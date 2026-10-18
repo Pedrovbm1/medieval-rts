@@ -39,6 +39,7 @@ func apply_hit(attacker: Node2D, target: Object, dmg: int) -> void:
 	if attacker != null and is_instance_valid(attacker):
 		var kind: String = source.unit_type if source != null else String(attacker.get("building_type"))
 		damage_by_type[kind] = int(damage_by_type.get(kind, 0)) + dmg
+	_hit_sound(attacker, target)
 	if target is Unit:
 		var u: Unit = target
 		u.take_damage(dmg, source)
@@ -48,6 +49,25 @@ func apply_hit(attacker: Node2D, target: Object, dmg: int) -> void:
 			u.queue_redraw()
 	elif target is Building:
 		(target as Building).take_damage(dmg, source)
+
+
+## Impact sound: swords for melee, thuds for arrows, crashes on buildings.
+func _hit_sound(attacker: Node2D, target: Object) -> void:
+	var at: Vector2 = (target as Node2D).position
+	var id: String = "hit_building"
+	if target is Unit:
+		var melee: bool = attacker != null and is_instance_valid(attacker) and attacker is Unit 				and float(Dictionary((attacker as Unit).data.get("combat", {})).get("range_px", 0.0)) <= 0.0
+		id = "sword" if melee else "arrow_hit"
+	if Sfx.play_at(id, at):
+		_ping_music(attacker, target)
+
+
+## Fighting between players (not hunting) on screen: battle music.
+func _ping_music(attacker: Object, target: Object) -> void:
+	if attacker == null or not is_instance_valid(attacker) or not is_instance_valid(target):
+		return
+	if int(attacker.get("owner_id")) >= 0 and int(target.get("owner_id")) >= 0:
+		Music.combat_ping()
 
 
 func fire(attacker: Node2D, target: Object, dmg: int, speed: float, splash: float = 0.0) -> void:
@@ -62,12 +82,15 @@ func fire(attacker: Node2D, target: Object, dmg: int, speed: float, splash: floa
 		_projectiles.append(p)
 	p.launch(attacker, target, dmg, speed, splash)
 	shots_fired += 1
+	if Sfx.play_at("siege_fire" if splash > 0.0 else "bow", attacker.position):
+		_ping_music(attacker, target)
 
 
 ## Area damage around `center`: full damage at the centre, half at the edge.
 ## Hits every enemy unit and building of the shooter in range (no friendly fire).
 func apply_splash(attacker: Node2D, shooter_owner: int, center: Vector2, radius: float, base_damage: int) -> int:
 	var hits: int = 0
+	Sfx.play_at("siege_hit", center)
 	var src: Unit = attacker as Unit if is_instance_valid(attacker) else null
 	for other: Object in world.movement.spatial.query(center, radius + 24.0).duplicate():
 		var u: Unit = other as Unit
@@ -125,14 +148,9 @@ func find_enemy(unit: Unit) -> Object:
 	var best: Object = null
 	var best_d: float = INF
 	if not bool(attack.get("buildings_only", false)):
-		for other: Object in world.movement.spatial.query(unit.position, sight):
-			var o: Unit = other as Unit
-			if o == unit or o.is_dead or o.owner_id < 0 or o.owner_id == unit.owner_id:
-				continue
-			var d: float = unit.position.distance_to(o.position)
-			if d <= sight and d < best_d:
-				best_d = d
-				best = o
+		best = nearest_enemy_unit(unit, sight)
+		if best != null:
+			best_d = unit.position.distance_to((best as Unit).position)
 	if best != null or unit.can_gather():
 		return best
 	for b: Building in world.buildings:
@@ -142,6 +160,21 @@ func find_enemy(unit: Unit) -> Object:
 		if d <= sight and d < best_d:
 			best_d = d
 			best = b
+	return best
+
+
+## Nearest enemy (player-owned) unit within `sight` px, or null.
+func nearest_enemy_unit(unit: Unit, sight: float) -> Unit:
+	var best: Unit = null
+	var best_d: float = INF
+	for other: Object in world.movement.spatial.query(unit.position, sight):
+		var o: Unit = other as Unit
+		if o == unit or o.is_dead or o.owner_id < 0 or o.owner_id == unit.owner_id:
+			continue
+		var d: float = unit.position.distance_to(o.position)
+		if d <= sight and d < best_d:
+			best_d = d
+			best = o
 	return best
 
 
@@ -184,6 +217,9 @@ func _acquire_targets() -> void:
 		if unit.data.get("combat", {}).is_empty():
 			continue
 		var stance: Dictionary = unit.stance_data()
+		if unit.task is AttackTask:
+			_prefer_soldiers(unit, unit.task as AttackTask)
+			continue
 		if unit.task != null:
 			continue
 		var foe: Unit = unit.last_attacker
@@ -197,6 +233,20 @@ func _acquire_targets() -> void:
 		var enemy: Object = find_enemy(unit)
 		if enemy != null:
 			world.behavior.assign(unit, AttackTask.new(unit, world, enemy, false))
+
+
+## A unit that picked a building on its own drops it when enemy soldiers
+## come close: fighting back beats hitting walls while being cut down.
+## Explicit orders (the player tapped the building) are kept.
+func _prefer_soldiers(unit: Unit, task: AttackTask) -> void:
+	if task.ordered or not (task.target is Building) or bool(Dictionary(unit.data.get("combat", {})).get("buildings_only", false)):
+		return
+	var threat: Unit = nearest_enemy_unit(unit, float(unit.data.get("sight_px", 288)))
+	if threat == null:
+		return
+	var next: AttackTask = AttackTask.new(unit, world, threat, false)
+	next.resume_to = task.resume_to
+	world.behavior.assign(unit, next)
 
 
 ## Group order: walk to `target` and fight whatever is met on the way.
@@ -213,6 +263,7 @@ func attack_move(group: Array[Unit], target: Vector2) -> void:
 ## A unit just died: keep it on screen as a fading corpse, then pool it.
 func add_corpse(unit: Unit) -> void:
 	kills += 1
+	Sfx.play_at("death", unit.position)
 	unit.corpse_t = _corpse_seconds
 	unit.selected = false
 	_corpses[unit] = true

@@ -159,6 +159,7 @@ func _step(delta: float) -> void:
 	_handle_nav_changes()
 	for unit: Unit in units:
 		_steer(unit, delta)
+		unit.animate(delta)
 
 
 func _handle_nav_changes() -> void:

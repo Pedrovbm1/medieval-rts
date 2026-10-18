@@ -32,8 +32,9 @@ sleep 3
 CX=$((VW / 2))
 # Title menu: buttons are centred; with no save the first is "New game".
 tap_label "Nueva partida" 1.5
-tap_label "Normal" 5
-expect "scenario skirmish start" "title menu -> New game -> Normal starts a skirmish"
+tap_label "Normal" 1.5
+tap_label "Valle del Río" 5
+expect "scenario skirmish start" "title menu -> New game -> Normal -> Valle del Río starts a skirmish"
 # Minimap sits bottom-left: tap its centre.
 tap 112 568 1
 expect "perf|scenario" "the match is running after the minimap tap"

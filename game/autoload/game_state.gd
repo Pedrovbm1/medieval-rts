@@ -25,6 +25,9 @@ var additions: Dictionary = {}
 var stats: Dictionary = {}
 ## player_id -> { tech_id: true }
 var researched: Dictionary = {}
+## Set by the main menu before loading the match scene:
+## {"scenario": id, "ai": {"1": "normal"}} or {"load": slot}. Consumed once.
+var launch: Dictionary = {}
 
 
 func _ready() -> void:

@@ -142,10 +142,13 @@ func has_free_work_slot(unit: Unit) -> bool:
 	return workers.size() < int(gather_info().get("workers", 1))
 
 
-func take_damage(amount: int, _source: Unit) -> void:
+func take_damage(amount: int, source: Unit) -> void:
 	hp = maxi(0, hp - maxi(1, amount))
+	if source != null and is_instance_valid(source) and owner_id >= 0 and source.owner_id >= 0 and source.owner_id != owner_id:
+		EventBus.under_attack.emit(owner_id, position)
 	queue_redraw()
 	if hp == 0:
+		Sfx.play_at("collapse", position)
 		destroyed.emit(self)
 
 

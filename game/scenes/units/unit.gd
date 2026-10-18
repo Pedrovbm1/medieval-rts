@@ -58,6 +58,16 @@ var winding_up: bool = false
 var facing_target: Vector2 = Vector2.ZERO
 var flash_t: float = 0.0
 var corpse_t: float = 0.0
+## Animation (F9): current atlas pose, facing and timers. Purely visual.
+var pose: String = "idle"
+var face_left: bool = false
+var anim_t: float = 0.0
+var strike_t: float = 0.0
+var _last_x: float = 0.0
+var _was_winding: bool = false
+## Set every tick by gather/build tasks; while > 0 the unit swings its tool.
+var work_t: float = 0.0
+var work_sfx: String = ""
 
 
 ## Must be called before adding the unit to the tree.
@@ -65,6 +75,7 @@ func setup(type_id: String, player_id: int, world_pos: Vector2) -> void:
 	unit_type = type_id
 	owner_id = player_id
 	position = world_pos
+	_last_x = world_pos.x
 	data = DataLoader.get_entry("units", type_id)
 	if data.is_empty():
 		push_error("Unit: unknown type " + type_id)
@@ -113,7 +124,55 @@ func reset_for_pool() -> void:
 	winding_up = false
 	flash_t = 0.0
 	corpse_t = 0.0
+	pose = "idle"
+	face_left = false
+	anim_t = 0.0
+	strike_t = 0.0
+	_was_winding = false
+	work_t = 0.0
+	work_sfx = ""
 	modulate = Color.WHITE
+
+
+## Picks the animation pose from what the unit is doing. Called once per
+## physics frame by MovementSystem; redraws only when the frame changes.
+func animate(delta: float) -> void:
+	if is_dead:
+		return
+	var dx: float = position.x - _last_x
+	_last_x = position.x
+	var left: bool = face_left
+	if absf(dx) > 0.05:
+		left = dx < 0.0
+	if winding_up and facing_target != Vector2.ZERO:
+		left = facing_target.x < position.x
+	if _was_winding and not winding_up:
+		strike_t = 0.2
+	_was_winding = winding_up
+	strike_t = maxf(0.0, strike_t - delta)
+	var next: String = "idle"
+	if winding_up:
+		next = "attack0"
+	elif strike_t > 0.0:
+		next = "attack1"
+	elif work_t > 0.0:
+		work_t -= delta
+		anim_t += delta
+		next = "attack0" if fmod(anim_t, 0.7) < 0.4 else "attack1"
+		if next == "attack1" and pose == "attack0":
+			Sfx.play_at(work_sfx, position)
+	elif is_moving() and not waiting_path:
+		anim_t += delta
+		next = "walk0" if fmod(anim_t, 0.36) < 0.18 else "walk1"
+	if next != pose or left != face_left:
+		pose = next
+		face_left = left
+		queue_redraw()
+
+
+func mark_working(sfx_id: String) -> void:
+	work_t = 0.25
+	work_sfx = sfx_id
 
 
 func is_moving() -> bool:
@@ -158,6 +217,8 @@ func take_damage(amount: int, source: Unit) -> void:
 	hp = maxi(0, hp - maxi(1, amount))
 	if source != null and is_instance_valid(source):
 		last_attacker = source
+		if owner_id >= 0 and source.owner_id >= 0 and source.owner_id != owner_id:
+			EventBus.under_attack.emit(owner_id, position)
 	queue_redraw()
 	if hp == 0:
 		is_dead = true
@@ -179,16 +240,22 @@ func change_owner(new_owner: int) -> void:
 
 func _draw() -> void:
 	var tex: Texture2D = PlaceholderArt.texture()
-	var region: Rect2 = PlaceholderArt.unit_region(unit_type, owner_id)
 	if is_dead:
-		# Corpse: flattened, darkened and fading out before going to the pool.
+		# Corpse: the fallen pose, fading out before going to the pool.
+		var dead_region: Rect2 = PlaceholderArt.unit_frame(unit_type, owner_id, "dead")
 		var fade: float = clampf(corpse_t / 0.8, 0.0, 1.0)
-		draw_texture_rect_region(tex, Rect2(Vector2(-region.size.x * 0.5, -region.size.y * 0.25), Vector2(region.size.x, region.size.y * 0.5)), region, Color(0.35, 0.3, 0.3, fade))
+		draw_texture_rect_region(tex, Rect2(-dead_region.size * 0.5, dead_region.size), dead_region, Color(0.8, 0.75, 0.75, fade))
 		return
+	var region: Rect2 = PlaceholderArt.unit_frame(unit_type, owner_id, pose)
 	if selected:
 		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 32, Color(0.35, 1.0, 0.35), 3.0, true)
 	var tint: Color = Color(1.0, 0.45, 0.45) if flash_t > 0.0 else Color.WHITE
-	draw_texture_rect_region(tex, Rect2(-region.size * 0.5, region.size), region, tint)
+	# Facing left = the same frame drawn with a negative width (a mirror),
+	# which keeps every unit in the same batch (no transform change).
+	var dest: Rect2 = Rect2(-region.size * 0.5, region.size)
+	if face_left:
+		dest = Rect2(Vector2(region.size.x * 0.5, -region.size.y * 0.5), Vector2(-region.size.x, region.size.y))
+	draw_texture_rect_region(tex, dest, region, tint)
 	if winding_up and facing_target != Vector2.ZERO:
 		# Wind-up tell: a short bright stroke toward the target before the hit lands.
 		var dir: Vector2 = (facing_target - position).normalized()

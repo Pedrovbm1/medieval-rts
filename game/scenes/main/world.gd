@@ -129,7 +129,7 @@ func take_from_tree(cell: Vector2i, want: float) -> float:
 	if left <= 0.0001:
 		_tree_amount.erase(key)
 		terrain_grid[key] = _grass_id
-		terrain_layer.set_cell(cell, TERRAIN_SOURCE_ID, Vector2i(_grass_id, 0))
+		terrain_layer.set_cell(cell, TERRAIN_SOURCE_ID, PlaceholderTileset.atlas_coords(_grass_id, cell))
 		nav.set_terrain_walkable(cell, true)
 		EventBus.tree_depleted.emit(cell)
 	else:
@@ -467,6 +467,30 @@ static func distance_to_rect(point: Vector2, rect: Rect2) -> float:
 	return point.distance_to(clamped)
 
 
+## Saved tree amounts (cell key -> wood left), for SaveGame.
+func tree_amounts_dict() -> Dictionary:
+	var out: Dictionary = {}
+	for key: int in _tree_amount.keys():
+		out[str(key)] = _tree_amount[key]
+	return out
+
+
+## Applies a saved terrain grid (trees cut since the map was generated) and
+## the partial tree amounts. Cells that became grass are freed for paths.
+func apply_terrain(saved: PackedByteArray, trees: Dictionary) -> void:
+	if saved.size() == terrain_grid.size():
+		for i: int in saved.size():
+			if saved[i] != terrain_grid[i]:
+				terrain_grid[i] = saved[i]
+				var cell: Vector2i = Vector2i(i % map_width, i / map_width)
+				terrain_layer.set_cell(cell, TERRAIN_SOURCE_ID, PlaceholderTileset.atlas_coords(saved[i], cell))
+				nav.set_terrain_walkable(cell, saved[i] != _forest_id)
+	_tree_amount.clear()
+	for key: Variant in trees.keys():
+		_tree_amount[int(key)] = float(trees[key])
+	nav.consume_changes()
+
+
 func _block_is_grass(center: Vector2i, margin: int) -> bool:
 	for dy: int in range(-margin, margin + 1):
 		for dx: int in range(-margin, margin + 1):
@@ -480,4 +504,4 @@ func _paint_terrain() -> void:
 	for y: int in map_height:
 		for x: int in map_width:
 			var terrain_id: int = terrain_grid[y * map_width + x]
-			terrain_layer.set_cell(Vector2i(x, y), TERRAIN_SOURCE_ID, Vector2i(terrain_id, 0))
+			terrain_layer.set_cell(Vector2i(x, y), TERRAIN_SOURCE_ID, PlaceholderTileset.atlas_coords(terrain_id, Vector2i(x, y)))

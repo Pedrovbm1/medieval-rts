@@ -34,7 +34,20 @@ static func generate(map_def: Dictionary, terrain_def: Dictionary) -> PackedByte
 				terrain_id = forest_id
 			grid[y * width + x] = terrain_id
 	_apply_features(grid, width, height, map_def.get("features", []), types)
+	if String(map_def.get("symmetry", "")) == "point":
+		mirror_point(grid, width, height)
 	return grid
+
+
+## Point symmetry (180 degree rotation about the centre): the second half of
+## the map copies the first, so both diagonal starts get the same land.
+static func mirror_point(grid: PackedByteArray, width: int, height: int) -> void:
+	for y: int in height:
+		for x: int in width:
+			var i: int = y * width + x
+			var j: int = (height - 1 - y) * width + (width - 1 - x)
+			if i > j:
+				grid[i] = grid[j]
 
 
 ## Hand-placed shapes painted over the noise, in order. Used by curated and test maps.

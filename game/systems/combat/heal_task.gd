@@ -35,6 +35,7 @@ func tick(delta: float) -> void:
 		var amount: int = int(_accum)
 		_accum -= amount
 		target.heal(amount)
+		Sfx.play_at("heal", target.position)
 		world.combat.healed += amount
 
 

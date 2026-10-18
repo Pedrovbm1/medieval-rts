@@ -8,6 +8,9 @@ const DEFAULT_BUILDING_SIGHT: float = 256.0
 
 var world: World
 var grid: VisionGrid = VisionGrid.new()
+## Fog drawn for the human (null = no fog, e.g. benchmarks and tests).
+var fog_layer: FogLayer = null
+var fog_enabled: bool = true
 var interval: float = 0.25
 var last_update_usec: int = 0
 var _timer: float = 0.0
@@ -39,4 +42,20 @@ func refresh() -> void:
 		if sources.has(b.owner_id):
 			(sources[b.owner_id] as Array).append([b.position, Combat.sight_of(b, DEFAULT_BUILDING_SIGHT)])
 	grid.update(sources)
+	if fog_enabled:
+		_apply_visibility()
+		if fog_layer != null:
+			fog_layer.refresh()
 	last_update_usec = Time.get_ticks_usec() - t0
+
+
+## Enemy and wild units, and enemy buildings, are drawn only while the human
+## sees them; resources show once explored. Own things are always drawn.
+func _apply_visibility() -> void:
+	var me: int = GameState.PLAYER_HUMAN
+	for u: Unit in world.units:
+		u.visible = u.owner_id == me or grid.is_visible(me, u.position)
+	for b: Building in world.buildings:
+		b.visible = b.owner_id == me or grid.is_visible(me, b.position)
+	for n: ResourceNode in world.resource_nodes:
+		n.visible = grid.is_explored(me, n.position)

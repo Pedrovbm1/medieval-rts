@@ -62,7 +62,7 @@ func confirm() -> Building:
 		return null
 	active = false
 	visible = false
-	Sfx.play("order_move")
+	Sfx.play("place_building")
 	state_changed.emit(false, "")
 	placed.emit(b)
 	_log("placed %s at=(%d,%d)" % [type_id, cell.x, cell.y])

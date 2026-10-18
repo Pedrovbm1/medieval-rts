@@ -15,6 +15,7 @@ func _ready() -> void:
 		_start.call_deferred({})
 		return
 	title.text = tr("APP_NAME")
+	Music.play_theme("menu")
 	_show_main()
 
 
@@ -30,10 +31,23 @@ func _show_main() -> void:
 
 func _show_difficulty() -> void:
 	_clear()
+	_heading(tr("MENU_CHOOSE_DIFFICULTY"))
 	for id: String in ["easy", "normal", "hard"]:
 		var key: String = String(Dictionary(Dictionary(DataLoader.get_table("ai").get("difficulties", {})).get(id, {})).get("name_key", id))
-		_button(tr(key), func() -> void: _start({"scenario": "skirmish", "ai": {"1": id}}))
+		_button(tr(key), func() -> void: _show_maps(id))
 	_button(tr("HUD_BACK"), _show_main)
+
+
+func _show_maps(difficulty: String) -> void:
+	_clear()
+	_heading(tr("MENU_CHOOSE_MAP"))
+	for map_id: Variant in DataLoader.get_entry("scenarios", "_maps").get("list", []):
+		var def: Dictionary = DataLoader.get_map(String(map_id))
+		if def.is_empty():
+			continue
+		var id: String = String(map_id)
+		_button(tr(String(def.get("name_key", id))), func() -> void: _start({"scenario": "skirmish", "map": id, "ai": {"1": difficulty}}))
+	_button(tr("HUD_BACK"), _show_difficulty)
 
 
 func _start(launch: Dictionary) -> void:
@@ -46,6 +60,14 @@ func _clear() -> void:
 		if child != title:
 			box.remove_child(child)
 			child.queue_free()
+
+
+func _heading(text: String) -> void:
+	var l: Label = Label.new()
+	l.text = text
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", 24)
+	box.add_child(l)
 
 
 func _button(text: String, action: Callable) -> Button:

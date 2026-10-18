@@ -8,6 +8,8 @@ extends Node
 
 signal attack_ordered(target: Vector2, explored: bool)
 
+const PRODUCTION: PackedStringArray = ["barracks", "archery_range", "stable"]
+
 var world: World
 var player_id: int = GameState.PLAYER_AI
 var difficulty_id: String = "normal"
@@ -132,7 +134,7 @@ func _update_knowledge() -> void:
 
 func _economy(villagers: Array[Unit]) -> void:
 	var tcs: Array[Building] = _mine("town_center").filter(func(b: Building) -> bool: return b.is_complete())
-	var target: int = int(Dictionary(cfg.get("villager_target", {})).get(phase, 20))
+	var target: int = _villager_target()
 	var queued: int = 0
 	for tc: Building in tcs:
 		queued += tc.queue.count("villager")
@@ -182,8 +184,13 @@ func _economy(villagers: Array[Unit]) -> void:
 		var ex: int = 0 if int(DataLoader.get_entry("buildings", String(x)).get("era", 1)) == era_now else 1
 		var ey: int = 0 if int(DataLoader.get_entry("buildings", String(y)).get("era", 1)) == era_now else 1
 		return ex < ey)
+	var extra: int = _extra_production()
 	for type_id: String in order:
 		var want: int = int(Dictionary(bcfg.get(type_id, {})).get(phase, 0))
+		if PRODUCTION.has(type_id) and want > 0:
+			# Stronger AIs (and any AI floating resources) add production so
+			# a bigger economy becomes a bigger army.
+			want = int(ceil(want * float(diff.get("production_mult", 1.0)))) + extra
 		var bera: int = int(DataLoader.get_entry("buildings", type_id).get("era", 1))
 		if saving_for_era and bera == era_now and want == 0 and world.tech.era_buildings(player_id) < 2 and type_id != "siege_workshop":
 			want = 1
@@ -192,6 +199,18 @@ func _economy(villagers: Array[Unit]) -> void:
 		if era_ok and have.size() < want and not have.any(func(b: Building) -> bool: return not b.is_complete()):
 			_build(type_id, _front(), villagers, 2)
 	_assign_idle(villagers)
+	_rebalance(villagers)
+
+
+## +1 production building per `float_step` resources banked (capped).
+func _extra_production() -> int:
+	if phase != "harass" and phase != "push":
+		return 0
+	var bcfg: Dictionary = cfg.get("buildings", {})
+	var bank: int = 0
+	for res: String in ["food", "wood", "gold"]:
+		bank += GameState.get_resource(player_id, res)
+	return mini(int(bcfg.get("float_extra_max", 2)), bank / maxi(1, int(bcfg.get("float_step", 1200))))
 
 
 ## Nearest tree to home that is not already served by one of our camps.
@@ -242,6 +261,50 @@ func _assign_idle(villagers: Array[Unit]) -> void:
 		if task != null:
 			world.behavior.assign(v, task)
 			current[best] = int(current[best]) + 1
+
+
+## Moves a few gatherers from a resource we are swimming in to one we lack:
+## the era (or tech) cost when saving, else anything far below the rest.
+## Without this only idle villagers were ever placed, so wood piled up while
+## gold ran short and the AI never reached the next era.
+func _rebalance(villagers: Array[Unit]) -> void:
+	var rcfg: Dictionary = cfg.get("rebalance", {})
+	var surplus_at: int = int(rcfg.get("surplus", 600))
+	var bank: Dictionary = {}
+	for res: String in ["food", "wood", "gold", "stone"]:
+		bank[res] = GameState.get_resource(player_id, res)
+	var need: Dictionary = {}
+	if saving_for_era and saving_reason == "cost":
+		var cost: Dictionary = TechSystem.item_cost(TechSystem.era_item(GameState.era_of(player_id) + 1))
+		for res: String in cost.keys():
+			if int(cost[res]) > int(bank.get(res, 0)):
+				need[res] = int(cost[res]) - int(bank.get(res, 0))
+	else:
+		for res: String in ["food", "wood", "gold"]:
+			if int(bank[res]) < int(rcfg.get("low", 150)):
+				need[res] = int(rcfg.get("low", 150)) - int(bank[res])
+	if need.is_empty():
+		return
+	var short: String = ""
+	for res: String in need.keys():
+		if short == "" or int(need[res]) > int(need[short]):
+			short = res
+	var donor: String = ""
+	for res: String in ["wood", "food", "gold", "stone"]:
+		if res != short and not need.has(res) and int(bank[res]) >= surplus_at and (donor == "" or int(bank[res]) > int(bank[donor])):
+			donor = res
+	if donor == "":
+		return
+	var moved: int = 0
+	for v: Unit in villagers:
+		if moved >= int(rcfg.get("per_think", 2)):
+			break
+		if v.task is GatherTask and (v.task as GatherTask).resource == donor and v.carry_amount < 1.0:
+			var task: UnitTask = _gather_task(v, short)
+			if task == null:
+				return
+			world.behavior.assign(v, task)
+			moved += 1
 
 
 func _gather_task(v: Unit, res: String) -> UnitTask:
@@ -300,8 +363,13 @@ func _build(type_id: String, near: Vector2, villagers: Array[Unit], count: int) 
 # ------------------------------------------------------------------ eras & techs
 
 ## Advance era when the phase asks for it, then spend spare resources on techs.
+## Workforce goal for the current phase, scaled by difficulty.
+func _villager_target() -> int:
+	return int(round(float(Dictionary(cfg.get("villager_target", {})).get(phase, 20)) * float(diff.get("villager_mult", 1.0))))
+
+
 func _advance(villagers: Array[Unit]) -> void:
-	var want_era: int = int(Dictionary(cfg.get("eras", {})).get(phase, 1))
+	var want_era: int = mini(int(Dictionary(cfg.get("eras", {})).get(phase, 1)), int(diff.get("max_era", 4)))
 	var era: int = GameState.era_of(player_id)
 	var tc: Building = _first_of("town_center")
 	saving_for_era = false
@@ -338,6 +406,9 @@ func _advance(villagers: Array[Unit]) -> void:
 ## researched for a while, save for it (army production pauses briefly).
 func _research() -> void:
 	saving_for_tech = false
+	# Easier AIs skip some research turns (they upgrade less, like weaker players).
+	if rng.randf() > float(diff.get("research_chance", 1.0)):
+		return
 	var gap: float = float(Dictionary(cfg.get("research", {})).get("save_after_s", 90.0))
 	var best_item: String = ""
 	var best_b: Building = null
@@ -365,8 +436,12 @@ func _research() -> void:
 
 func _military(villagers: Array[Unit], military: Array[Unit]) -> void:
 	var army: Dictionary = cfg.get("army", {})
-	var target_v: int = int(Dictionary(cfg.get("villager_target", {})).get(phase, 20))
+	var target_v: int = _villager_target()
 	if phase == "opening" or villagers.size() < int(target_v * float(army.get("train_when_villagers_ratio", 0.6))):
+		return
+	# Easier AIs keep a small standing army (0 = no cap).
+	var cap: int = int(diff.get("army_cap", 0))
+	if cap > 0 and military.size() >= cap:
 		return
 	var mix: Dictionary = Dictionary(army.get("mix", {})).duplicate()
 	if phase == "push":
@@ -438,7 +513,7 @@ func _attack(military: Array[Unit]) -> void:
 		if _wave_was_alive and alive < 3:
 			failed_waves += 1
 		_wave_was_alive = alive >= 3
-		var growth: float = 1.0 + float(army.get("wave_growth", 0.25)) * failed_waves
+		var growth: float = 1.0 + float(diff.get("wave_growth", army.get("wave_growth", 0.25))) * failed_waves
 		var wave: int = mini(int(army.get("wave_cap", 40)), maxi(4, int(float(army.get("wave_min", 14)) * mult * growth)))
 		# A grown wave must stay reachable: never ask for more than 80% of the army.
 		wave = mini(wave, maxi(int(float(army.get("wave_min", 14)) * mult), int(military.size() * 0.8)))

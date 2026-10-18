@@ -15,7 +15,8 @@
 				"player": 0,
 				"count": 2
 			}
-		]
+		],
+		"fog": false
 	},
 	"skirmish": {
 		"map": "skirmish_120",
@@ -163,7 +164,8 @@
 				]
 			}
 		],
-		"report_arrival": true
+		"report_arrival": true,
+		"fog": false
 	},
 	"stress150": {
 		"map": "test_open",
@@ -203,7 +205,8 @@
 				98,
 				98
 			]
-		}
+		},
+		"fog": false
 	},
 	"build4min": {
 		"map": "skirmish_120",
@@ -240,7 +243,8 @@
 			60
 		],
 		"zoom": 0.5,
-		"units": []
+		"units": [],
+		"fog": false
 	},
 	"battle20": {
 		"map": "test_open",
@@ -369,7 +373,8 @@
 				"attack_move": true
 			}
 		],
-		"report_battle": true
+		"report_battle": true,
+		"fog": false
 	},
 	"techdemo": {
 		"map": "skirmish_120",
@@ -416,6 +421,44 @@
 				"type": "militia",
 				"player": 0,
 				"count": 1,
+				"near": "start"
+			}
+		]
+	},
+	"_maps": {
+		"list": [
+			"skirmish_120",
+			"valle_rio",
+			"bosque_cerrado",
+			"tierras_doradas"
+		]
+	},
+	"tutorial": {
+		"map": "tierras_doradas",
+		"camera": "start",
+		"populate": true,
+		"fog": false,
+		"tutorial": true,
+		"resources": {
+			"0": {
+				"food": 200,
+				"wood": 200,
+				"gold": 100,
+				"stone": 100
+			}
+		},
+		"buildings": [
+			{
+				"type": "town_center",
+				"player": 0,
+				"at": "start"
+			}
+		],
+		"units": [
+			{
+				"type": "villager",
+				"player": 0,
+				"count": 3,
 				"near": "start"
 			}
 		]

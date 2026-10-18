@@ -29,3 +29,5 @@ signal match_ended(winner_id: int, seconds: float)
 signal era_changed(player_id: int, era: int)
 ## A player finished researching a technology.
 signal tech_researched(player_id: int, tech_id: String)
+## Something of `player_id` was hit by an enemy at `world_pos` (alerts).
+signal under_attack(player_id: int, world_pos: Vector2)

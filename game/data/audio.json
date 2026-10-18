@@ -1,8 +1,108 @@
 {
+	"sfx_db": -2.0,
+	"music_db": -9.0,
+	"music_fade_s": 1.5,
+	"battle_hold_s": 25.0,
+	"sfx_default_gap_s": 0.05,
+	"sfx_gap_s": {
+		"sword": 0.09,
+		"arrow_hit": 0.09,
+		"bow": 0.12,
+		"death": 0.25,
+		"hit_building": 0.2,
+		"chop": 0.12,
+		"mine": 0.12,
+		"hammer": 0.1,
+		"farm": 0.3,
+		"forage": 0.25,
+		"deposit": 0.3,
+		"unit_ready": 0.6,
+		"build_done": 0.8,
+		"alert": 4.0,
+		"collapse": 0.4,
+		"siege_hit": 0.2,
+		"siege_fire": 0.2,
+		"heal": 0.4,
+		"error": 0.3
+	},
 	"sfx": {
-		"select": "res://assets/placeholder/sfx/select.wav",
-		"order_move": "res://assets/placeholder/sfx/order_move.wav",
-		"order_stop": "res://assets/placeholder/sfx/order_stop.wav",
-		"ui_click": "res://assets/placeholder/sfx/ui_click.wav"
+		"alert": "res://assets/audio/sfx/alert.wav",
+		"arrow_hit": [
+			"res://assets/audio/sfx/arrow_hit_1.wav",
+			"res://assets/audio/sfx/arrow_hit_2.wav"
+		],
+		"bow": [
+			"res://assets/audio/sfx/bow_1.wav",
+			"res://assets/audio/sfx/bow_2.wav"
+		],
+		"build_done": "res://assets/audio/sfx/build_done.wav",
+		"chop": [
+			"res://assets/audio/sfx/chop_1.wav",
+			"res://assets/audio/sfx/chop_2.wav",
+			"res://assets/audio/sfx/chop_3.wav"
+		],
+		"collapse": "res://assets/audio/sfx/collapse.wav",
+		"death": [
+			"res://assets/audio/sfx/death_1.wav",
+			"res://assets/audio/sfx/death_2.wav"
+		],
+		"defeat": "res://assets/audio/sfx/defeat.wav",
+		"deposit": [
+			"res://assets/audio/sfx/deposit_1.wav",
+			"res://assets/audio/sfx/deposit_2.wav"
+		],
+		"era_up": "res://assets/audio/sfx/era_up.wav",
+		"error": "res://assets/audio/sfx/error.wav",
+		"farm": [
+			"res://assets/audio/sfx/farm_1.wav",
+			"res://assets/audio/sfx/farm_2.wav"
+		],
+		"forage": [
+			"res://assets/audio/sfx/forage_1.wav",
+			"res://assets/audio/sfx/forage_2.wav"
+		],
+		"hammer": [
+			"res://assets/audio/sfx/hammer_1.wav",
+			"res://assets/audio/sfx/hammer_2.wav",
+			"res://assets/audio/sfx/hammer_3.wav"
+		],
+		"heal": "res://assets/audio/sfx/heal.wav",
+		"hit_building": [
+			"res://assets/audio/sfx/hit_building_1.wav",
+			"res://assets/audio/sfx/hit_building_2.wav"
+		],
+		"mine": [
+			"res://assets/audio/sfx/mine_1.wav",
+			"res://assets/audio/sfx/mine_2.wav",
+			"res://assets/audio/sfx/mine_3.wav"
+		],
+		"order_move": [
+			"res://assets/audio/sfx/order_move_1.wav",
+			"res://assets/audio/sfx/order_move_2.wav"
+		],
+		"order_stop": "res://assets/audio/sfx/order_stop.wav",
+		"place_building": "res://assets/audio/sfx/place_building.wav",
+		"research_done": "res://assets/audio/sfx/research_done.wav",
+		"select": [
+			"res://assets/audio/sfx/select_1.wav",
+			"res://assets/audio/sfx/select_2.wav"
+		],
+		"siege_fire": "res://assets/audio/sfx/siege_fire.wav",
+		"siege_hit": "res://assets/audio/sfx/siege_hit.wav",
+		"sword": [
+			"res://assets/audio/sfx/sword_1.wav",
+			"res://assets/audio/sfx/sword_2.wav",
+			"res://assets/audio/sfx/sword_3.wav"
+		],
+		"ui_back": "res://assets/audio/sfx/ui_back.wav",
+		"ui_click": "res://assets/audio/sfx/ui_click.wav",
+		"ui_open": "res://assets/audio/sfx/ui_open.wav",
+		"unit_ready": "res://assets/audio/sfx/unit_ready.wav",
+		"victory": "res://assets/audio/sfx/victory.wav"
+	},
+	"music": {
+		"menu": "res://assets/audio/music/menu.wav",
+		"peace": "res://assets/audio/music/peace.wav",
+		"battle": "res://assets/audio/music/battle.wav"
 	}
 }

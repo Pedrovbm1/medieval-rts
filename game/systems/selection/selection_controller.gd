@@ -23,6 +23,8 @@ var order_marker: OrderMarker
 var player_id: int = GameState.PLAYER_HUMAN
 var selected: Array[Unit] = []
 var selected_building: Building = null
+## Control groups 1-5: number -> Array[Unit]
+var groups: Dictionary = {}
 
 var _pick_radius_screen: float = 40.0
 var _log: bool = false
@@ -208,6 +210,35 @@ func order_hold() -> void:
 	if not selected.is_empty():
 		Sfx.play("order_stop")
 	_trace("hold", Vector2.ZERO)
+
+
+## Saves the current unit selection as group `n` (1-5).
+func assign_group(n: int) -> void:
+	_prune()
+	groups[n] = selected.duplicate()
+	Sfx.play("order_stop")
+	_trace("group_assign_%d" % n, Vector2.ZERO)
+
+
+## Selects group `n`; selecting it again while already selected centres the camera.
+func recall_group(n: int) -> void:
+	var members: Array = groups.get(n, [])
+	var alive: Array[Unit] = []
+	for u: Variant in members:
+		if is_instance_valid(u) and world.units.has(u):
+			alive.append(u)
+	groups[n] = alive
+	if alive.is_empty():
+		return
+	var same: bool = alive.size() == selected.size() and alive.all(func(u: Unit) -> bool: return selected.has(u))
+	set_selection(alive)
+	Sfx.play("select")
+	if same:
+		var pos: Array[Vector2] = []
+		for u: Unit in alive:
+			pos.append(u.position)
+		camera.center_on_smooth(Formation.centroid(pos))
+	_trace("group_recall_%d" % n, Vector2.ZERO)
 
 
 func clear_selection() -> void:

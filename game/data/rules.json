@@ -37,7 +37,8 @@
 		"chase_repath_px": 48
 	},
 	"vision": {
-		"update_interval_s": 0.25
+		"update_interval_s": 0.25,
+		"fog": true
 	},
 	"production": {
 		"queue_max": 5,
@@ -50,11 +51,20 @@
 		"stone": "#a8a8a0"
 	},
 	"players": {
-		"colors": ["#3a6fd8", "#d84a3a"]
+		"colors": [
+			"#3a6fd8",
+			"#d84a3a"
+		]
 	},
 	"debug": {
 		"log_input": true,
 		"log_perf": true,
 		"log_tasks": false
+	},
+	"save": {
+		"autosave_seconds": 120
+	},
+	"alerts": {
+		"cooldown_s": 6.0
 	}
 }

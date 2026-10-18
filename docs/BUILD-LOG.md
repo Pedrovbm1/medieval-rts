@@ -170,3 +170,33 @@ Se cerraron juntas: la IA de F6 necesitaba eras y tecnologías (F7) para gastar 
 - Duelo IA vs IA se estancaba (refuerzos sueltos contra la defensa) → oleadas completas que crecen, refuerzos solo a oleadas vivas, más asedio.
 - `MatchRules` declaraba victoria instantánea sin rival (encontrado en el S10).
 - Un script de device tocó otro dispositivo conectado por red al desconectarse el S10 → serial fijo y aborto si falta.
+
+---
+
+## F8 — Niebla, minimapa, UX y guardado (2026-10-18)
+
+**Qué se hizo**
+- Niebla de guerra por jugador: `FogLayer` es una sola textura con 1 texel por celda (negro / explorado / visible), escalada con filtro; los enemigos fuera de vista se ocultan.
+- Minimapa (toque = mover cámara, alertas rojas de ataque), grupos de control 1-5 (tocar recupera, mantener asigna), menú de pausa (Continuar, Guardar, Salir), menú principal (Continuar, Nueva partida, Tutorial).
+- `SaveGame` + `SaveManager`: guardar y cargar la partida completa (unidades, edificios, recursos, techs, IA); autoguardado cada 120 s.
+- Sonido de alerta "¡Te atacan!" con espera entre avisos.
+
+**Tests**: `test_f8_ux` 24/24 (cargar = mismo estado). Gate lento `test_f8_slow_full_match`: Difícil vs Fácil con niebla y autoguardado termina en 28.4 min, gana Difícil, 0 errores de script.
+
+**Problemas**
+- La comparación de guardar/cargar se hacía después de avanzar frames → se compara justo tras cargar.
+- Las primeras 3 corridas de la partida completa terminaron en empate a los 50 min. Con registros cada 5 min se vio que Fácil era casi igual a Normal, que Difícil no convertía su economía en ejército y que sus oleadas morían golpeando edificios. Se arregló en F9 (D50, D51).
+
+---
+
+## F9 — Arte, audio y contenido (2026-10-18, en curso)
+
+**Qué se hizo**
+- Arte por código: `Raster` (primitivas con borde y sombra), `UnitPainter` (12 unidades + animales, 6 poses: quieto, 2 de caminar, 2 de golpe, caído), `BuildingPainter` (13 edificios con techo, puerta y estandarte del jugador), `NaturePainter` (3 variantes de pasto/agua/bosque, minas, arbustos, carne, íconos). Todo se hornea en un atlas de 2048x1024 al arrancar.
+- Animación: la unidad elige pose según lo que hace (camina, golpea, trabaja con la herramienta al talar/minar/construir) y se voltea hacia donde va. El cadáver usa la pose caída.
+- Audio: `tools/gen_audio.py` sintetiza 47 efectos (UI, trabajo, combate, eventos, fanfarrias) y 3 temas (menú con arpa, paz con laúd y flauta, batalla con tambores y metales). `Sfx` con variantes, espacio mínimo por sonido y filtro "solo si se ve"; `Music` con fundidos y cambio a batalla al ver combate. Botón "Sonido: Sí/No" en la pausa.
+- Contenido: tutorial de 5 misiones (`tutorial.json` + `TutorialDirector`, panel, flecha, Saltar); 3 mapas curados simétricos (Valle del Río, Bosque Cerrado, Tierras Doradas) y selector de mapa en Nueva partida.
+- Balance: unidades que golpean un edificio se voltean contra soldados enemigos (D50); dificultades con perillas reales (D51).
+- Documentos: `docs/LICENSES.md` (inventario), `docs/PLAYTEST-F9.md` (gate humano para Pedro).
+
+**Medido en PC (render real 1280x720)**: stress150 60 fps, 32 draw calls; battle20 60 fps, 33-35 draw calls; APK debug 29.9 MB.
