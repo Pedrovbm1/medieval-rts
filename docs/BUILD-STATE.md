@@ -11,10 +11,10 @@
 |---|---|---|---|
 | F0 | 2007d99, 2638e05 | 2026-10-17 | Cumplido en Galaxy S10 (arranque 0.6-0.9 s, pan 60 fps, pinch probado por Pedro) |
 | F1 | 4747fd7 | 2026-10-17 | 67/67 headless, 7/7 adb en S10, gate humano 10/10 aprobado por Pedro |
-| F2 | ver BUILD-LOG | 2026-10-17 | Headless: 50/50 rodean el lago, muro re-planifica, 150 unidades en 1.5-1.9 ms por paso (PC). **Medición en S10 pendiente** (el teléfono se desconectó de adb) |
+| F2 | 3784c4d | 2026-10-17 | Headless 96/96. S10: 150 unidades a 59.5-60 fps (peor frame en juego 28 ms; 149 ms solo en la carga), lake50 50/50 en 57 s. Draw calls 189-543 → se corrige en F3 con atlas |
 
 ## Siguiente
-F3 → F4. Pendiente de device: `bash tools/device_bench.sh stress150 24` (gate F2: fps >= 40, worst_ms < 100) y `bash tools/device_bench.sh lake50 60` en cuanto el S10 vuelva a adb.
+F3 → F4. El S10 se comparte con la sesión del juego de Mateo: pedir turno por mensaje antes de usarlo.
 
 ## Entorno
 | Pieza | Valor |
@@ -63,7 +63,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D16 | F2 | Las tablas de `DataLoader` se comparten: son de solo lectura (`duplicate()` antes de modificar) | Un test borró datos compartidos y rompió el siguiente |
 
 ## Blockers
-- S10 desconectado de adb desde F2 (no bloquea F3-F4; las mediciones de device quedan en cola).
+- Ninguno. Nota: el S10 se comparte con otra sesión (juego de Mateo); turnarse por mensaje.
 
 ## Últimos tests
 - F0: 22/22 headless. Device: arranque 0.6-0.9 s, 60 fps en pan.

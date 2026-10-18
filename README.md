@@ -11,7 +11,7 @@ contenido propio, siempre.
 - [x] Investigación + plan de construcción → `docs/PLAN-CONSTRUCCION-RTS.md`
 - [x] F0 — Setup + mundo mínimo (aprobada 2026-10-17; probada en Galaxy S10)
 - [x] F1 — Selección y órdenes (gate humano aprobado 2026-10-17)
-- [x] F2 — Pathfinding (headless cumplido; medición en teléfono pendiente)
+- [x] F2 — Pathfinding (S10: 150 unidades a 60 fps, 50/50 rodean el lago)
 - [ ] F3 — Economía
 - [ ] F4 — Construcción
 - [ ] F5 — Combate
