@@ -36,7 +36,7 @@
 		"hard": {
 			"name_key": "AI_HARD",
 			"think_s": 1.5,
-			"gather_mult": 1.2,
+			"gather_mult": 1.3,
 			"army_mult": 1.3,
 			"phase_scale": 0.85,
 			"scout_escort": 2,
