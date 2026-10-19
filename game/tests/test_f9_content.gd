@@ -110,6 +110,21 @@ func test_b_tutorial_five_missions() -> void:
 	await _close()
 
 
+func test_c_every_text_row_has_both_languages() -> void:
+	var f: FileAccess = FileAccess.open("res://data/i18n/ui.csv", FileAccess.READ)
+	var bad: Array[String] = []
+	var count: int = 0
+	while not f.eof_reached():
+		var row: PackedStringArray = f.get_csv_line()
+		if row.size() == 1 and row[0] == "":
+			continue
+		count += 1
+		if row.size() != 3 or row[1].strip_edges() == "" or row[2].strip_edges() == "":
+			bad.append(row[0])
+	check(count > 100 and bad.is_empty(), "all %d text rows have key, Spanish and English (bad: %s)" % [count, bad])
+	check(tr("TUT_1_TIP").ends_with("recuadro."), "a tip with commas is read whole")
+
+
 func _wait_until(cond: Callable, max_game_s: float) -> void:
 	var t0: float = scen.elapsed
 	while not cond.call() and scen.elapsed - t0 < max_game_s:

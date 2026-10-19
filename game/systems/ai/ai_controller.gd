@@ -7,8 +7,11 @@ extends Node
 ## attack-move). Every number comes from data/ai.json.
 
 signal attack_ordered(target: Vector2, explored: bool)
+## The AI gives up a lost match (no villagers, no army, no way to rebuild).
+signal resigned(player_id: int)
 
 const PRODUCTION: PackedStringArray = ["barracks", "archery_range", "stable"]
+const ECONOMY_TARGETS: PackedStringArray = ["lumber_camp", "mining_camp", "farm"]
 
 var world: World
 var player_id: int = GameState.PLAYER_AI
@@ -41,6 +44,8 @@ var _last_research_t: float = 0.0
 var _last_target: Vector2 = Vector2.INF
 ## Push waves that died without razing their target: the next one is bigger.
 var failed_waves: int = 0
+var has_resigned: bool = false
+var _hopeless_since: float = -1.0
 ## Saving for an era gives up after a while (e.g. gold ran out) and retries later.
 var _saving_since: float = -1.0
 var _no_saving_until: float = -1.0
@@ -90,6 +95,8 @@ func think() -> void:
 			villagers.append(u)
 		elif u.unit_type != "scout" and not u.data.has("heal"):
 			military.append(u)
+	if _check_resign(villagers, military):
+		return
 	_economy(villagers)
 	_advance(villagers)
 	# While saving for an era, keep only the standing army this phase needs.
@@ -100,6 +107,28 @@ func think() -> void:
 	_scouting()
 	if not _defend(military):
 		_attack(military)
+
+
+## Like computer players in the genre, resign when the match is lost:
+## no villagers, almost no army and no way to train a villager, for a while.
+func _check_resign(villagers: Array[Unit], military: Array[Unit]) -> bool:
+	var rcfg: Dictionary = cfg.get("resign", {})
+	var tc: Building = _first_of("town_center")
+	var villager_cost: int = int(Dictionary(DataLoader.get_entry("units", "villager").get("cost", {})).get("food", 50))
+	var can_rebuild: bool = tc != null and tc.is_complete() and GameState.get_resource(player_id, "food") >= villager_cost
+	var hopeless: bool = villagers.is_empty() and military.size() < int(rcfg.get("max_army", 3)) and not can_rebuild
+	if not hopeless:
+		_hopeless_since = -1.0
+		return false
+	if _hopeless_since < 0.0:
+		_hopeless_since = elapsed
+	if elapsed - _hopeless_since >= float(rcfg.get("after_s", 30.0)) and not has_resigned:
+		has_resigned = true
+		enabled = false
+		if OS.is_debug_build():
+			print("[REALM] ai %d resigns t=%.0f" % [player_id, elapsed])
+		resigned.emit(player_id)
+	return true
 
 
 # ------------------------------------------------------------------ phases & knowledge
@@ -187,7 +216,7 @@ func _economy(villagers: Array[Unit]) -> void:
 	var extra: int = _extra_production()
 	for type_id: String in order:
 		var want: int = int(Dictionary(bcfg.get(type_id, {})).get(phase, 0))
-		if PRODUCTION.has(type_id) and want > 0:
+		if PRODUCTION.has(type_id) and want > 0 and not saving_for_era:
 			# Stronger AIs (and any AI floating resources) add production so
 			# a bigger economy becomes a bigger army.
 			want = int(ceil(want * float(diff.get("production_mult", 1.0)))) + extra
@@ -279,6 +308,11 @@ func _rebalance(villagers: Array[Unit]) -> void:
 		for res: String in cost.keys():
 			if int(cost[res]) > int(bank.get(res, 0)):
 				need[res] = int(cost[res]) - int(bank.get(res, 0))
+	elif saving_for_era and saving_reason == "requires":
+		# The era's required buildings are paid in wood.
+		var want_wood: int = int(rcfg.get("requires_wood", 350))
+		if int(bank["wood"]) < want_wood:
+			need["wood"] = want_wood - int(bank["wood"])
 	else:
 		for res: String in ["food", "wood", "gold"]:
 			if int(bank[res]) < int(rcfg.get("low", 150)):
@@ -499,6 +533,7 @@ func _attack(military: Array[Unit]) -> void:
 	var army: Dictionary = cfg.get("army", {})
 	var mult: float = float(diff.get("army_mult", 1.0))
 	var idle: Array[Unit] = military.filter(func(m: Unit) -> bool: return m.task == null and not m.is_moving())
+	idle = _press_on(idle)
 	_harass = _harass.filter(func(m: Unit) -> bool: return world.units.has(m))
 	if phase == "harass" and _harass.is_empty():
 		var size: int = maxi(3, int(float(army.get("harass_group", 6)) * mult))
@@ -517,7 +552,11 @@ func _attack(military: Array[Unit]) -> void:
 		var wave: int = mini(int(army.get("wave_cap", 40)), maxi(4, int(float(army.get("wave_min", 14)) * mult * growth)))
 		# A grown wave must stay reachable: never ask for more than 80% of the army.
 		wave = mini(wave, maxi(int(float(army.get("wave_min", 14)) * mult), int(military.size() * 0.8)))
-		var target: Dictionary = _pick_target(true)
+		# Stronger AIs hit the economy (camps and farms, where the villagers
+		# work) instead of the Town Center: it breaks the enemy's income.
+		var target: Dictionary = _pick_economy_target() if bool(diff.get("raid_economy", false)) else {}
+		if target.is_empty():
+			target = _pick_target(true)
 		if target.is_empty():
 			return
 		if idle.size() >= wave:
@@ -529,6 +568,34 @@ func _attack(military: Array[Unit]) -> void:
 		elif waves > 0 and idle.size() >= int(army.get("reinforce_min", 5)) and alive >= int(army.get("reinforce_needs_alive", 5)):
 			# Reinforce only a wave that is still fighting; otherwise build up a full one.
 			_order_attack(idle, target["pos"], "reinforce")
+
+
+## Soldiers standing idle out in the field (their target fell and nothing
+## else is in sight) go for the nearest enemy building we know about, instead
+## of waiting there while reinforcements pile up. Returns the ones left idle.
+func _press_on(idle: Array[Unit]) -> Array[Unit]:
+	var field_px: float = float(Dictionary(cfg.get("army", {})).get("field_px", 1500))
+	var reach_px: float = float(Dictionary(cfg.get("army", {})).get("press_on_px", 1400))
+	var left: Array[Unit] = []
+	for u: Unit in idle:
+		if u.position.distance_to(home) < field_px:
+			left.append(u)
+			continue
+		var best: Building = null
+		var best_d: float = reach_px
+		for k: Dictionary in known_buildings.values():
+			var ref: Variant = k["ref"]
+			if not is_instance_valid(ref) or not world.buildings.has(ref):
+				continue
+			var d: float = u.position.distance_to(Vector2(k["pos"]))
+			if d < best_d:
+				best_d = d
+				best = ref
+		if best == null:
+			left.append(u)
+		else:
+			world.behavior.assign(u, AttackTask.new(u, world, best, false))
+	return left
 
 
 ## Own soldiers already out near the last wave's target.
@@ -551,6 +618,20 @@ func _pick_target(prefer_center: bool) -> Dictionary:
 			score += 100000.0
 		if score < best_score:
 			best_score = score
+			best = k
+	return best
+
+
+## Nearest known enemy gathering building (lumber/mining camp, farm).
+func _pick_economy_target() -> Dictionary:
+	var best: Dictionary = {}
+	var best_d: float = INF
+	for k: Dictionary in known_buildings.values():
+		if not ECONOMY_TARGETS.has(String(k["type"])):
+			continue
+		var d: float = Vector2(k["pos"]).distance_to(home)
+		if d < best_d:
+			best_d = d
 			best = k
 	return best
 

@@ -43,12 +43,17 @@ tap $((VW - 48)) 44 1.5
 tap_label "Guardar partida" 2
 expect "saved slot=manual err=0" "pause menu -> Save writes a save"
 tap $((VW - 48)) 44 1.5
-tap_label "Salir al menú" 3
-expect "saved slot=auto" "quitting autosaves first"
+# Keep the pause-menu button lines; the menu prints its own after quitting.
+QUIT=$(log | grep -oE "btn Salir al menú=\([0-9]+,[0-9]+\)" | tail -1)
 "$ADB" logcat -c
-sleep 1
+if [ -n "$QUIT" ]; then
+  tap "$(echo "$QUIT" | sed -E 's/.*\(([0-9]+),([0-9]+)\)/\1/')" "$(echo "$QUIT" | sed -E 's/.*\(([0-9]+),([0-9]+)\)/\2/')" 3
+else
+  ko "button 'Salir al menú' not found"
+fi
+expect "saved slot=auto" "quitting autosaves first"
 tap_label "Continuar partida" 5
-expect "scenario|saved" "Continue loads the saved match"
+expect "loaded save units=[1-9]" "Continue loads the saved match"
 "$ADB" exec-out screencap -p > "${SHOT:-/tmp/f8.png}"
 guard_release
 echo "== device F8: $PASS passed, $FAIL failed =="

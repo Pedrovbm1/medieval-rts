@@ -177,6 +177,8 @@ func test_f_ai_reaches_era_four_in_25_minutes() -> void:
 		var e: int = GameState.era_of(1)
 		if not era_times.has(e):
 			era_times[e] = ai.elapsed / 60.0
+		if OS.has_environment("REALM_DIAG") and int(ai.elapsed) % 60 == 0 and ai.elapsed - floorf(ai.elapsed) < 0.14:
+			print("        t=%.0f era=%d saving=%s(%s) tech=%s bank f%d w%d g%d s%d" % [ai.elapsed / 60.0, e, ai.saving_for_era, ai.saving_reason, ai.saving_for_tech, GameState.get_resource(1, "food"), GameState.get_resource(1, "wood"), GameState.get_resource(1, "gold"), GameState.get_resource(1, "stone")])
 	Engine.time_scale = 1.0
 	check(GameState.era_of(1) == 4 and float(era_times.get(4, 99.0)) <= 25.0, "the Hard AI reaches Era IV by minute %.1f (eras at %s)" % [float(era_times.get(4, 99.0)), str(era_times)])
 	var researched: int = Dictionary(GameState.researched.get(1, {})).size()

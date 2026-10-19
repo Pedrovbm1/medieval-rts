@@ -200,3 +200,11 @@ Se cerraron juntas: la IA de F6 necesitaba eras y tecnologías (F7) para gastar 
 - Documentos: `docs/LICENSES.md` (inventario), `docs/PLAYTEST-F9.md` (gate humano para Pedro).
 
 **Medido en PC (render real 1280x720)**: stress150 60 fps, 32 draw calls; battle20 60 fps, 33-35 draw calls; APK debug 29.9 MB.
+
+**En el S10**: F8 por toques 5/5; stress150 60 fps / 32 DC / 60 MB; battle20 60 fps; tutorial 60 fps / 42 DC.
+
+**Problemas**
+- El script de device borraba el log justo después de volver al menú y ya no encontraba el botón Continuar → se limpia antes de salir.
+- Dos textos del tutorial tenían comas sin comillas en el CSV y se cortaban en el teléfono → CSV reescrito con comillas y test que revisa las 3 columnas de cada fila.
+- El panel del tutorial no crecía con el texto y tapaba la barra de recursos → se ajusta al texto y baja a y=92.
+- Duelo Difícil vs Normal: empates por (1) soldados golpeando muros, (2) oleadas paradas junto a objetivos destruidos, (3) bases sin aldeanos que tardaban 15 min en demolerse, (4) el mapa de ruido favorece una esquina. Con D50, D57-D59: 4 de 4 en Tierras Doradas.

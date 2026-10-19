@@ -83,3 +83,46 @@ func test_b_raiders_turn_on_defenders() -> void:
 	Engine.time_scale = 1.0
 	check(turned, "when soldiers arrive the raiders fight them instead of the wall")
 	await _close()
+
+
+func test_c_wave_razes_economy_buildings() -> void:
+	await _open()
+	var farm: Building = world.place_building("farm", 1, Vector2i(66, 60))
+	var camp: Building = world.place_building("lumber_camp", 1, Vector2i(69, 62))
+	var wave: Array[Unit] = _army("militia", 0, 10, Vector2i(50, 60))
+	var farm_id: int = farm.get_instance_id()
+	var camp_id: int = camp.get_instance_id()
+	world.combat.attack_move(wave, farm.position)
+	Engine.time_scale = 4.0
+	var t0: float = scen.elapsed
+	while (instance_from_id(farm_id) != null or instance_from_id(camp_id) != null) and scen.elapsed - t0 < 150.0:
+		await physics_frames(1)
+	Engine.time_scale = 1.0
+	var busy: Array = _alive(wave).map(func(u: Unit) -> String: return str(u.task.kind if u.task != null else "none") + ("/move" if u.is_moving() else ""))
+	print("  info  farm alive=%s camp alive=%s units=%s" % [instance_from_id(farm_id) != null, instance_from_id(camp_id) != null, busy])
+	check(instance_from_id(farm_id) == null, "an attack-move wave razes a farm")
+	check(instance_from_id(camp_id) == null, "and then the lumber camp in sight next to it")
+	await _close()
+
+
+func test_d_ai_resigns_when_hopeless() -> void:
+	main = load("res://scenes/main/main.tscn").instantiate()
+	main.scenario = "skirmish"
+	main.ai_override = {1: "normal"}
+	add_to_tree(main)
+	await frames(1)
+	world = main.get_node("World")
+	scen = main.get_node("ScenarioRunner")
+	var rules: MatchRules = main.get_node("MatchRules")
+	for u: Unit in world.units.duplicate():
+		if u.owner_id == 1:
+			u.take_damage(99999, null)
+	GameState.add_resource(1, "food", -GameState.get_resource(1, "food"))
+	Engine.time_scale = 4.0
+	var t0: float = scen.elapsed
+	while not rules.ended and scen.elapsed - t0 < 60.0:
+		await physics_frames(1)
+	Engine.time_scale = 1.0
+	check(rules.ended and rules.winner_id == 0, "an AI with no villagers, no army and no food resigns (%.0f s)" % (scen.elapsed - t0))
+	check(world.buildings.any(func(b: Building) -> bool: return b.owner_id == 1), "even though its Town Center still stands")
+	await _close()

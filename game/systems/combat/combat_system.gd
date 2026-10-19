@@ -164,12 +164,15 @@ func find_enemy(unit: Unit) -> Object:
 
 
 ## Nearest enemy (player-owned) unit within `sight` px, or null.
-func nearest_enemy_unit(unit: Unit, sight: float) -> Unit:
+## With `soldiers_only`, villagers are ignored.
+func nearest_enemy_unit(unit: Unit, sight: float, soldiers_only: bool = false) -> Unit:
 	var best: Unit = null
 	var best_d: float = INF
 	for other: Object in world.movement.spatial.query(unit.position, sight):
 		var o: Unit = other as Unit
 		if o == unit or o.is_dead or o.owner_id < 0 or o.owner_id == unit.owner_id:
+			continue
+		if soldiers_only and o.can_gather():
 			continue
 		var d: float = unit.position.distance_to(o.position)
 		if d <= sight and d < best_d:
@@ -241,12 +244,31 @@ func _acquire_targets() -> void:
 func _prefer_soldiers(unit: Unit, task: AttackTask) -> void:
 	if task.ordered or not (task.target is Building) or bool(Dictionary(unit.data.get("combat", {})).get("buildings_only", false)):
 		return
-	var threat: Unit = nearest_enemy_unit(unit, float(unit.data.get("sight_px", 288)))
+	var threat: Unit = _nearest_attacker(unit, float(unit.data.get("sight_px", 288)))
 	if threat == null:
 		return
 	var next: AttackTask = AttackTask.new(unit, world, threat, false)
 	next.resume_to = task.resume_to
 	world.behavior.assign(unit, next)
+
+
+## Nearest enemy within `sight` that is attacking one of `unit`'s side
+## (a passing scout or a fleeing villager is not a reason to stop).
+func _nearest_attacker(unit: Unit, sight: float) -> Unit:
+	var best: Unit = null
+	var best_d: float = INF
+	for other: Object in world.movement.spatial.query(unit.position, sight):
+		var o: Unit = other as Unit
+		if o == unit or o.is_dead or o.owner_id < 0 or o.owner_id == unit.owner_id or not (o.task is AttackTask):
+			continue
+		var victim: Object = (o.task as AttackTask).target
+		if not (victim is Unit) or not is_instance_valid(victim) or (victim as Unit).owner_id != unit.owner_id:
+			continue
+		var d: float = unit.position.distance_to(o.position)
+		if d <= sight and d < best_d:
+			best_d = d
+			best = o
+	return best
 
 
 ## Group order: walk to `target` and fight whatever is met on the way.

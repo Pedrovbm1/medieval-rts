@@ -427,10 +427,10 @@
 	},
 	"_maps": {
 		"list": [
-			"skirmish_120",
 			"valle_rio",
 			"bosque_cerrado",
-			"tierras_doradas"
+			"tierras_doradas",
+			"skirmish_120"
 		]
 	},
 	"tutorial": {

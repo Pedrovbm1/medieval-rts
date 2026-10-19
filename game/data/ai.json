@@ -12,7 +12,8 @@
 			"research_chance": 0.35,
 			"wave_growth": 0.0,
 			"production_mult": 1.0,
-			"army_cap": 18
+			"army_cap": 18,
+			"raid_economy": false
 		},
 		"normal": {
 			"name_key": "AI_NORMAL",
@@ -25,7 +26,8 @@
 			"max_era": 4,
 			"research_chance": 1.0,
 			"production_mult": 1.0,
-			"army_cap": 0
+			"army_cap": 0,
+			"raid_economy": false
 		},
 		"hard": {
 			"name_key": "AI_HARD",
@@ -38,7 +40,8 @@
 			"max_era": 4,
 			"research_chance": 1.0,
 			"production_mult": 1.5,
-			"army_cap": 0
+			"army_cap": 0,
+			"raid_economy": true
 		}
 	},
 	"phases": [
@@ -162,7 +165,9 @@
 		"push_mix_bonus": {
 			"ram": 0.12,
 			"mangonel": 0.08
-		}
+		},
+		"field_px": 1500,
+		"press_on_px": 1400
 	},
 	"scout": {
 		"waypoint_reach_px": 96
@@ -199,6 +204,11 @@
 	"rebalance": {
 		"surplus": 600,
 		"low": 150,
-		"per_think": 2
+		"per_think": 2,
+		"requires_wood": 350
+	},
+	"resign": {
+		"max_army": 3,
+		"after_s": 30
 	}
 }

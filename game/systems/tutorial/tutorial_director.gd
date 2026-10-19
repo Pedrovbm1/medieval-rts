@@ -9,6 +9,8 @@ signal step_changed(index: int)
 signal finished
 signal skip_pressed
 
+const PANEL_TOP: float = 92.0
+
 var world: World
 var selection: SelectionController
 var player_id: int = 0
@@ -55,6 +57,7 @@ func _go(i: int) -> void:
 	_title.text = tr(String(step.get("title_key", "")))
 	_tip.text = tr(String(step.get("tip_key", "")))
 	_count.text = tr("TUT_MISSION") % [int(step.get("mission", 1)), int(DataLoader.get_table("tutorial").get("missions", 5))]
+	_fit_panel.call_deferred()
 	if String(step.get("goal", "")) == "enemies_dead":
 		_spawn_fight(step)
 	if i > 0:
@@ -69,6 +72,7 @@ func _finish() -> void:
 	_count.text = ""
 	_skip.text = tr("TUT_FINISH")
 	_arrow.target = Vector2.INF
+	_fit_panel.call_deferred()
 	Sfx.play("victory")
 	finished.emit()
 
@@ -207,10 +211,19 @@ func _build_panel(layer: Node) -> void:
 	margin.add_child(box)
 	_panel.add_child(margin)
 	layer.add_child(_panel)
-	_panel.reset_size()
-	_panel.position = Vector2((1280.0 - _panel.size.x) * 0.5, 64.0)
+	_fit_panel()
 	if OS.is_debug_build():
 		_log_skip.call_deferred()
+
+
+## Shrink-wrap the panel to the current text (tips have different lengths)
+## and keep it just under the top resource bar.
+func _fit_panel() -> void:
+	if _panel == null:
+		return
+	_panel.size = Vector2.ZERO
+	_panel.reset_size()
+	_panel.position = Vector2((1280.0 - _panel.size.x) * 0.5, PANEL_TOP)
 
 
 func _log_skip() -> void:

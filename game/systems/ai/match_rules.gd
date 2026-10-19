@@ -56,6 +56,16 @@ func _physics_process(delta: float) -> void:
 			return
 
 
+## A player gives up (the AI when it cannot recover): the rival wins.
+func resign(player_id: int) -> void:
+	if ended or contenders.has(-1) or not contenders.has(player_id):
+		return
+	for p: int in contenders:
+		if p != player_id:
+			finish(p, player_id)
+			return
+
+
 func finish(p_winner: int, loser: int) -> void:
 	if ended:
 		return

@@ -77,6 +77,8 @@ func _ready() -> void:
 		runner.start(scenario_id, world, camera)
 	else:
 		SaveGame.restore(self, load_data)
+		if OS.is_debug_build():
+			print("[REALM] loaded save units=%d buildings=%d" % [world.units.size(), world.buildings.size()])
 	world.vision.refresh()
 	hud.minimap.setup(world, camera)
 	hud.minimap.jump_to.connect(func(p: Vector2) -> void: camera.center_on(p))
@@ -99,6 +101,7 @@ func _ready() -> void:
 		var ai: AIController = AIController.new()
 		add_child(ai)
 		ai.setup(world, int(key), String(ai_players[key]), ai_seed + int(key) * 101)
+		ai.resigned.connect(rules.resign)
 		ais.append(ai)
 	if not load_data.is_empty():
 		SaveGame.restore_ais(self, load_data)

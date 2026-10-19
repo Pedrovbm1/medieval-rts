@@ -20,7 +20,7 @@ func _process(delta: float) -> void:
 	if not visible:
 		return
 	_t += delta
-	position = target + Vector2(0, -44.0 - absf(sin(_t * 4.0)) * 14.0)
+	position = target + Vector2(0, -26.0 - absf(sin(_t * 4.0)) * 12.0)
 	queue_redraw()
 
 
