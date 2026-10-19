@@ -21,7 +21,7 @@
 | F8 | ver BUILD-LOG | 2026-10-18 | Niebla por jugador (textura de 1 texel por celda), minimapa con alertas, grupos de control, menú de pausa, guardar/cargar (cargar = mismo estado, 24/24), autoguardado 120 s, menú principal. Partida completa Difícil vs Fácil con niebla y autoguardado: termina antes de 50 min (22-46 según la versión de la IA), gana Difícil, 0 errores (tras arreglar F9-D50). S10: `device_test_f8.sh` 5/5 con toques reales (menú → Normal → Valle del Río, minimapa, guardar, salir con autoguardado, continuar) |
 
 ## Siguiente
-F9 en curso. S10 medido 2026-10-18 (ver Últimos tests). Hecho: arte por código integrado (atlas, poses, terreno con variantes, íconos), audio (47 SFX + 3 temas, música de batalla), tutorial de 5 misiones, 3 mapas curados simétricos con selector, inventario de licencias, playtest humano documentado (`docs/PLAYTEST-F9.md`), IA con dificultades reales. Falta: revisar el duelo Difícil vs Normal (gate F6) con los arreglos nuevos, medir F8/F9 en el S10 cuando Pedro lo suelte (`tools/device_test_f8.sh`, `device_bench.sh stress150`), gate humano de F9 (Pedro). Después F10 (necesita cuenta de Play Console de Pedro).
+F9: falta solo el playtest final de Pedro (`docs/PLAYTEST-F9.md`, sección 7 nueva). Después F10 (necesita cuenta de Play Console de Pedro). Diferidos en `TODOS.md`. Hecho: arte por código integrado (atlas, poses, terreno con variantes, íconos), audio (47 SFX + 3 temas, música de batalla), tutorial de 5 misiones, 3 mapas curados simétricos con selector, inventario de licencias, playtest humano documentado (`docs/PLAYTEST-F9.md`), IA con dificultades reales. Falta: revisar el duelo Difícil vs Normal (gate F6) con los arreglos nuevos, medir F8/F9 en el S10 cuando Pedro lo suelte (`tools/device_test_f8.sh`, `device_bench.sh stress150`), gate humano de F9 (Pedro). Después F10 (necesita cuenta de Play Console de Pedro).
 
 ## Entorno
 | Pieza | Valor |
@@ -139,6 +139,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D83 | F9 | Arte v3: unidades en vista tres cuartos (dos ojos, escudo con color del jugador, yelmos/capuchas/plumas distintos), árboles individuales con tronco y sombra, orilla de arena junto al agua (columna extra del tileset), agua con brillo y crestas | "Los monos y los gráficos más parecidos al clásico" |
 | D84 | F9 | Mercado: precio mínimo 30, baja 3 por venta, sube 4 cada 15 s; la IA vende hasta 3 lotes por turno cuando ahorra para una era y le falta oro; ahorro máximo 480 s | Difícil se atoraba en Era III con 2400 de comida y sin oro (minas secas) |
 | D85 | F9 | Gate del jugador pasivo contra Normal ampliado a 15-22 min | Las flechas del CU alargan 1-2 min la caída; es el efecto buscado |
+| D86 | F9 | Claridad: cola de producción con retratos de las unidades (del atlas) en vez de letras; estadísticas con palabras completas (Ataque/Armadura/Alcance/Velocidad/Vida); plurales en el panel; "Centro Urbano" en todas partes. Tutorial de 7 misiones: la 5 construye cuartel y entrena 2 milicianos antes de los bandidos (6); la 7 amuralla | Pendientes del primer playtest de Pedro; "no te da tiempo" también era no saber entrenar soldados |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
