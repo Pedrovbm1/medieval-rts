@@ -161,3 +161,14 @@ func test_g_player_can_resign() -> void:
 	check(rules.ended and rules.winner_id == 1, "resigning ends the match: the AI wins")
 	check(hud.end_panel != null, "and the defeat screen shows")
 	await _close()
+
+
+func test_h_farms_are_drawn_under_units() -> void:
+	await _open("arena")
+	var farm: Building = world.place_building("farm", 0, Vector2i(60, 60))
+	var house: Building = world.place_building("house", 0, Vector2i(66, 60))
+	var v: Unit = world.spawn_unit("villager", 0, farm.position + Vector2(0, -40))
+	check(farm.z_index < v.z_index, "a farm (ground) draws under units even where y-sort would put it on top")
+	check(house.z_index == v.z_index, "solid buildings still y-sort with units")
+	check(world.terrain_layer.z_index < farm.z_index, "the terrain stays under the farm")
+	await _close()

@@ -122,6 +122,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D66 | F9 | Anillo de selección horneado en el atlas y dibujado con su textura | `draw_arc` cortaba el batching: 57 seleccionadas = 270 draw calls; ahora 75 seleccionadas = 40 |
 | D67 | F9 | Botón de velocidad x1/x2/x3 (`rules.json` speed.steps) junto al ≡; vuelve a x1 al salir al menú o al terminar | Pedro lo pidió; partidas de 40-70 min |
 | D68 | F9 | "Rendirse" en el menú de pausa (solo en partidas reales) | "Tarda mucho en terminar de destruirme" |
+| D69 | F9 | Edificios caminables (granjas) con z_index -1 y terreno con -10: siempre debajo de las unidades | "Los aldeanos quedan tapados por las granjas" (el y-sort ponía la granja encima de quien estaba en su mitad de arriba) |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers

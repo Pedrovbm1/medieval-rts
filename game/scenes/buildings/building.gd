@@ -19,6 +19,8 @@ var tile_size: float = 64.0
 var hp: int = 1
 var max_hp: int = 1
 var walkable: bool = false
+## Draw layer for ground-level buildings; the terrain sits below it (World).
+const GROUND_Z: int = -1
 ## 0..1. Fully built buildings work (drop-off, pop, farm). F4 grows it.
 var build_progress: float = 1.0
 ## Workers currently assigned (farms limit this).
@@ -54,6 +56,9 @@ func setup(type_id: String, player_id: int, origin_cell: Vector2i, p_tile_size: 
 	max_hp = int(data.get("hp", 100))
 	hp = max_hp
 	walkable = bool(data.get("walkable", false))
+	# Walkable buildings (farms) are ground: always under units, whatever
+	# their position in the y-sort (villagers used to vanish under farms).
+	z_index = GROUND_Z if walkable else 0
 	# Node origin at the footprint centre so y-sorting looks right.
 	position = (Vector2(cell) + Vector2(footprint) * 0.5) * tile_size
 	name = "%s_%d" % [type_id, get_instance_id()]

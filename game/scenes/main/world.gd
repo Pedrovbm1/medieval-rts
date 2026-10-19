@@ -7,6 +7,8 @@ extends Node2D
 const TERRAIN_SOURCE_ID: int = 0
 const UNIT_SCENE: PackedScene = preload("res://scenes/units/unit.tscn")
 
+const TERRAIN_Z: int = -10
+
 @onready var terrain_layer: TileMapLayer = $TerrainLayer
 @onready var entities: Node2D = $Entities
 @onready var movement: MovementSystem = $MovementSystem
@@ -59,6 +61,7 @@ func build_from_map(p_map_id: String) -> void:
 
 	terrain_grid = MapGenerator.generate(map_def, terrain_def)
 	terrain_layer.tile_set = PlaceholderTileset.build(terrain_def)
+	terrain_layer.z_index = TERRAIN_Z  # below ground buildings (farms, z -1)
 	_paint_terrain()
 	nav.build(terrain_grid, map_width, map_height, tile_size, terrain_def)
 	movement.setup(nav, units)

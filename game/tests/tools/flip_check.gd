@@ -28,6 +28,12 @@ func _ready() -> void:
 		units[i].face_left = i % 2 == 0
 		units[i].set_physics_process(false)
 		units[i].queue_redraw()
+	if OS.has_environment("REALM_FARM"):
+		# Farm under the first units: they must stay visible on top of it.
+		var farm: Building = world.place_building("farm", 0, world.world_to_cell(units[0].position) + Vector2i(-1, -2))
+		for i: int in units.size():
+			units[i].position = farm.position + Vector2(-60 + (i % 5) * 30, -50 + (i / 5) * 60)
+		cam.position = farm.position
 	if OS.has_environment("REALM_BUILD_MENU"):
 		var villagers: Array[Unit] = units.filter(func(u: Unit) -> bool: return u.can_gather())
 		sel.set_selection(villagers)
