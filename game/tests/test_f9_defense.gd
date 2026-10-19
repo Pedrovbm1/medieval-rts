@@ -169,10 +169,10 @@ func test_f_town_center_roof_changes_with_the_era() -> void:
 
 func test_g_tutorial_has_a_wall_mission() -> void:
 	var steps: Array = DataLoader.get_table("tutorial").get("steps", [])
-	check(steps.size() == 7 and String(Dictionary(steps[6]).get("id", "")) == "walls", "mission 6 asks for a palisade")
+	check(steps.size() == 9 and String(Dictionary(steps[8]).get("id", "")) == "walls", "the last mission asks for a palisade")
 	await _open("tutorial")
 	var tut: TutorialDirector = main.tutorial
-	tut._go(6)
+	tut._go(8)
 	check(tut.current().get("id") == "walls", "the director reaches the wall mission")
 	var v: Unit = _villager()
 	var a: Vector2i = world.world_to_cell(v.position) + Vector2i(4, 2)

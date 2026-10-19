@@ -47,13 +47,32 @@
 			"arrow": "town_center"
 		},
 		{
-			"id": "fight",
+			"id": "barracks",
 			"mission": 5,
 			"title_key": "TUT_5_TITLE",
 			"tip_key": "TUT_5_TIP",
+			"goal": "building_completed",
+			"building": "barracks",
+			"arrow": "own_villager"
+		},
+		{
+			"id": "militia",
+			"mission": 5,
+			"title_key": "TUT_5_TITLE",
+			"tip_key": "TUT_5B_TIP",
+			"goal": "units_trained",
+			"unit": "militia",
+			"count": 2,
+			"arrow": "barracks"
+		},
+		{
+			"id": "fight",
+			"mission": 6,
+			"title_key": "TUT_6_TITLE",
+			"tip_key": "TUT_6_TIP",
 			"goal": "enemies_dead",
 			"spawn_own": {
-				"militia": 4
+				"militia": 2
 			},
 			"spawn_enemy": {
 				"militia": 2
@@ -66,14 +85,14 @@
 		},
 		{
 			"id": "walls",
-			"mission": 6,
-			"title_key": "TUT_6_TITLE",
-			"tip_key": "TUT_6_TIP",
+			"mission": 7,
+			"title_key": "TUT_7_TITLE",
+			"tip_key": "TUT_7_TIP",
 			"goal": "buildings_completed",
 			"building": "palisade",
 			"count": 4,
 			"arrow": "own_villager"
 		}
 	],
-	"missions": 6
+	"missions": 7
 }

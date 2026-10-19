@@ -441,8 +441,8 @@
 		"tutorial": true,
 		"resources": {
 			"0": {
-				"food": 200,
-				"wood": 200,
+				"food": 250,
+				"wood": 350,
 				"gold": 100,
 				"stone": 100
 			}

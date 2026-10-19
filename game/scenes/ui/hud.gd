@@ -53,6 +53,7 @@ var minimap: Minimap
 var group_buttons: Array[Button] = []
 var menu_button: Button
 var speed_button: Button
+var queue_row: HBoxContainer
 ## Main sets this when there is a real match to give up (not sandbox/tutorial).
 var can_resign: bool = false
 var pause_panel: PanelContainer = null
@@ -228,6 +229,8 @@ func is_point_over_ui(screen_pos: Vector2) -> bool:
 func _set_mode(m: Mode) -> void:
 	var was_visible: bool = selection_panel.visible
 	mode = m
+	if queue_row != null and m != Mode.BUILDING:
+		queue_row.visible = false
 	for child: Node in actions.get_children():
 		actions.remove_child(child)
 		child.queue_free()
@@ -266,7 +269,11 @@ func _fill_units() -> void:
 	var parts: PackedStringArray = PackedStringArray()
 	for type_id: String in counts.keys():
 		var name_key: String = String(DataLoader.get_entry("units", type_id).get("name_key", type_id))
-		parts.append("%d %s" % [counts[type_id], tr(name_key)])
+		var plural_key: String = name_key.replace("_NAME", "_PLURAL")
+		var shown: String = tr(name_key)
+		if int(counts[type_id]) > 1 and tr(plural_key) != plural_key:
+			shown = tr(plural_key)
+		parts.append("%d %s" % [counts[type_id], shown])
 	selection_label.text = ", ".join(parts)
 	if _units.size() == 1 and is_instance_valid(_units[0]):
 		selection_label.text += "\n" + unit_stats_text(_units[0])
@@ -412,14 +419,52 @@ func _refresh_building() -> void:
 		text += "  %s %d%%" % [tr("HUD_UNDER_CONSTRUCTION"), int(_building.build_progress * 100.0)]
 	elif not _building.gather_info().is_empty():
 		text += "  (%d/%d)" % [_building.workers.size(), int(_building.gather_info().get("workers", 1))]
+	_refresh_queue_row()
 	if not _building.queue.is_empty():
-		var names: PackedStringArray = PackedStringArray()
-		for id: String in _building.queue:
-			names.append("I" if TechSystem.is_research(id) else String(DataLoader.get_entry("units", id).get("placeholder_glyph", "?")))
-		text += "\n%s: %s  %d%%" % [tr("HUD_QUEUE"), " ".join(names), int(_building.train_progress() * 100.0)]
+		text += "\n%s: %d%%" % [tr("HUD_QUEUE"), int(_building.train_progress() * 100.0)]
 		if _building.blocked_by_pop:
 			text += "  " + tr("HUD_POP_FULL")
 	selection_label.text = text
+
+
+## The production queue as little portraits (unit idle frames from the atlas;
+## research shows the tech's short name) instead of letters like "Q Q Q".
+func _refresh_queue_row() -> void:
+	if queue_row == null:
+		queue_row = HBoxContainer.new()
+		queue_row.name = "QueueRow"
+		queue_row.add_theme_constant_override("separation", 4)
+		selection_label.get_parent().add_child(queue_row)
+		selection_label.get_parent().move_child(queue_row, selection_label.get_index() + 1)
+	for child: Node in queue_row.get_children():
+		queue_row.remove_child(child)
+		child.queue_free()
+	if _building == null or not is_instance_valid(_building) or _building.queue.is_empty():
+		queue_row.visible = false
+		return
+	queue_row.visible = true
+	for i: int in _building.queue.size():
+		var id: String = _building.queue[i]
+		if TechSystem.is_research(id):
+			var l: Label = Label.new()
+			var def: Dictionary = TechSystem.item_def(id)
+			l.text = tr(String(def.get("name_key", id)))
+			l.add_theme_font_size_override("font_size", 15)
+			l.custom_minimum_size = Vector2(0, 36)
+			l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			queue_row.add_child(l)
+			continue
+		var pic: TextureRect = TextureRect.new()
+		var at: AtlasTexture = AtlasTexture.new()
+		at.atlas = PlaceholderArt.texture()
+		at.region = PlaceholderArt.unit_frame(id, player_id, "idle")
+		pic.texture = at
+		pic.custom_minimum_size = Vector2(36, 36)
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pic.modulate = Color.WHITE if i == 0 else Color(1, 1, 1, 0.6)
+		pic.tooltip_text = tr(String(DataLoader.get_entry("units", id).get("name_key", id)))
+		queue_row.add_child(pic)
 	for id: String in type_buttons.keys():
 		var btn: Button = type_buttons[id]
 		if TechSystem.is_research(id):
@@ -655,8 +700,8 @@ static func unit_stats_text(u: Unit) -> String:
 	if float(attack.get("range_px", 0.0)) > 0.0:
 		parts.append("%s %d" % [TranslationServer.translate("STAT_RANGE"), int(Combat.range_of(u))])
 	parts.append("%s %d" % [TranslationServer.translate("STAT_SPEED"), int(u.speed_px)])
-	parts.append("HP %d/%d" % [u.hp, u.max_hp])
-	return "  ".join(parts)
+	parts.append("%s %d/%d" % [TranslationServer.translate("STAT_HP"), u.hp, u.max_hp])
+	return "   ".join(parts)
 
 
 # ------------------------------------------------------------------ F8: minimap, groups, menu

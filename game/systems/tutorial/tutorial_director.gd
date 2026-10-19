@@ -125,8 +125,16 @@ func _on_building_completed(b: Building) -> void:
 
 func _on_unit_trained(u: Unit, _b: Building) -> void:
 	var step: Dictionary = current()
-	if u.owner_id == player_id and String(step.get("goal", "")) == "unit_trained" and u.unit_type == String(step.get("unit", "villager")):
+	if u.owner_id != player_id or u.unit_type != String(step.get("unit", "villager")):
+		return
+	var goal: String = String(step.get("goal", ""))
+	if goal == "unit_trained":
 		_go(index + 1)
+	elif goal == "units_trained":
+		_progress += 1.0
+		_count.text = "%s  %d/%d" % [tr("TUT_MISSION") % [int(step.get("mission", 1)), int(DataLoader.get_table("tutorial").get("missions", 7))], int(_progress), int(step.get("count", 2))]
+		if _progress >= float(step.get("count", 2)):
+			_go(index + 1)
 
 
 ## Mission 5: a squad for the player and a small band of raiders nearby.
@@ -168,6 +176,10 @@ func _arrow_target(kind: String) -> Vector2:
 			var tc2: Building = _own_tc()
 			if tc2 != null:
 				return tc2.position + Vector2(0, -tc2.rect().size.y * 0.5)
+		"barracks":
+			for b: Building in world.buildings:
+				if b.owner_id == player_id and b.building_type == "barracks":
+					return b.position + Vector2(0, -b.rect().size.y * 0.5)
 		"enemies":
 			for e: Unit in _enemies:
 				if is_instance_valid(e) and not e.is_dead:

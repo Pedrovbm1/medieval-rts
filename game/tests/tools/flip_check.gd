@@ -34,6 +34,14 @@ func _ready() -> void:
 		for i: int in units.size():
 			units[i].position = farm.position + Vector2(-60 + (i % 5) * 30, -50 + (i / 5) * 60)
 		cam.position = farm.position
+	if OS.has_environment("REALM_QUEUE"):
+		# Town Center selected with a production queue: portraits in the panel.
+		var tc: Building = world.place_building("town_center", 0, world.world_to_cell(units[0].position) + Vector2i(2, -5))
+		GameState.add_resource(0, "food", 1000)
+		for id: String in ["villager", "villager", "scout"]:
+			world.construction.enqueue(tc, id)
+		sel.select_building(tc)
+		cam.position = tc.position
 	if OS.has_environment("REALM_BUILD_MENU"):
 		var villagers: Array[Unit] = units.filter(func(u: Unit) -> bool: return u.can_gather())
 		sel.set_selection(villagers)

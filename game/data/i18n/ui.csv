@@ -28,7 +28,7 @@ RES_GOLD_MINE_NAME,Mina de oro,Gold mine
 RES_STONE_MINE_NAME,Cantera,Stone quarry
 RES_BERRY_BUSH_NAME,Arbusto de bayas,Berry bush
 RES_CARCASS_NAME,Presa,Carcass
-BLDG_TOWN_CENTER_NAME,Plaza Mayor,Town Center
+BLDG_TOWN_CENTER_NAME,Centro Urbano,Town Center
 BLDG_HOUSE_NAME,Casa,House
 BLDG_LUMBER_CAMP_NAME,Aserradero,Lumber camp
 BLDG_MINING_CAMP_NAME,Campamento minero,Mining camp
@@ -140,10 +140,10 @@ HUD_ERA,Era,Era
 BLDG_BLACKSMITH_NAME,Herrería,Blacksmith
 BLDG_UNIVERSITY_NAME,Universidad,University
 BLDG_WATCH_TOWER_NAME,Torre de vigía,Watch tower
-STAT_ATTACK,ATQ,ATK
-STAT_ARMOR,ARM,ARM
-STAT_RANGE,ALC,RNG
-STAT_SPEED,VEL,SPD
+STAT_ATTACK,Ataque,Attack
+STAT_ARMOR,Armadura,Armor
+STAT_RANGE,Alcance,Range
+STAT_SPEED,Velocidad,Speed
 MENU_CONTINUE,Continuar partida,Continue
 MENU_NEW_GAME,Nueva partida,New game
 MENU_TUTORIAL,Tutorial,Tutorial
@@ -169,8 +169,8 @@ TUT_3_TITLE,Misión 3: Construir,Mission 3: Build
 TUT_3_TIP,"Selecciona un aldeano, toca Construir y elige Casa. Toca dónde ponerla y luego Confirmar. Las casas suben tu población.","Select a villager, tap Build and choose House. Tap where to place it, then Confirm. Houses raise your population."
 TUT_4_TITLE,Misión 4: Entrenar,Mission 4: Train
 TUT_4_TIP,Toca tu Centro Urbano y pulsa Aldeano para entrenar uno nuevo. Más aldeanos = más recursos.,Tap your Town Center and press Villager to train a new one. More villagers = more resources.
-TUT_5_TITLE,Misión 5: Defender,Mission 5: Defend
-TUT_5_TIP,¡Llegaron bandidos! Selecciona a tus milicianos (dedo quieto y recuadro) y toca a un enemigo para atacarlo.,"Bandits are here! Select your militia (hold, then drag a box) and tap an enemy to attack it."
+TUT_5_TITLE,Misión 5: Tu ejército,Mission 5: Your army
+TUT_5_TIP,"Antes de que lleguen problemas, prepara soldados: selecciona un aldeano, toca Construir y elige Cuartel. Cuando esté listo, toca el Cuartel y entrena 2 milicianos.","Get soldiers ready before trouble comes: select a villager, tap Build and choose Barracks. When it is done, tap the Barracks and train 2 militia."
 TUT_DONE,"¡Tutorial completado! Ya conoces lo básico: recolecta, construye, entrena, defiende y amuralla.","Tutorial complete! You know the basics: gather, build, train, defend and wall up."
 TUT_SKIP,Saltar,Skip
 TUT_MISSION,Misión %d de %d,Mission %d of %d
@@ -188,3 +188,22 @@ HUD_WALL_START,Toca donde empieza la muralla,Tap where the wall starts
 ALERT_ARMY,¡Se acerca un ejército!,An army approaches!
 TUT_6_TITLE,Misión 6: Defiende tu aldea,Mission 6: Defend your village
 TUT_6_TIP,"Selecciona un aldeano, toca Construir y elige Empalizada. Toca donde empieza la muralla, luego donde termina y pulsa ✓. Construye al menos 4 tramos. En Era II podrás poner Muralla de piedra y Torres.","Select a villager, tap Build and choose Palisade. Tap where the wall starts, then where it ends, and press ✓. Build at least 4 segments. In Era II you can add Stone walls and Towers."
+STAT_HP,Vida,HP
+TUT_5B_TIP,"Toca el Cuartel y pulsa Miliciano dos veces. Mientras entrenan, los aldeanos pueden seguir trabajando.",Tap the Barracks and press Militia twice. Your villagers can keep working while they train.
+TUT_7_TITLE,Misión 7: Amuralla tu aldea,Mission 7: Wall your village
+TUT_7_TIP,"Selecciona un aldeano, toca Construir y elige Empalizada. Toca donde empieza la muralla, luego donde termina y pulsa ✓. Construye al menos 4 tramos. En Era II podrás poner Muralla de piedra, Puertas y Torres.","Select a villager, tap Build and choose Palisade. Tap where the wall starts, then where it ends, and press ✓. Build at least 4 segments. In Era II you can add Stone walls, Gates and Towers."
+UNIT_VILLAGER_PLURAL,Aldeanos,Villagers
+UNIT_SCOUT_PLURAL,Exploradores,Scouts
+UNIT_MILITIA_PLURAL,Milicianos,Militia
+UNIT_SPEARMAN_PLURAL,Lanceros,Spearmen
+UNIT_ARCHER_PLURAL,Arqueros,Archers
+UNIT_KNIGHT_PLURAL,Caballeros,Knights
+UNIT_RAM_PLURAL,Arietes,Rams
+UNIT_SKIRMISHER_PLURAL,Escaramuzadores,Skirmishers
+UNIT_SWORDSMAN_PLURAL,Espadachines,Swordsmen
+UNIT_MONK_PLURAL,Monjes,Monks
+UNIT_MANGONEL_PLURAL,Mangoneles,Mangonels
+UNIT_CAMEL_RIDER_PLURAL,Camelleros,Camel riders
+UNIT_SHEEP_PLURAL,Ovejas,Sheep
+UNIT_DEER_PLURAL,Ciervos,Deer
+UNIT_BOAR_PLURAL,Jabalíes,Boars

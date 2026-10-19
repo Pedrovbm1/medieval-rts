@@ -99,13 +99,38 @@ func test_b_tutorial_five_missions() -> void:
 	check(tut.current().get("id") == "train", "building a house completes mission 3")
 	world.construction.enqueue(tc, "villager")
 	await _wait_until(func() -> bool: return tut.current().get("id") != "train", 90.0)
-	check(tut.current().get("id") == "fight", "training a villager completes mission 4")
-	check(tut.enemies().size() == 2, "mission 5 brings raiders")
+	check(tut.current().get("id") == "barracks", "training a villager completes mission 4; mission 5 asks for barracks")
+	var bspot: Vector2i = world.find_building_spot("barracks", tc.position)
+	var barracks: Building = world.construction.start_construction(0, "barracks", bspot, villagers)
+	check(barracks != null, "the tutorial gives enough wood for a barracks")
+	await _wait_until(func() -> bool: return tut.current().get("id") != "barracks", 200.0)
+	check(tut.current().get("id") == "militia", "a finished barracks asks for 2 militia")
+	world.construction.enqueue(barracks, "militia")
+	world.construction.enqueue(barracks, "militia")
+	await _wait_until(func() -> bool: return tut.current().get("id") != "militia", 120.0)
+	check(tut.current().get("id") == "fight", "2 militia trained: the raiders come")
+	check(tut.enemies().size() == 2, "mission 6 brings raiders")
 	var squad: Array[Unit] = world.units.filter(func(u: Unit) -> bool: return u.owner_id == 0 and u.unit_type == "militia")
-	check(squad.size() == 4, "and a militia squad for the player")
+	check(squad.size() == 4, "the player has 4 militia (2 trained + 2 given)")
 	world.combat.attack_move(squad, tut.enemies()[0].position)
-	await _wait_until(func() -> bool: return tut.done, 90.0)
-	check(tut.done, "beating the raiders finishes the tutorial")
+	await _wait_until(func() -> bool: return tut.current().get("id") != "fight", 90.0)
+	check(tut.current().get("id") == "walls", "beating the raiders leads to the wall mission")
+	GameState.add_resource(0, "wood", 100)
+	var origin: Vector2i = world.world_to_cell(villagers[0].position)
+	var line: Array[Vector2i] = []
+	for dy: int in range(-12, 13):
+		for dx: int in range(-12, 9):
+			var a: Vector2i = origin + Vector2i(dx, dy)
+			var cells: Array[Vector2i] = World.line_cells(a, a + Vector2i(3, 0))
+			if cells.all(func(c: Vector2i) -> bool: return world.can_place("palisade", c, villagers)):
+				line = cells
+				break
+		if not line.is_empty():
+			break
+	var made: Array[Building] = world.construction.start_wall_line(0, "palisade", line, villagers)
+	check(made.size() == 4, "4 palisade foundations placed for the last mission (%d)" % made.size())
+	await _wait_until(func() -> bool: return tut.done, 200.0)
+	check(tut.done, "4 palisade segments finish the tutorial")
 	check(not main.rules.ended, "the tutorial does not trigger a defeat or victory")
 	await _close()
 
