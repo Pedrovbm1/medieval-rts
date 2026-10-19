@@ -156,9 +156,14 @@ func find_path(from_world: Vector2, to_world: Vector2) -> PackedVector2Array:
 	var start_point: Vector2 = from_world if to_cell(from_world) == start else cell_center(start)
 	if start == goal:
 		return PackedVector2Array([start_point, end_point])
-	var raw: PackedVector2Array = _astar.get_point_path(start, goal)
+	# Partial paths: a walled-in goal still gets a route up to the wall, so an
+	# army arrives at the obstacle (and fights it) instead of giving up.
+	var raw: PackedVector2Array = _astar.get_point_path(start, goal, true)
 	if raw.is_empty():
 		return PackedVector2Array()
+	if raw.size() >= 2 and to_cell(raw[raw.size() - 1]) != goal:
+		raw[0] = start_point
+		return smooth(raw)
 	raw[0] = start_point
 	raw[raw.size() - 1] = end_point
 	return smooth(raw)

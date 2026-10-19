@@ -65,7 +65,7 @@ func test_b_terrain_variants() -> void:
 	var ts: TileSet = PlaceholderTileset.build(DataLoader.get_table("terrain"))
 	var src: TileSetAtlasSource = ts.get_source(0)
 	var types: int = Dictionary(DataLoader.get_table("terrain").get("types", {})).size()
-	check(src.get_tiles_count() == types * PlaceholderTileset.VARIANTS, "%d variants per terrain type" % PlaceholderTileset.VARIANTS)
+	check(src.get_tiles_count() == (types + 1) * PlaceholderTileset.VARIANTS, "%d variants per terrain type plus shore" % PlaceholderTileset.VARIANTS)
 	var seen: Dictionary = {}
 	for x: int in 20:
 		seen[PlaceholderTileset.atlas_coords(0, Vector2i(x, 3))] = true

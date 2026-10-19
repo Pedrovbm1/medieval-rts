@@ -103,7 +103,7 @@ func test_c_market_trades_surplus_for_gold() -> void:
 	var saved: Dictionary = GameState.to_dict()
 	GameState.market_prices = {}
 	GameState.from_dict(saved)
-	check(eco.market_price(0, "food") == low + int(DataLoader.rule("market", "recover", 2)), "prices survive save and load")
+	check(eco.market_price(0, "food") == mini(int(DataLoader.rule("market", "start_price", 70)), low + int(DataLoader.rule("market", "recover", 2))), "prices survive save and load")
 	GameState.add_resource(0, "stone", -GameState.get_resource(0, "stone"))
 	check(not eco.sell(0, "stone"), "cannot sell what you do not have")
 	await _close()

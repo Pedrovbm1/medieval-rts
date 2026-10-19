@@ -61,6 +61,7 @@ func _ready() -> void:
 	hud.place_confirm_pressed.connect(placement.confirm)
 	hud.place_cancel_pressed.connect(placement.cancel)
 	placement.state_changed.connect(hud.show_placing)
+	placement.line_changed.connect(hud.show_line)
 	placement.placed.connect(func(_b: Building) -> void: selection.release(placement.builders))
 	hud.train_pressed.connect(_on_train_pressed)
 	hud.research_pressed.connect(_on_train_pressed)
@@ -170,7 +171,41 @@ func _resolve_scenario() -> String:
 	return "sandbox"
 
 
+## "An army approaches": several enemy soldiers seen marching toward our
+## base, once per minute at most (rules.json alerts.*).
+var _army_warn_t: float = -999.0
+
+
+func _check_army_warning() -> void:
+	var p: int = GameState.PLAYER_HUMAN
+	var now: float = rules.elapsed
+	if now - _army_warn_t < float(DataLoader.rule("alerts", "army_warn_s", 60)):
+		return
+	var tc: Building = null
+	for b: Building in world.buildings:
+		if b.owner_id == p and b.building_type == "town_center":
+			tc = b
+			break
+	if tc == null:
+		return
+	var radius: float = float(DataLoader.rule("alerts", "army_radius_px", 2200))
+	var seen: int = 0
+	for u: Unit in world.units:
+		if u.owner_id < 0 or u.owner_id == p or u.is_dead or u.can_gather():
+			continue
+		var d: float = u.position.distance_to(tc.position)
+		if d < radius and d > 600.0 and world.vision.grid.is_visible(p, u.position):
+			seen += 1
+	if seen >= int(DataLoader.rule("alerts", "army_min_units", 6)):
+		_army_warn_t = now
+		hud.show_banner(tr("ALERT_ARMY"))
+		Sfx.play("alert")
+		if OS.is_debug_build():
+			print("[REALM] army warning seen=%d" % seen)
+
+
 func _refresh_idle() -> void:
+	_check_army_warning()
 	hud.set_idle_count(world.economy.idle_villagers(GameState.PLAYER_HUMAN).size())
 
 

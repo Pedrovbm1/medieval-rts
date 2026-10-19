@@ -14,7 +14,7 @@ extends RefCounted
 ## (its fingerprint differs) the game paints the atlas at startup instead.
 
 ## Bump when a painter changes, so an old baked atlas is not used.
-const ART_VERSION: int = 3
+const ART_VERSION: int = 5
 const BAKED_PNG: String = "res://assets/art/atlas.png"
 const BAKED_JSON: String = "res://assets/art/atlas.json"
 const ATLAS_WIDTH: int = 2048
@@ -110,7 +110,12 @@ static func unit_frame(type_id: String, owner_id: int, pose: String) -> Rect2:
 	return r
 
 
-static func building_region(type_id: String, owner_id: int) -> Rect2:
+## `era` > 0 picks an era look when the building has one (Town Center).
+static func building_region(type_id: String, owner_id: int, era: int = 0) -> Rect2:
+	if era > 0:
+		var r: Rect2 = region("bldg:%s@%s#e%d" % [type_id, variant_key(owner_id), era])
+		if r.size != Vector2.ZERO:
+			return r
 	return region("bldg:%s@%s" % [type_id, variant_key(owner_id)])
 
 
@@ -167,6 +172,11 @@ static func build() -> void:
 		var size: Vector2i = Vector2i(int(fp[0]) * tile, int(fp[1]) * tile)
 		for i: int in colors.size():
 			images["bldg:%s@p%d" % [type_id, i]] = BuildingPainter.paint(type_id, size, Color.html(String(colors[i])))
+			if type_id == "town_center":
+				for era: int in [2, 3, 4]:
+					images["bldg:%s@p%d#e%d" % [type_id, i, era]] = BuildingPainter.paint(type_id, size, Color.html(String(colors[i])), era)
+			if type_id == "gate":
+				images["bldg:gate_open@p%d" % i] = BuildingPainter.paint("gate_open", size, Color.html(String(colors[i])))
 
 	var resources: Dictionary = DataLoader.get_table("resources")
 	for type_id: String in resources.keys():

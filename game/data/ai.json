@@ -17,7 +17,8 @@
 			"human_bonus": {
 				"gather": 1.2,
 				"train_speed": 1.25
-			}
+			},
+			"first_attack_min": 16
 		},
 		"normal": {
 			"name_key": "AI_NORMAL",
@@ -31,7 +32,8 @@
 			"research_chance": 1.0,
 			"production_mult": 1.0,
 			"army_cap": 0,
-			"raid_economy": false
+			"raid_economy": false,
+			"first_attack_min": 11
 		},
 		"hard": {
 			"name_key": "AI_HARD",
@@ -45,7 +47,8 @@
 			"research_chance": 1.0,
 			"production_mult": 1.5,
 			"army_cap": 0,
-			"raid_economy": true
+			"raid_economy": true,
+			"first_attack_min": 8
 		}
 	},
 	"phases": [
@@ -89,13 +92,13 @@
 			"food": 0.4,
 			"wood": 0.27,
 			"gold": 0.3,
-			"stone": 0.03
+			"stone": 0.05
 		},
 		"push": {
 			"food": 0.4,
 			"wood": 0.27,
 			"gold": 0.3,
-			"stone": 0.03
+			"stone": 0.05
 		}
 	},
 	"buildings": {
@@ -146,8 +149,14 @@
 		"market": {
 			"opening": 0,
 			"development": 0,
-			"harass": 0,
+			"harass": 1,
 			"push": 1
+		},
+		"watch_tower": {
+			"opening": 0,
+			"development": 0,
+			"harass": 1,
+			"push": 2
 		}
 	},
 	"army": {
@@ -209,7 +218,7 @@
 			"3": 26,
 			"4": 34
 		},
-		"max_seconds": 300,
+		"max_seconds": 480,
 		"cooldown_seconds": 180
 	},
 	"rebalance": {
@@ -224,6 +233,7 @@
 	},
 	"market": {
 		"sell_when_gold_below": 150,
-		"keep_at_least": 400
+		"keep_at_least": 400,
+		"era_lots_per_think": 3
 	}
 }

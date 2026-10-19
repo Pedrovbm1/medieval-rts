@@ -188,6 +188,7 @@ func show_placing(active: bool, error: String) -> void:
 		else:
 			_refresh_placing()
 	elif mode == Mode.PLACING:
+		_line_text = ""
 		_set_mode(Mode.UNITS if not _units.is_empty() else Mode.NONE)
 
 
@@ -298,10 +299,27 @@ func _fill_placing() -> void:
 	_refresh_placing()
 
 
+## Line mode (walls): "tap where it ends (n segments)" + total cost.
+var _line_text: String = ""
+
+
+func show_line(anchored: bool, count: int, cost: Dictionary) -> void:
+	if not anchored:
+		_line_text = tr("HUD_WALL_START")
+	else:
+		_line_text = tr("HUD_WALL_LINE") % count
+		if count > 0:
+			_line_text += "  " + cost_text(cost)
+	if mode == Mode.PLACING:
+		_refresh_placing()
+
+
 func _refresh_placing() -> void:
 	match _place_error:
+		"line":
+			selection_label.text = _line_text
 		"":
-			selection_label.text = tr("HUD_BUILD")
+			selection_label.text = _line_text if _line_text != "" else tr("HUD_BUILD")
 		"cost":
 			selection_label.text = tr("ERR_COST")
 		"era":

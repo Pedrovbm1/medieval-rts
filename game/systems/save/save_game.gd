@@ -31,7 +31,7 @@ static func snapshot(main: Node) -> Dictionary:
 		nodes.append({"id": ids[n], "type": n.resource_type, "cell": [n.cell.x, n.cell.y], "pos": [n.position.x, n.position.y], "amount": n.amount, "free": n.walkable})
 	for b: Building in world.buildings:
 		buildings.append({
-			"id": ids[b], "type": b.building_type, "owner": b.owner_id, "cell": [b.cell.x, b.cell.y], "hp": b.hp,
+			"id": ids[b], "type": b.building_type, "owner": b.owner_id, "cell": [b.cell.x, b.cell.y], "hp": b.hp, "open": b.is_open,
 			"progress": b.build_progress, "queue": Array(b.queue), "train_elapsed": b.train_elapsed,
 			"rally": [b.rally_point.x, b.rally_point.y] if b.rally_point != Vector2.INF else null,
 		})
@@ -116,6 +116,8 @@ static func restore(main: Node, data: Dictionary) -> void:
 		var building: Building = world.place_building(String(b["type"]), int(b["owner"]), Vector2i(int(b["cell"][0]), int(b["cell"][1])))
 		building.build_progress = float(b["progress"])
 		building.hp = int(b["hp"])
+		if building.is_gate() and not bool(b.get("open", true)):
+			building.set_gate_open(false, world.nav)
 		for item: Variant in b.get("queue", []):
 			building.queue.append(String(item))
 		building.train_elapsed = float(b.get("train_elapsed", 0.0))

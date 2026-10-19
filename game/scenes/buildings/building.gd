@@ -36,6 +36,9 @@ var blocked_by_pop: bool = false
 var rally_point: Vector2 = Vector2.INF
 ## Armed buildings (towers): seconds until the next shot.
 var attack_cooldown: float = 0.0
+## Gates: open lets everyone through; closed blocks the cell (enemies near).
+var is_open: bool = true
+var _open_since: float = 0.0
 var selected: bool = false:
 	set(value):
 		if selected != value:
@@ -157,9 +160,31 @@ func take_damage(amount: int, source: Unit) -> void:
 		destroyed.emit(self)
 
 
+func is_gate() -> bool:
+	return bool(data.get("gate", false))
+
+
+func is_wall() -> bool:
+	return Array(data.get("classes", [])).has("wall")
+
+
+## Opens or closes the gate: a closed gate blocks its cell for everyone.
+func set_gate_open(open: bool, nav: NavGrid) -> void:
+	if not is_gate() or open == is_open:
+		return
+	is_open = open
+	nav.set_blocked(cells(), not open)
+	queue_redraw()
+	if OS.is_debug_build():
+		print("[REALM] gate %s at=(%d,%d)" % ["open" if open else "closed", cell.x, cell.y])
+
+
 func _draw() -> void:
 	var tex: Texture2D = PlaceholderArt.texture()
-	var region: Rect2 = PlaceholderArt.building_region(building_type, owner_id)
+	var look: String = building_type
+	if is_gate() and is_open:
+		look = "gate_open"
+	var region: Rect2 = PlaceholderArt.building_region(look, owner_id, GameState.era_of(owner_id) if building_type == "town_center" else 0)
 	var half: Vector2 = Vector2(footprint) * tile_size * 0.5
 	if is_complete():
 		draw_texture_rect_region(tex, Rect2(-half, region.size), region)

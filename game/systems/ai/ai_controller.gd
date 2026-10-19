@@ -433,15 +433,28 @@ func _build(type_id: String, near: Vector2, villagers: Array[Unit], count: int) 
 ## (keeping a reserve), like a player does once the mines run dry.
 func _trade() -> void:
 	var mcfg: Dictionary = cfg.get("market", {})
-	if GameState.get_resource(player_id, "gold") >= int(mcfg.get("sell_when_gold_below", 150)):
+	var gold: int = GameState.get_resource(player_id, "gold")
+	var lots: int = 1
+	var floor_gold: int = int(mcfg.get("sell_when_gold_below", 150))
+	# Saving for an era that needs gold we do not have (mines run dry late):
+	# trade the surplus for it, several lots per turn.
+	if saving_for_era and saving_reason == "cost":
+		var cost: Dictionary = TechSystem.item_cost(TechSystem.era_item(GameState.era_of(player_id) + 1))
+		var need_gold: int = int(cost.get("gold", 0)) - gold
+		if need_gold > 0:
+			floor_gold = int(cost.get("gold", 0))
+			lots = int(mcfg.get("era_lots_per_think", 3))
+	if gold >= floor_gold:
 		return
 	var keep: int = int(mcfg.get("keep_at_least", 400))
-	var best: String = ""
-	for res: String in ["food", "wood", "stone"]:
-		var have: int = GameState.get_resource(player_id, res)
-		if have >= keep + int(DataLoader.rule("market", "lot", 100)) and (best == "" or have > GameState.get_resource(player_id, best)):
-			best = res
-	if best != "" and world.economy.sell_error(player_id, best) == "":
+	for _k: int in lots:
+		var best: String = ""
+		for res: String in ["food", "wood", "stone"]:
+			var have: int = GameState.get_resource(player_id, res)
+			if have >= keep + int(DataLoader.rule("market", "lot", 100)) and (best == "" or have > GameState.get_resource(player_id, best)):
+				best = res
+		if best == "" or world.economy.sell_error(player_id, best) != "":
+			return
 		world.economy.sell(player_id, best)
 
 
@@ -580,6 +593,10 @@ func _defend(military: Array[Unit]) -> bool:
 func _attack(military: Array[Unit]) -> void:
 	var army: Dictionary = cfg.get("army", {})
 	var mult: float = float(diff.get("army_mult", 1.0))
+	# Peace window: no harassment or pushes before this minute (defence still
+	# works). Beginners get time to wall up and train before the first fight.
+	if elapsed < float(diff.get("first_attack_min", 0.0)) * 60.0:
+		return
 	var idle: Array[Unit] = military.filter(func(m: Unit) -> bool: return m.task == null and not m.is_moving())
 	idle = _press_on(idle)
 	if (phase == "harass" or phase == "push") and _known_enemy_buildings() == 0:

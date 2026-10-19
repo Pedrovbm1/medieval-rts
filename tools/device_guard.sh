@@ -8,7 +8,12 @@
 ADB="${ADB:-C:/Users/pedro/AppData/Local/Android/Sdk/platform-tools/adb.exe}"
 # Always talk to the S10 test phone, never to whatever else is connected
 # (other sessions use network adb devices such as a Fire TV).
-export ANDROID_SERIAL="${ANDROID_SERIAL:-R58M154WY9A}"
+# REALM_DEVICE=s24 targets Pedro's own Galaxy S24 (R5GL11HQ7XJ) instead.
+if [ "${REALM_DEVICE:-}" = "s24" ]; then
+  export ANDROID_SERIAL="${ANDROID_SERIAL:-R5GL11HQ7XJ}"
+else
+  export ANDROID_SERIAL="${ANDROID_SERIAL:-R58M154WY9A}"
+fi
 if [ "$("$ADB" get-state 2>/dev/null | tr -d '')" != "device" ]; then
   echo "guard: test phone $ANDROID_SERIAL is not connected; aborting (no other device is touched)" >&2
   return 3 2>/dev/null || exit 3

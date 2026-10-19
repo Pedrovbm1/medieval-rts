@@ -171,7 +171,7 @@ TUT_4_TITLE,Misión 4: Entrenar,Mission 4: Train
 TUT_4_TIP,Toca tu Centro Urbano y pulsa Aldeano para entrenar uno nuevo. Más aldeanos = más recursos.,Tap your Town Center and press Villager to train a new one. More villagers = more resources.
 TUT_5_TITLE,Misión 5: Defender,Mission 5: Defend
 TUT_5_TIP,¡Llegaron bandidos! Selecciona a tus milicianos (dedo quieto y recuadro) y toca a un enemigo para atacarlo.,"Bandits are here! Select your militia (hold, then drag a box) and tap an enemy to attack it."
-TUT_DONE,"¡Tutorial completado! Ya conoces lo básico: recolecta, construye, entrena y defiende.","Tutorial complete! You know the basics: gather, build, train and defend."
+TUT_DONE,"¡Tutorial completado! Ya conoces lo básico: recolecta, construye, entrena, defiende y amuralla.","Tutorial complete! You know the basics: gather, build, train, defend and wall up."
 TUT_SKIP,Saltar,Skip
 TUT_MISSION,Misión %d de %d,Mission %d of %d
 TUT_FINISH,Volver al menú,Back to menu
@@ -180,3 +180,11 @@ HUD_SELL,Vender,Sell
 HUD_MARKET_HINT,Cambia 100 de un recurso por oro. Cada venta baja el precio; se recupera con el tiempo.,Trade 100 of a resource for gold. Each sale lowers the price; it recovers over time.
 HUD_SPEED,Velocidad del juego,Game speed
 MENU_RESIGN,Rendirse,Resign
+BLDG_PALISADE_NAME,Empalizada,Palisade
+BLDG_STONE_WALL_NAME,Muralla,Stone wall
+BLDG_GATE_NAME,Puerta,Gate
+HUD_WALL_LINE,Toca donde termina la muralla (%d tramos),Tap where the wall ends (%d segments)
+HUD_WALL_START,Toca donde empieza la muralla,Tap where the wall starts
+ALERT_ARMY,¡Se acerca un ejército!,An army approaches!
+TUT_6_TITLE,Misión 6: Defiende tu aldea,Mission 6: Defend your village
+TUT_6_TIP,"Selecciona un aldeano, toca Construir y elige Empalizada. Toca donde empieza la muralla, luego donde termina y pulsa ✓. Construye al menos 4 tramos. En Era II podrás poner Muralla de piedra y Torres.","Select a villager, tap Build and choose Palisade. Tap where the wall starts, then where it ends, and press ✓. Build at least 4 segments. In Era II you can add Stone walls and Towers."

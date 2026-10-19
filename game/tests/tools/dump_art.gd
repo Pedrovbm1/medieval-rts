@@ -29,7 +29,9 @@ func _preview() -> Image:
 				name = "water"
 			elif y <= 1 and x >= 7:
 				name = "forest"
-			var entry: Dictionary = terrain.get(name, {})
+			elif x == 11:
+				name = "shore"
+			var entry: Dictionary = terrain.get("grass" if name == "shore" else name, {})
 			var v: int = absi(x * 73856093 ^ y * 19349663) % PlaceholderTileset.VARIANTS
 			var t: Image = NaturePainter.tile(name, Color.html(String(entry.get("color", "#55aa55"))), v, tile)
 			img.blit_rect(t, Rect2i(0, 0, tile, tile), Vector2i(x * tile, y * tile))

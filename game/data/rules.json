@@ -67,15 +67,18 @@
 		"autosave_seconds": 120
 	},
 	"alerts": {
-		"cooldown_s": 6.0
+		"cooldown_s": 6.0,
+		"army_warn_s": 60,
+		"army_min_units": 6,
+		"army_radius_px": 2200
 	},
 	"market": {
 		"lot": 100,
 		"start_price": 70,
-		"min_price": 20,
-		"drop": 4,
-		"recover": 2,
-		"recover_s": 20
+		"min_price": 30,
+		"drop": 3,
+		"recover": 4,
+		"recover_s": 15
 	},
 	"speed": {
 		"steps": [
@@ -83,5 +86,12 @@
 			2.0,
 			3.0
 		]
+	},
+	"gates": {
+		"auto": true,
+		"close_px": 320,
+		"open_px": 400,
+		"open_delay_s": 1.0,
+		"tick_s": 0.25
 	}
 }

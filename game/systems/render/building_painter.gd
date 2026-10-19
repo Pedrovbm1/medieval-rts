@@ -9,12 +9,16 @@ const STONE: Color = Color(0.62, 0.6, 0.56)
 const PLANK: Color = Color(0.58, 0.42, 0.26)
 const ROOF: Color = Color(0.62, 0.27, 0.2)
 const THATCH: Color = Color(0.78, 0.64, 0.34)
+const STEEL: Color = Color(0.72, 0.74, 0.78)
 
 
-static func paint(type_id: String, size: Vector2i, team: Color) -> Image:
+static func paint(type_id: String, size: Vector2i, team: Color, era: int = 1) -> Image:
 	var img: Image = Raster.begin(size, 1.0, 0.3)
 	var w: float = size.x
 	var h: float = size.y
+	if type_id in ["palisade", "stone_wall", "gate", "gate_open"]:
+		_wall_piece(img, type_id, w, h, team)
+		return Raster.finish(img, size, Color(0.08, 0.06, 0.05, 0.6))
 	if type_id != "farm":
 		# Trodden dirt under the building: it sits on the ground, not on top.
 		Raster.ellipse(img, Vector2(w * 0.5, h * 0.8), Vector2(w * 0.5, h * 0.2), Color(0.42, 0.34, 0.22, 0.5))
@@ -22,9 +26,16 @@ static func paint(type_id: String, size: Vector2i, team: Color) -> Image:
 		"farm":
 			_farm(img, w, h, team)
 		"town_center":
-			_hall(img, w, h, STONE, ROOF, team, true)
-			_tower(img, Vector2(w * 0.5, h * 0.36), 16.0, 34.0, STONE.lightened(0.1), ROOF)
-			_banner(img, Vector2(w * 0.5, h * 0.06), team, 16.0)
+			# The roof tells the era at a glance: thatch, planks, tile, slate+gold.
+			var roofs: Array = [THATCH, Color(0.5, 0.36, 0.22), ROOF, Color(0.36, 0.4, 0.52)]
+			var walls: Array = [PLANK, PLANK.darkened(0.1), STONE, STONE.lightened(0.08)]
+			var k: int = clampi(era - 1, 0, 3)
+			_hall(img, w, h, walls[k], roofs[k], team, true)
+			_tower(img, Vector2(w * 0.5, h * 0.36), 16.0, 34.0 + k * 4.0, Color(walls[k]).lightened(0.1), roofs[k])
+			if k >= 3:
+				Raster.rect(img, Rect2(w * 0.5 - 18, h * 0.1, 36, 2.5), Color(0.95, 0.8, 0.3))
+				Raster.circle(img, Vector2(w * 0.5, h * 0.36 - 27), 3.5, Color(0.95, 0.8, 0.3))
+			_banner(img, Vector2(w * 0.5, h * 0.06), team, 16.0 + k * 2.0)
 		"house":
 			_hall(img, w, h, PLANK, THATCH, team, false)
 		"lumber_camp":
@@ -213,6 +224,52 @@ static func _market(img: Image, w: float, h: float, team: Color) -> void:
 	Raster.blob(img, Vector2(w * 0.8, h * 0.86), Vector2(6, 5), Color(0.82, 0.74, 0.55), DARK, 1.0)
 	Raster.circle(img, Vector2(w * 0.76, h * 0.8), 3.5, Color(0.95, 0.78, 0.25))  # coin pile
 	_banner(img, Vector2(w * 0.5, h * 0.08), team, 12.0)
+
+
+## 1x1 wall pieces. They are tiled next to each other, so the design fills the
+## cell edge to edge (no outline gap) and reads as a continuous wall.
+static func _wall_piece(img: Image, type_id: String, w: float, h: float, team: Color) -> void:
+	match type_id:
+		"palisade":
+			Raster.rect(img, Rect2(0, h * 0.55, w, h * 0.45), Color(0.42, 0.34, 0.22, 0.5))  # trodden base
+			var x: float = 2.0
+			while x < w - 2.0:
+				var top: float = h * 0.18 + absf(Raster.noise(int(x), 1, 3)) * 6.0
+				Raster.framed_rect(img, Rect2(x, top, 7, h * 0.78 - top + 8.0), PLANK.lightened(0.05), DARK)
+				Raster.polygon(img, PackedVector2Array([Vector2(x - 1, top + 2), Vector2(x + 8, top + 2), Vector2(x + 3.5, top - 6)]), PLANK.darkened(0.25))
+				Raster.rect(img, Rect2(x + 2, top + 2, 1.5, h * 0.7 - top), PLANK.lightened(0.3))
+				x += 9.0
+			Raster.framed_rect(img, Rect2(0, h * 0.42, w, 5), PLANK.darkened(0.35), DARK)
+			Raster.framed_rect(img, Rect2(0, h * 0.72, w, 5), PLANK.darkened(0.35), DARK)
+		"stone_wall":
+			var body: Rect2 = Rect2(0, h * 0.2, w, h * 0.8)
+			Raster.rect(img, body, STONE)
+			_wall_texture(img, body, STONE)
+			for i: int in 4:
+				Raster.framed_rect(img, Rect2(i * 16 + 2, h * 0.04, 10, h * 0.2), STONE.lightened(0.1), DARK)
+			Raster.rect(img, Rect2(0, h * 0.2, w, 2), STONE.darkened(0.4))
+			Raster.rect(img, Rect2(0, h * 0.9, w, h * 0.1), STONE.darkened(0.3))
+		"gate", "gate_open":
+			var open: bool = type_id == "gate_open"
+			Raster.rect(img, Rect2(0, h * 0.55, w, h * 0.45), Color(0.42, 0.34, 0.22, 0.5))
+			# Posts
+			Raster.framed_rect(img, Rect2(0, h * 0.08, 10, h * 0.9), STONE.darkened(0.1), DARK)
+			Raster.framed_rect(img, Rect2(w - 10, h * 0.08, 10, h * 0.9), STONE.darkened(0.1), DARK)
+			Raster.framed_rect(img, Rect2(-1, h * 0.08, w + 2, 8), STONE.darkened(0.2), DARK)
+			if open:
+				# Doors swung inward: two narrow slabs against the posts.
+				Raster.framed_rect(img, Rect2(10, h * 0.16, 6, h * 0.5), PLANK.darkened(0.4), DARK)
+				Raster.framed_rect(img, Rect2(w - 16, h * 0.16, 6, h * 0.5), PLANK.darkened(0.4), DARK)
+				Raster.rect(img, Rect2(16, h * 0.3, w - 32, h * 0.6), Color(0.5, 0.42, 0.3, 0.6))
+			else:
+				Raster.framed_rect(img, Rect2(10, h * 0.16, w - 20, h * 0.72), PLANK.darkened(0.3), DARK)
+				for dx: float in [10 + (w - 20) * 0.5]:
+					Raster.rect(img, Rect2(dx - 0.75, h * 0.16, 1.5, h * 0.72), DARK)
+				for dy: float in [h * 0.3, h * 0.6]:
+					Raster.rect(img, Rect2(10, dy, w - 20, 3), STEEL.darkened(0.3))
+				Raster.circle(img, Vector2(w * 0.5 - 6, h * 0.5), 1.5, Color(0.85, 0.7, 0.3))
+				Raster.circle(img, Vector2(w * 0.5 + 6, h * 0.5), 1.5, Color(0.85, 0.7, 0.3))
+			_banner(img, Vector2(w * 0.5, 0), team, 8.0)
 
 
 static func _farm(img: Image, w: float, h: float, team: Color) -> void:

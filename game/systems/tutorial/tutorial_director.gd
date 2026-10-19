@@ -111,8 +111,16 @@ func _on_delivered(p: int, resource: String, amount: int) -> void:
 
 func _on_building_completed(b: Building) -> void:
 	var step: Dictionary = current()
-	if b.owner_id == player_id and String(step.get("goal", "")) == "building_completed" and b.building_type == String(step.get("building", "house")):
+	if b.owner_id != player_id:
+		return
+	var goal: String = String(step.get("goal", ""))
+	if goal == "building_completed" and b.building_type == String(step.get("building", "house")):
 		_go(index + 1)
+	elif goal == "buildings_completed" and b.building_type == String(step.get("building", "palisade")):
+		_progress += 1.0
+		_count.text = "%s  %d/%d" % [tr("TUT_MISSION") % [int(step.get("mission", 1)), int(DataLoader.get_table("tutorial").get("missions", 6))], int(_progress), int(step.get("count", 4))]
+		if _progress >= float(step.get("count", 4)):
+			_go(index + 1)
 
 
 func _on_unit_trained(u: Unit, _b: Building) -> void:

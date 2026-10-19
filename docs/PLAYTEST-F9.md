@@ -48,3 +48,11 @@ Nueva partida → Fácil → cada mapa.
 - [ ] Nada se traba en batallas grandes ni al abrir menús.
 
 Cuando termines, dime "playtest F9" con lo que marcaste y lo que no.
+
+## 7. Defensa (nuevo, 2026-10-19)
+- [ ] Construir → Empalizada: el primer toque fija el inicio, cada toque mueve el fin, ✓ construye. ¿Se entiende sin explicación?
+- [ ] Una Puerta en la muralla se abre para tus aldeanos y se cierra cuando llega el enemigo.
+- [ ] El Centro Urbano dispara a los primeros hostigadores.
+- [ ] En Normal, la primera presión llega después del minuto 11: ¿ahora sí da tiempo de prepararse?
+- [ ] Suena y se ve "¡Se acerca un ejército!" antes de que lleguen.
+- [ ] Al subir de era cambia el techo del Centro Urbano.

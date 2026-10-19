@@ -26,7 +26,9 @@ func placement_error(player_id: int, type_id: String, cell: Vector2i, ignore: Ar
 		return "type"
 	if int(def.get("era", 1)) > GameState.era_of(player_id):
 		return "era"
-	if not world.can_place(type_id, cell, ignore):
+	# A gate may replace one of our own wall segments.
+	var replaces: Building = world.wall_at(player_id, cell) if bool(def.get("gate", false)) else null
+	if replaces == null and not world.can_place(type_id, cell, ignore):
 		return "occupied"
 	if not GameState.can_afford(player_id, def.get("cost", {})):
 		return "cost"
@@ -39,6 +41,12 @@ func start_construction(player_id: int, type_id: String, cell: Vector2i, builder
 	var cost: Dictionary = DataLoader.get_entry("buildings", type_id).get("cost", {})
 	if not GameState.spend(player_id, cost):
 		return null
+	var old_wall: Building = world.wall_at(player_id, cell) if bool(DataLoader.get_entry("buildings", type_id).get("gate", false)) else null
+	if old_wall != null:
+		# Gate on a wall: the segment comes down and its cost comes back.
+		for res: String in Dictionary(old_wall.data.get("cost", {})).keys():
+			GameState.add_resource(player_id, res, int(old_wall.data["cost"][res]))
+		world.remove_building(old_wall)
 	var b: Building = world.place_building(type_id, player_id, cell)
 	b.make_foundation()
 	_paid[b] = cost.duplicate()
@@ -54,6 +62,62 @@ func start_construction(player_id: int, type_id: String, cell: Vector2i, builder
 		else:
 			world.behavior.assign(u, BuildTask.new(u, world, b))
 	return b
+
+
+## Builds a straight wall: one 1x1 foundation per free cell, in order from the
+## start, stopping when the player runs out of the resource. Returns the
+## foundations made (cells already walled or blocked are skipped, not errors).
+func start_wall_line(player_id: int, type_id: String, cells: Array[Vector2i], builders: Array[Unit]) -> Array[Building]:
+	var made: Array[Building] = []
+	for c: Vector2i in cells:
+		if placement_error(player_id, type_id, c, builders) == "cost":
+			break
+		var b: Building = start_construction(player_id, type_id, c, builders)
+		if b != null:
+			made.append(b)
+	if OS.is_debug_build():
+		print("[REALM] wall placed %s n=%d of %d" % [type_id, made.size(), cells.size()])
+	return made
+
+
+## Gates open for everyone and close while an enemy is close (with a delay
+## before reopening, so they do not flap). Called every physics frame.
+var _gate_t: float = 0.0
+
+
+func _tick_gates(delta: float) -> void:
+	if not bool(DataLoader.rule("gates", "auto", true)):
+		return
+	_gate_t += delta
+	if _gate_t < float(DataLoader.rule("gates", "tick_s", 0.25)):
+		return
+	_gate_t = 0.0
+	var close_px: float = float(DataLoader.rule("gates", "close_px", 320))
+	var open_px: float = float(DataLoader.rule("gates", "open_px", 400))
+	var delay: float = float(DataLoader.rule("gates", "open_delay_s", 1.0))
+	var now: float = Time.get_ticks_msec() / 1000.0
+	for b: Building in world.buildings:
+		if not b.is_gate() or not b.is_complete():
+			continue
+		var nearest: float = INF
+		for other: Object in world.movement.spatial.query(b.position, open_px):
+			var u: Unit = other as Unit
+			if u.is_dead or u.owner_id < 0 or u.owner_id == b.owner_id:
+				continue
+			nearest = minf(nearest, u.position.distance_to(b.position))
+		if b.is_open and nearest <= close_px:
+			# Do not trap a unit standing in the doorway: close once it is clear.
+			var standing: bool = world.units.any(func(u: Unit) -> bool: return not u.is_dead and b.rect().has_point(u.position))
+			if not standing:
+				b.set_gate_open(false, world.nav)
+				b._open_since = -1.0
+		elif not b.is_open and nearest > open_px:
+			if b._open_since < 0.0:
+				b._open_since = now
+			elif now - b._open_since >= delay:
+				b.set_gate_open(true, world.nav)
+		elif not b.is_open:
+			b._open_since = -1.0
 
 
 ## Removes an unfinished building and refunds part of what was paid.
@@ -138,6 +202,7 @@ func dequeue(b: Building, index: int) -> bool:
 func _physics_process(delta: float) -> void:
 	if world != null:
 		world.economy.tick_market(delta)
+		_tick_gates(delta)
 	if world == null:
 		return
 	for b: Building in world.buildings.duplicate():

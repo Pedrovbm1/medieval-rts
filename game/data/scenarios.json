@@ -462,5 +462,58 @@
 				"near": "start"
 			}
 		]
+	},
+	"fortress": {
+		"map": "skirmish_120",
+		"camera": "start",
+		"populate": true,
+		"fog": false,
+		"buildings": [
+			{
+				"type": "town_center",
+				"player": 0,
+				"at": "start"
+			},
+			{
+				"type": "town_center",
+				"player": 1,
+				"at": "start"
+			}
+		],
+		"walls": [
+			{
+				"type": "palisade",
+				"player": 0,
+				"around": "start",
+				"radius": 10,
+				"gates": 2
+			}
+		],
+		"units": [
+			{
+				"type": "militia",
+				"player": 0,
+				"count": 60,
+				"near": "start"
+			},
+			{
+				"type": "villager",
+				"player": 0,
+				"count": 20,
+				"near": "start"
+			},
+			{
+				"type": "archer",
+				"player": 1,
+				"count": 40,
+				"near": "start"
+			},
+			{
+				"type": "villager",
+				"player": 1,
+				"count": 10,
+				"near": "start"
+			}
+		]
 	}
 }

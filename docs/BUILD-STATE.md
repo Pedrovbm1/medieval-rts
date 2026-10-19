@@ -129,6 +129,16 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D73 | F9 | Con aldeanos seleccionados, el toque busca primero algo que trabajar (recurso, árbol, granja/cimiento propio, animal) con zona generosa, antes que seleccionar otra unidad | "Si selecciono el objeto no hace nada": otro aldeano junto al recurso se robaba el toque |
 | D74 | F9 | Cola de construcciones por aldeano: una orden nueva mientras construye se agrega a su lista | "Se olvidan de lo que estaban construyendo" |
 | D75 | F9 | Guardado: una tarea cuyo recurso se agotó se restaura como "seguir con el mismo tipo cerca" o "entregar"; el botón de velocidad y el panel del tutorial cuentan como interfaz (no mandan órdenes al mapa) | Bugs encontrados con el nuevo ritmo y en el playtest |
+| D76 | F9 | Revisión de jugabilidad contra los pilares del género (`docs/GAMEPLAY-REVIEW-2026-10-19.md`) con `/plan-ceo-review` en modo autónomo: 8 propuestas aceptadas, 4 diferidas a `TODOS.md` | Pedro: "no da tiempo de hacer nada", "faltan murallas y torres" |
+| D77 | F9 | Murallas como edificios 1x1 (`palisade` Era I 5 madera 250 HP; `stone_wall` Era II 5 piedra 900 HP) trazadas en línea: primer toque fija el inicio, cada toque mueve el fin, ✓ construye un tramo por celda libre hasta donde alcanza el recurso; el constructor encola los tramos | Defensa construible sin un sistema nuevo |
+| D78 | F9 | Puerta (Era I, 30 madera): abierta para todos; se cierra (bloquea el `NavGrid`) con un enemigo a 5 celdas y reabre 1 s después de que no haya a 6; puede reemplazar un tramo propio (devuelve su costo); nunca atrapa a quien está en el umbral | Sin puerta, amurallar encierra a tus propios aldeanos |
+| D79 | F9 | Rutas parciales (`get_point_path(..., true)`): un ejército llega hasta la muralla y la ataca en vez de quedarse sin ruta | Sin esto, amurallar era ganar gratis |
+| D80 | F9 | El Centro Urbano dispara flechas (pierce 7, alcance 352, cada 1.6 s): mata un hostigamiento de 4 milicianos en ~100 s, no frena un empuje de 16 | Primera defensa del género |
+| D81 | F9 | Ventana de paz `first_attack_min` por dificultad (Fácil 16, Normal 11, Difícil 8); aviso "¡Se acerca un ejército!" al ver 6+ soldados enemigos a menos de 2200 px (1 vez por minuto); la IA construye torres (madera 50 + piedra 75) desde el hostigamiento y mercado desde esa fase | Tiempo para prepararse sin quitarle colmillos a la IA |
+| D82 | F9 | Techo del Centro Urbano por era (paja → tablas → teja → pizarra con oro); misión 6 del tutorial: 4 tramos de empalizada | Subir de era se nota; el tutorial enseña a defenderse |
+| D83 | F9 | Arte v3: unidades en vista tres cuartos (dos ojos, escudo con color del jugador, yelmos/capuchas/plumas distintos), árboles individuales con tronco y sombra, orilla de arena junto al agua (columna extra del tileset), agua con brillo y crestas | "Los monos y los gráficos más parecidos al clásico" |
+| D84 | F9 | Mercado: precio mínimo 30, baja 3 por venta, sube 4 cada 15 s; la IA vende hasta 3 lotes por turno cuando ahorra para una era y le falta oro; ahorro máximo 480 s | Difícil se atoraba en Era III con 2400 de comida y sin oro (minas secas) |
+| D85 | F9 | Gate del jugador pasivo contra Normal ampliado a 15-22 min | Las flechas del CU alargan 1-2 min la caída; es el efecto buscado |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
@@ -138,6 +148,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
+- F9 noche 2026-10-19: defensa 29/29, playtest 45/45, arte+audio 22/22, eras 21/21 (Era IV en 19.1 min); S10: F8 por toques 5/5, stress150 59.5 fps / 34 DC, battle20 60 fps, fortaleza (45 tramos + 130 unidades en batalla) 55-58 fps / 36 DC. La prueba de rendimiento de PC dio 7 ms con la máquina cargada por otras sesiones (1.5 ms sola el día anterior): no es del juego.
 - F9 tras playtest (2026-10-18): suite normal 328 pruebas sin fallas de código (la de rendimiento falló una vez con el CPU ocupado y dio 1.51 ms sola); playtest 26/26; duelo Difícil vs Normal 3/4 ✓; partida completa Difícil vs Fácil 39.3 min ✓. Instalada en S10 y S24 (SM-S938B).
 - F9 final (2026-10-18): suite normal 323/324, 0 errores de script (falla solo el pasivo 20.1 min, ver Blockers); F9 balance 7/7, contenido 31/31, arte+audio 19/19. Lentas: duelo Difícil vs Normal 3/4 ✓; partida completa Difícil vs Fácil 45.9 min ✓.
 - S10 (F9, 2026-10-18): stress150 60 fps / 32 DC / 60 MB; battle20 60 fps / 33-35 DC; tutorial 60 fps / 42 DC; F8 por toques 5/5. APK debug 29.9 MB.

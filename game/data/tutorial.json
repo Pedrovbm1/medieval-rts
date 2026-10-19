@@ -63,7 +63,17 @@
 				8
 			],
 			"arrow": "enemies"
+		},
+		{
+			"id": "walls",
+			"mission": 6,
+			"title_key": "TUT_6_TITLE",
+			"tip_key": "TUT_6_TIP",
+			"goal": "buildings_completed",
+			"building": "palisade",
+			"count": 4,
+			"arrow": "own_villager"
 		}
 	],
-	"missions": 5
+	"missions": 6
 }

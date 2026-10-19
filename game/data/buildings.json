@@ -34,7 +34,19 @@
 			"pierce": 6,
 			"crush": 0
 		},
-		"sight_px": 448
+		"sight_px": 448,
+		"combat": {
+			"damage": {
+				"pierce": 7
+			},
+			"range_px": 352,
+			"prepare_s": 0.0,
+			"repeat_s": 1.6,
+			"bonus": {},
+			"projectile": {
+				"speed_px": 640
+			}
+		}
 	},
 	"house": {
 		"name_key": "BLDG_HOUSE_NAME",
@@ -338,8 +350,8 @@
 	"watch_tower": {
 		"name_key": "BLDG_WATCH_TOWER_NAME",
 		"cost": {
-			"wood": 25,
-			"stone": 125
+			"wood": 50,
+			"stone": 75
 		},
 		"hp": 850,
 		"footprint": [
@@ -403,6 +415,85 @@
 				"wood",
 				"stone"
 			]
+		}
+	},
+	"palisade": {
+		"name_key": "BLDG_PALISADE_NAME",
+		"cost": {
+			"wood": 5
+		},
+		"hp": 250,
+		"footprint": [
+			1,
+			1
+		],
+		"build_time": 6,
+		"era": 1,
+		"color": "#8a6a3a",
+		"placeholder_glyph": "||",
+		"buildable": true,
+		"line": true,
+		"classes": [
+			"building",
+			"wall"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 8,
+			"crush": 0
+		}
+	},
+	"stone_wall": {
+		"name_key": "BLDG_STONE_WALL_NAME",
+		"cost": {
+			"stone": 5
+		},
+		"hp": 900,
+		"footprint": [
+			1,
+			1
+		],
+		"build_time": 12,
+		"era": 2,
+		"color": "#8f8c85",
+		"placeholder_glyph": "##",
+		"buildable": true,
+		"line": true,
+		"classes": [
+			"building",
+			"wall"
+		],
+		"armor": {
+			"hack": 6,
+			"pierce": 12,
+			"crush": 0
+		}
+	},
+	"gate": {
+		"name_key": "BLDG_GATE_NAME",
+		"cost": {
+			"wood": 30
+		},
+		"hp": 450,
+		"footprint": [
+			1,
+			1
+		],
+		"build_time": 10,
+		"era": 1,
+		"color": "#6b4a2a",
+		"placeholder_glyph": "[]",
+		"buildable": true,
+		"walkable": true,
+		"gate": true,
+		"classes": [
+			"building",
+			"wall"
+		],
+		"armor": {
+			"hack": 3,
+			"pierce": 8,
+			"crush": 0
 		}
 	}
 }

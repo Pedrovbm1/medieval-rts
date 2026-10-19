@@ -53,6 +53,8 @@ func start(p_id: String, p_world: World, p_camera: CameraController) -> void:
 
 	for b: Variant in def.get("buildings", []):
 		_place_building(b)
+	for w: Variant in def.get("walls", []):
+		_place_wall_ring(w)
 
 	var row: Array[Dictionary] = []
 	for group: Variant in def.get("units", []):
@@ -82,6 +84,32 @@ func start(p_id: String, p_world: World, p_camera: CameraController) -> void:
 	for unit: Unit in spawned:
 		unit.arrived.connect(_on_arrived)
 	_log("start units=%d buildings=%d nodes=%d" % [spawned.size(), placed.size(), world.resource_nodes.size()])
+
+
+## {"type": "palisade", "player": 0, "around": "start", "radius": 10, "gates": 2}
+## A square ring of wall segments around the player's start, already built;
+## with "gates", the middle of that many sides gets a gate instead.
+func _place_wall_ring(w: Dictionary) -> void:
+	var player: int = int(w.get("player", 0))
+	var center: Vector2i = world.world_to_cell(start_of(player))
+	var r: int = int(w.get("radius", 10))
+	var gates: int = int(w.get("gates", 0))
+	var mids: Array[Vector2i] = [center + Vector2i(0, r), center + Vector2i(r, 0), center + Vector2i(0, -r), center + Vector2i(-r, 0)]
+	var type_id: String = String(w.get("type", "palisade"))
+	var placed: int = 0
+	for dy: int in range(-r, r + 1):
+		for dx: int in range(-r, r + 1):
+			if absi(dx) != r and absi(dy) != r:
+				continue
+			var c: Vector2i = center + Vector2i(dx, dy)
+			var kind: String = type_id
+			if gates > 0 and mids.slice(0, gates).has(c):
+				kind = "gate"
+			if world.can_place(kind, c):
+				world.place_building(kind, player, c)
+				placed += 1
+	if OS.is_debug_build():
+		print("[REALM] scenario wall ring %s r=%d placed=%d" % [type_id, r, placed])
 
 
 func start_of(player_id: int) -> Vector2:

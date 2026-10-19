@@ -76,6 +76,18 @@ func build_from_map(p_map_id: String) -> void:
 
 # ---------------------------------------------------------------- terrain
 
+## Tile to draw for a cell: grass next to water becomes shore.
+func _terrain_coords(terrain_id: int, cell: Vector2i) -> Vector2i:
+	var water_id: int = int(Dictionary(Dictionary(DataLoader.get_table("terrain").get("types", {})).get("water", {})).get("id", 1))
+	var shore: bool = false
+	if terrain_id == _grass_id:
+		for o: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if get_terrain_id(cell + o) == water_id:
+				shore = true
+				break
+	return PlaceholderTileset.atlas_coords(terrain_id, cell, shore, Dictionary(DataLoader.get_table("terrain").get("types", {})).size())
+
+
 func get_terrain_id(cell: Vector2i) -> int:
 	if cell.x < 0 or cell.y < 0 or cell.x >= map_width or cell.y >= map_height:
 		return -1
@@ -132,7 +144,7 @@ func take_from_tree(cell: Vector2i, want: float) -> float:
 	if left <= 0.0001:
 		_tree_amount.erase(key)
 		terrain_grid[key] = _grass_id
-		terrain_layer.set_cell(cell, TERRAIN_SOURCE_ID, PlaceholderTileset.atlas_coords(_grass_id, cell))
+		terrain_layer.set_cell(cell, TERRAIN_SOURCE_ID, _terrain_coords(_grass_id, cell))
 		nav.set_terrain_walkable(cell, true)
 		EventBus.tree_depleted.emit(cell)
 	else:
@@ -302,7 +314,7 @@ func remove_building(b: Building) -> void:
 	if not buildings.has(b):
 		return
 	buildings.erase(b)
-	if not b.walkable:
+	if not b.walkable or (b.is_gate() and not b.is_open):
 		nav.set_blocked(b.cells(), false)
 	EventBus.building_removed.emit(b)
 	b.queue_free()
@@ -352,6 +364,37 @@ func task_for_point(unit: Unit, point: Vector2) -> UnitTask:
 	var cell: Vector2i = world_to_cell(point)
 	if is_tree(cell):
 		return GatherTask.for_tree(unit, self, cell)
+	return null
+
+
+## Cells of a straight wall from `a` to `b` (Bresenham), both ends included.
+static func line_cells(a: Vector2i, b: Vector2i) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var dx: int = absi(b.x - a.x)
+	var dy: int = -absi(b.y - a.y)
+	var sx: int = 1 if a.x < b.x else -1
+	var sy: int = 1 if a.y < b.y else -1
+	var err: int = dx + dy
+	var p: Vector2i = a
+	for _i: int in 4096:
+		out.append(p)
+		if p == b:
+			break
+		var e2: int = 2 * err
+		if e2 >= dy:
+			err += dy
+			p.x += sx
+		if e2 <= dx:
+			err += dx
+			p.y += sy
+	return out
+
+
+## Own wall segment standing exactly on this cell (for gates replacing it).
+func wall_at(owner: int, c: Vector2i) -> Building:
+	for b: Building in buildings:
+		if b.owner_id == owner and b.cell == c and b.footprint == Vector2i.ONE and b.is_wall() and not b.is_gate():
+			return b
 	return null
 
 
@@ -529,7 +572,7 @@ func apply_terrain(saved: PackedByteArray, trees: Dictionary) -> void:
 			if saved[i] != terrain_grid[i]:
 				terrain_grid[i] = saved[i]
 				var cell: Vector2i = Vector2i(i % map_width, i / map_width)
-				terrain_layer.set_cell(cell, TERRAIN_SOURCE_ID, PlaceholderTileset.atlas_coords(saved[i], cell))
+				terrain_layer.set_cell(cell, TERRAIN_SOURCE_ID, _terrain_coords(saved[i], cell))
 				nav.set_terrain_walkable(cell, saved[i] != _forest_id)
 	_tree_amount.clear()
 	for key: Variant in trees.keys():
@@ -550,4 +593,4 @@ func _paint_terrain() -> void:
 	for y: int in map_height:
 		for x: int in map_width:
 			var terrain_id: int = terrain_grid[y * map_width + x]
-			terrain_layer.set_cell(Vector2i(x, y), TERRAIN_SOURCE_ID, PlaceholderTileset.atlas_coords(terrain_id, Vector2i(x, y)))
+			terrain_layer.set_cell(Vector2i(x, y), TERRAIN_SOURCE_ID, _terrain_coords(terrain_id, Vector2i(x, y)))

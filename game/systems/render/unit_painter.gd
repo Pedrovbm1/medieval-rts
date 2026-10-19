@@ -61,86 +61,132 @@ static func paint(type_id: String, team: Color, pose: String) -> Image:
 # ------------------------------------------------------------------ humans
 
 static func _infantry(img: Image, type_id: String, team: Color, step: int, strike: int) -> void:
+	# Three-quarter view: the body faces the viewer a little, so both eyes,
+	# both arms and the shield read; the weapon arm is on the right.
 	var cx: float = 23.0
-	Raster.ellipse(img, Vector2(cx, 40.5), Vector2(10, 3.2), Color(0, 0, 0, 0.32))
-	# Legs with boots
-	var legs: Color = Color(0.36, 0.3, 0.26) if type_id != "monk" else Color(0.38, 0.27, 0.18)
-	for side: float in [-1.0, 1.0]:
-		var hip: Vector2 = Vector2(cx + side * 3.0, 30)
-		var foot: Vector2 = Vector2(cx + side * 3.0 + side * -step * 2.0, 37.5)
-		Raster.line(img, hip, foot, 3.4, DARK)
-		Raster.line(img, hip, foot, 2.4, legs)
-		Raster.blob(img, foot + Vector2(1.0, 0.6), Vector2(2.4, 1.4), BOOT, DARK, 0.6)
-	# Back arm (behind the body)
+	Raster.ellipse(img, Vector2(cx, 41), Vector2(10.5, 3.2), Color(0, 0, 0, 0.32))
 	var tunic: Color = team
+	var trim: Color = team.darkened(0.35)
 	if type_id == "monk":
 		tunic = Color(0.45, 0.32, 0.22)
+		trim = tunic.darkened(0.3)
 	elif type_id == "villager":
 		tunic = team.lerp(Color(0.78, 0.68, 0.52), 0.5)
-	Raster.line(img, Vector2(cx - 4, 20), Vector2(cx - 6 + step, 28), 3.6, DARK)
-	Raster.line(img, Vector2(cx - 4, 20), Vector2(cx - 6 + step, 28), 2.6, tunic.darkened(0.25))
-	# Body: tunic flaring to the hem, belt
-	var hem: float = 32.0 if type_id != "monk" else 36.0
-	Raster.framed_polygon(img, PackedVector2Array([Vector2(cx - 7.5, hem), Vector2(cx + 7.5, hem), Vector2(cx + 5.5, 18), Vector2(cx - 5.5, 18)]), tunic, DARK)
-	Raster.line(img, Vector2(cx, 19), Vector2(cx, hem - 1), 0.8, tunic.darkened(0.3))
+		trim = tunic.darkened(0.3)
+	# Legs with boots (walk: one forward, one back)
+	var legs: Color = Color(0.36, 0.3, 0.26) if type_id != "monk" else Color(0.38, 0.27, 0.18)
+	for side: float in [-1.0, 1.0]:
+		var hip: Vector2 = Vector2(cx + side * 3.2, 30)
+		var foot: Vector2 = Vector2(cx + side * 3.6 + side * -step * 2.2, 38.0)
+		Raster.line(img, hip, foot, 3.8, DARK)
+		Raster.line(img, hip, foot, 2.8, legs)
+		Raster.blob(img, foot + Vector2(side * 0.6, 0.8), Vector2(2.8, 1.6), BOOT, DARK, 0.6)
+	# Shield arm (left side of the sprite): shield faces the viewer.
+	var shield: bool = type_id in ["militia", "swordsman", "spearman"]
+	Raster.line(img, Vector2(cx - 5, 20), Vector2(cx - 8.5 + step * 0.5, 27), 3.8, DARK)
+	Raster.line(img, Vector2(cx - 5, 20), Vector2(cx - 8.5 + step * 0.5, 27), 2.8, tunic.darkened(0.2))
+	# Body: tunic with shoulders, flaring to the hem; belt and buckle
+	var hem: float = 32.5 if type_id != "monk" else 37.0
+	Raster.framed_polygon(img, PackedVector2Array([Vector2(cx - 8, hem), Vector2(cx + 8, hem), Vector2(cx + 6.5, 19), Vector2(cx + 4, 17), Vector2(cx - 4, 17), Vector2(cx - 6.5, 19)]), tunic, DARK)
+	Raster.rect(img, Rect2(cx - 0.5, 20, 1, hem - 21), trim)  # centre seam
+	Raster.rect(img, Rect2(cx - 8, hem - 2.5, 16, 2), trim)  # hem band
 	if type_id == "villager":
-		Raster.polygon(img, PackedVector2Array([Vector2(cx - 4, 25), Vector2(cx + 4.5, 25), Vector2(cx + 5, hem - 0.5), Vector2(cx - 4.5, hem - 0.5)]), Color(0.9, 0.86, 0.74))
-	if type_id in ["swordsman", "militia", "spearman"]:
-		Raster.framed_rect(img, Rect2(cx - 5.5, 19, 11, 5), STEEL if type_id != "militia" else LEATHER, DARK)
+		Raster.polygon(img, PackedVector2Array([Vector2(cx - 4.5, 24), Vector2(cx + 4.5, 24), Vector2(cx + 5.5, hem - 0.5), Vector2(cx - 5.5, hem - 0.5)]), Color(0.9, 0.86, 0.74))
+	if type_id == "swordsman":
+		# Mail shirt under a tabard: steel at the shoulders and sleeves.
+		Raster.rect(img, Rect2(cx - 7, 18, 14, 5), STEEL)
+		Raster.rect(img, Rect2(cx - 3.5, 17.5, 7, 15), tunic)
+	elif type_id == "militia":
+		Raster.rect(img, Rect2(cx - 6, 18.5, 12, 4.5), LEATHER)
+	elif type_id == "spearman":
+		Raster.rect(img, Rect2(cx - 6.5, 18.5, 13, 4.5), STEEL.darkened(0.15))
 	if type_id != "monk":
-		Raster.rect(img, Rect2(cx - 6, 25, 12, 1.8), LEATHER.darkened(0.3))
-		Raster.rect(img, Rect2(cx - 1, 24.7, 2.4, 2.4), Color(0.85, 0.7, 0.3))
+		Raster.rect(img, Rect2(cx - 7, 25.5, 14, 2.0), LEATHER.darkened(0.35))
+		Raster.rect(img, Rect2(cx - 1.3, 25.1, 2.8, 2.8), Color(0.88, 0.72, 0.3))
 	else:
-		Raster.rect(img, Rect2(cx - 1, 19, 2, 15), team)  # team sash
-		Raster.rect(img, Rect2(cx - 6, 25, 12, 1.2), Color(0.85, 0.75, 0.5))
-	# Front arm reaching to the weapon hand
-	var hand: Vector2 = Vector2(cx + 6, 23) if strike != 1 else Vector2(cx + 8, 24)
-	Raster.line(img, Vector2(cx + 4, 20), hand, 3.6, DARK)
-	Raster.line(img, Vector2(cx + 4, 20), hand, 2.6, tunic)
-	Raster.circle(img, hand, 1.6, SKIN)
-	# Head with hair and face
-	Raster.blob(img, Vector2(cx, 13), Vector2(4.6, 4.8), SKIN, DARK, 1.0)
-	Raster.ellipse(img, Vector2(cx - 1.2, 10.4), Vector2(4.2, 2.6), HAIR)
-	Raster.circle(img, Vector2(cx + 2.4, 13.0), 0.7, DARK)
-	Raster.line(img, Vector2(cx + 2.0, 15.6), Vector2(cx + 3.4, 15.4), 0.6, Color(0.55, 0.3, 0.25))
+		Raster.rect(img, Rect2(cx - 1.2, 18, 2.4, 17), team)  # team sash
+		Raster.rect(img, Rect2(cx - 7, 26, 14, 1.4), Color(0.85, 0.75, 0.5))
+	if shield:
+		# Round shield with a team-coloured field, steel rim and boss.
+		var sc: Vector2 = Vector2(cx - 9.5, 26)
+		Raster.blob(img, sc, Vector2(4.8, 5.6), team.darkened(0.15), DARK, 1.2)
+		Raster.ellipse(img, sc, Vector2(3.6, 4.4), team.lightened(0.1))
+		Raster.circle(img, sc, 1.4, STEEL)
+		Raster.line(img, sc + Vector2(0, -4.2), sc + Vector2(0, 4.2), 0.8, STEEL.darkened(0.2))
+	elif type_id == "skirmisher":
+		Raster.blob(img, Vector2(cx - 8.5, 26), Vector2(3.2, 4.4), Color(0.7, 0.55, 0.3), DARK, 1.0)
+	# Weapon arm (right): reaches to the hand.
+	var hand: Vector2 = Vector2(cx + 7, 24) if strike != 1 else Vector2(cx + 9.5, 25)
+	Raster.line(img, Vector2(cx + 5, 20), hand, 3.8, DARK)
+	Raster.line(img, Vector2(cx + 5, 20), hand, 2.8, tunic)
+	Raster.circle(img, hand, 1.8, SKIN)
+	# Head: round face with two eyes, hair, mouth; then the headgear.
+	Raster.blob(img, Vector2(cx, 12.5), Vector2(5.0, 5.2), SKIN, DARK, 1.0)
+	Raster.ellipse(img, Vector2(cx, 9.6), Vector2(4.6, 2.4), HAIR)
+	Raster.circle(img, Vector2(cx - 1.9, 12.8), 0.75, DARK)
+	Raster.circle(img, Vector2(cx + 1.9, 12.8), 0.75, DARK)
+	Raster.line(img, Vector2(cx - 1.2, 15.6), Vector2(cx + 1.2, 15.6), 0.7, Color(0.55, 0.3, 0.25))
 	match type_id:
 		"villager":
-			Raster.ellipse(img, Vector2(cx, 10.2), Vector2(8, 2.4), Color(0.86, 0.72, 0.38))
-			Raster.ellipse(img, Vector2(cx, 8.6), Vector2(4.6, 2.6), Color(0.9, 0.78, 0.45))
-			Raster.rect(img, Rect2(cx - 4.4, 9.2, 8.8, 1.0), team)
-			_tool(img, Vector2(cx + 6, 24), strike)
+			# Straw hat with a team band.
+			Raster.ellipse(img, Vector2(cx, 9.8), Vector2(8.5, 2.6), Color(0.86, 0.72, 0.38))
+			Raster.ellipse(img, Vector2(cx, 8.0), Vector2(4.8, 2.8), Color(0.9, 0.78, 0.45))
+			Raster.rect(img, Rect2(cx - 4.6, 8.6, 9.2, 1.1), team)
+			_tool(img, Vector2(cx + 7, 24), strike)
 		"militia":
-			Raster.ellipse(img, Vector2(cx, 10), Vector2(5, 3), LEATHER)
-			_weapon_sword(img, Vector2(cx + 6, 22), strike)
+			# Leather cap.
+			Raster.ellipse(img, Vector2(cx, 9.4), Vector2(5.4, 3.2), LEATHER)
+			Raster.rect(img, Rect2(cx - 5.4, 9.8, 10.8, 1.2), LEATHER.darkened(0.3))
+			_weapon_sword(img, Vector2(cx + 7, 23), strike)
 		"spearman":
-			Raster.ellipse(img, Vector2(cx, 10), Vector2(5, 3.5), STEEL)
-			_weapon_spear(img, Vector2(cx + 5, 23), strike)
+			# Kettle hat: wide steel brim.
+			Raster.ellipse(img, Vector2(cx, 9.6), Vector2(5.0, 3.4), STEEL)
+			Raster.ellipse(img, Vector2(cx, 10.8), Vector2(7.5, 1.6), STEEL.darkened(0.2))
+			_weapon_spear(img, Vector2(cx + 6, 24), strike)
 		"swordsman":
-			Raster.ellipse(img, Vector2(cx, 10.5), Vector2(5.5, 4), STEEL)
-			Raster.rect(img, Rect2(cx - 1, 10, 6, 1.5), DARK)
-			Raster.blob(img, Vector2(cx - 7, 25), Vector2(4, 5.5), team.darkened(0.2), DARK, 1.0)
-			_weapon_sword(img, Vector2(cx + 6, 22), strike, 13.0)
+			# Full helm with nose guard and a team plume.
+			Raster.blob(img, Vector2(cx, 11.5), Vector2(5.6, 5.4), STEEL, DARK, 1.0)
+			Raster.rect(img, Rect2(cx - 5.4, 12, 10.8, 1.2), DARK)
+			Raster.rect(img, Rect2(cx - 0.6, 11, 1.2, 4), STEEL.darkened(0.35))
+			Raster.circle(img, Vector2(cx - 1.9, 12.8), 0.6, DARK)
+			Raster.circle(img, Vector2(cx + 1.9, 12.8), 0.6, DARK)
+			Raster.line(img, Vector2(cx, 6.5), Vector2(cx - 4, 3.5), 2.2, team)
+			_weapon_sword(img, Vector2(cx + 7, 23), strike, 13.0)
 		"archer":
-			Raster.ellipse(img, Vector2(cx, 10), Vector2(5.5, 4), Color(0.3, 0.42, 0.25))
-			_weapon_bow(img, Vector2(cx + 7, 22), strike)
+			# Hood in forest green.
+			Raster.blob(img, Vector2(cx, 10.5), Vector2(6.0, 4.6), Color(0.3, 0.42, 0.25), DARK, 1.0)
+			Raster.ellipse(img, Vector2(cx, 12.6), Vector2(3.8, 3.0), SKIN)
+			Raster.circle(img, Vector2(cx - 1.6, 12.8), 0.7, DARK)
+			Raster.circle(img, Vector2(cx + 1.6, 12.8), 0.7, DARK)
+			Raster.line(img, Vector2(cx - 6, 18), Vector2(cx - 3, 30), 1.6, Color(0.45, 0.3, 0.18))  # quiver strap
+			_weapon_bow(img, Vector2(cx + 8, 23), strike)
 		"skirmisher":
-			Raster.ellipse(img, Vector2(cx, 10), Vector2(5, 3), LEATHER)
-			Raster.blob(img, Vector2(cx - 6, 25), Vector2(3, 4), Color(0.7, 0.55, 0.3), DARK, 1.0)
-			_weapon_javelin(img, Vector2(cx + 5, 20), strike)
+			Raster.rect(img, Rect2(cx - 5, 9.2, 10, 1.8), team)  # headband
+			_weapon_javelin(img, Vector2(cx + 6, 21), strike)
 		"monk":
-			Raster.ellipse(img, Vector2(cx, 11), Vector2(6, 5), Color(0.4, 0.28, 0.2))
-			Raster.circle(img, Vector2(cx + 1, 13.5), 3.0, SKIN)
-			Raster.line(img, Vector2(cx + 8, 8), Vector2(cx + 8, 38), 2.0, WOOD)
-			Raster.circle(img, Vector2(cx + 8, 8), 2.5, Color(0.95, 0.9, 0.55))
+			# Hood up, tonsure hidden; staff with a lantern.
+			Raster.blob(img, Vector2(cx, 10.5), Vector2(6.4, 5.2), Color(0.4, 0.28, 0.2), DARK, 1.0)
+			Raster.ellipse(img, Vector2(cx, 13), Vector2(3.6, 3.0), SKIN)
+			Raster.circle(img, Vector2(cx - 1.5, 13), 0.65, DARK)
+			Raster.circle(img, Vector2(cx + 1.5, 13), 0.65, DARK)
+			Raster.line(img, Vector2(cx + 9, 7), Vector2(cx + 9, 38), 2.0, WOOD)
+			Raster.circle(img, Vector2(cx + 9, 7), 2.6, Color(0.95, 0.9, 0.55))
 		_:
-			_weapon_sword(img, Vector2(cx + 6, 22), strike)
+			_weapon_sword(img, Vector2(cx + 7, 23), strike)
 
 
 static func _rider(img: Image, team: Color, at: Vector2, s: float, armored: bool = false) -> void:
 	Raster.framed_polygon(img, PackedVector2Array([at + Vector2(-5, 9) * s, at + Vector2(5, 9) * s, at + Vector2(4, 0), at + Vector2(-4, 0)]), team, DARK)
+	# Shield on the near side, team colour with a steel rim.
+	Raster.blob(img, at + Vector2(-5.5, 4), Vector2(3.4, 4.2), team.darkened(0.15), DARK, 1.0)
+	Raster.circle(img, at + Vector2(-5.5, 4), 1.1, STEEL)
 	Raster.blob(img, at + Vector2(0, -5), Vector2(4, 4), SKIN if not armored else STEEL, DARK, 1.0)
 	if armored:
-		Raster.rect(img, Rect2(at + Vector2(-1, -6), Vector2(5, 1.5)), DARK)
+		Raster.rect(img, Rect2(at + Vector2(-4, -5.5), Vector2(8, 1.4)), DARK)
+		Raster.line(img, at + Vector2(0, -9), at + Vector2(-4, -12), 2.0, team)  # plume
+	else:
+		Raster.ellipse(img, at + Vector2(0, -7.5), Vector2(3.8, 2.0), HAIR)
+		Raster.circle(img, at + Vector2(1.5, -5), 0.6, DARK)
 
 
 static func _tool(img: Image, hand: Vector2, strike: int) -> void:
