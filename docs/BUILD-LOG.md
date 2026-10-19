@@ -208,3 +208,8 @@ Se cerraron juntas: la IA de F6 necesitaba eras y tecnologías (F7) para gastar 
 - Dos textos del tutorial tenían comas sin comillas en el CSV y se cortaban en el teléfono → CSV reescrito con comillas y test que revisa las 3 columnas de cada fila.
 - El panel del tutorial no crecía con el texto y tapaba la barra de recursos → se ajusta al texto y baja a y=92.
 - Duelo Difícil vs Normal: empates por (1) soldados golpeando muros, (2) oleadas paradas junto a objetivos destruidos, (3) bases sin aldeanos que tardaban 15 min en demolerse, (4) el mapa de ruido favorece una esquina. Con D50, D57-D59: 4 de 4 en Tierras Doradas.
+
+**Primer playtest de Pedro (tutorial)** y arreglos:
+1. "Los círculos se desplazan de los aldeanos": al caminar a la izquierda el sprite se dibujaba 48 px a la derecha (Godot voltea un rect de ancho negativo sin moverlo) → origen corregido; anillo como elipse a los pies.
+2. "A aldeanos, casas y edificios les falta diseño" → arte v2 (D60).
+3. "Todo cuesta C y no sé qué es C" → costos con íconos (D61).

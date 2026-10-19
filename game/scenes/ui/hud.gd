@@ -272,8 +272,7 @@ func _fill_build_menu() -> void:
 		var def: Dictionary = table[type_id]
 		if not bool(def.get("buildable", true)) or int(def.get("era", 1)) > GameState.era_of(player_id):
 			continue
-		var text: String = "%s\n%s" % [tr(String(def.get("name_key", type_id))), cost_text(def.get("cost", {}))]
-		var b: Button = _add_button(text, Signal(), Vector2(150, 72))
+		var b: Button = _add_cost_button(tr(String(def.get("name_key", type_id))), def.get("cost", {}), Vector2(150, 76))
 		b.pressed.connect(func() -> void:
 			Sfx.play("ui_click")
 			build_type_chosen.emit(type_id))
@@ -312,8 +311,7 @@ func _fill_building() -> void:
 			var def: Dictionary = DataLoader.get_entry("units", String(type_id))
 			if int(def.get("era", 1)) > GameState.era_of(player_id) or not ConstructionSystem.unit_allowed(player_id, String(type_id)):
 				continue
-			var text: String = "%s\n%s" % [tr(String(def.get("name_key", type_id))), cost_text(def.get("cost", {}))]
-			var b: Button = _add_button(text, Signal(), Vector2(150, 72))
+			var b: Button = _add_cost_button(tr(String(def.get("name_key", type_id))), def.get("cost", {}), Vector2(150, 76))
 			var id: String = String(type_id)
 			b.pressed.connect(func() -> void:
 				Sfx.play("ui_click")
@@ -333,7 +331,7 @@ func _fill_building() -> void:
 
 
 func _add_research_button(item: String, title: String) -> void:
-	var b: Button = _add_button("%s\n%s" % [title, cost_text(TechSystem.item_cost(item))], Signal(), Vector2(170, 72))
+	var b: Button = _add_cost_button(title, TechSystem.item_cost(item), Vector2(170, 76))
 	var def: Dictionary = TechSystem.item_def(item)
 	if def.has("desc_key"):
 		b.tooltip_text = tr(String(def["desc_key"]))
@@ -404,6 +402,39 @@ static func cost_text(cost: Dictionary) -> String:
 		if cost.has(res):
 			parts.append("%d %s" % [int(cost[res]), TranslationServer.translate("RESOURCE_%s_SHORT" % res.to_upper())])
 	return " ".join(parts)
+
+
+## A button with the name on top and the cost as resource icons + numbers
+## underneath (the same icons as the top bar), instead of letters.
+func _add_cost_button(title: String, cost: Dictionary, size: Vector2) -> Button:
+	var b: Button = _add_button(title + "\n ", Signal(), size)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.name = "Cost"
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 4)
+	for res: String in RESOURCE_ORDER:
+		if not cost.has(res) or int(cost[res]) <= 0:
+			continue
+		var icon: TextureRect = TextureRect.new()
+		icon.texture = PlaceholderArt.icon_texture(res)
+		icon.custom_minimum_size = Vector2(22, 22)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var amount: Label = Label.new()
+		amount.text = str(int(cost[res]))
+		amount.add_theme_font_size_override("font_size", 17)
+		amount.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(icon)
+		row.add_child(amount)
+	b.add_child(row)
+	row.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 6)
+	row.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	# Unaffordable buttons dim their cost too.
+	b.draw.connect(func() -> void: row.modulate.a = 0.45 if b.disabled else 1.0)
+	return b
 
 
 func _add_button(text: String, sig: Signal, size: Vector2 = BUTTON_SIZE) -> Button:

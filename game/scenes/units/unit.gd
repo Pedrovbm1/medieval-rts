@@ -248,13 +248,19 @@ func _draw() -> void:
 		return
 	var region: Rect2 = PlaceholderArt.unit_frame(unit_type, owner_id, pose)
 	if selected:
-		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 32, Color(0.35, 1.0, 0.35), 3.0, true)
+		# Selection ring as an ellipse on the ground at the unit's feet.
+		var feet: float = region.size.y * 0.27
+		draw_set_transform(Vector2(0.0, feet), 0.0, Vector2(1.0, 0.5))
+		draw_arc(Vector2.ZERO, radius + 9.0, 0.0, TAU, 32, Color(0.35, 1.0, 0.35), 4.0, true)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var tint: Color = Color(1.0, 0.45, 0.45) if flash_t > 0.0 else Color.WHITE
 	# Facing left = the same frame drawn with a negative width (a mirror),
 	# which keeps every unit in the same batch (no transform change).
+	# Godot flips in place: the rect keeps its position and only the sign of
+	# the width changes, so the origin stays at -size/2 in both cases.
 	var dest: Rect2 = Rect2(-region.size * 0.5, region.size)
 	if face_left:
-		dest = Rect2(Vector2(region.size.x * 0.5, -region.size.y * 0.5), Vector2(-region.size.x, region.size.y))
+		dest.size.x = -region.size.x
 	draw_texture_rect_region(tex, dest, region, tint)
 	if winding_up and facing_target != Vector2.ZERO:
 		# Wind-up tell: a short bright stroke toward the target before the hit lands.
@@ -265,7 +271,7 @@ func _draw() -> void:
 	if hp < max_hp:
 		# HP bar from the atlas' white texel: same texture, so it still batches.
 		var w: float = radius * 2.0
-		var top: Vector2 = Vector2(-radius, -radius - 9.0)
+		var top: Vector2 = Vector2(-radius, -region.size.y * 0.5 - 2.0)
 		draw_texture_rect_region(tex, Rect2(top, Vector2(w, 5.0)), PlaceholderArt.WHITE_RECT, Color(0.1, 0.1, 0.1, 0.85))
 		var ratio: float = float(hp) / float(max_hp)
 		var col: Color = Color(0.3, 0.9, 0.3) if ratio > 0.5 else (Color(0.95, 0.8, 0.2) if ratio > 0.25 else Color(0.95, 0.3, 0.2))

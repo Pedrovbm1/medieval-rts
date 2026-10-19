@@ -51,6 +51,16 @@ func test_a_atlas_has_every_sprite() -> void:
 	check(img.get_region(Rect2i(blue)).get_data() != img.get_region(Rect2i(red)).get_data(), "buildings carry the player's colour")
 
 
+func test_a2_baked_atlas_is_fresh_and_fast() -> void:
+	check(PlaceholderArt.baked_is_fresh(), "the baked atlas matches the current data and painters (else run tests/tools/bake_art.tscn)")
+	PlaceholderArt._texture = null
+	var t0: int = Time.get_ticks_msec()
+	PlaceholderArt.load_or_build()
+	var ms: int = Time.get_ticks_msec() - t0
+	check(ms < 1000, "loading the atlas at startup takes %d ms (painting it takes ~8 s)" % ms)
+	check(PlaceholderArt.unit_frame("villager", 0, "walk1").size == Vector2(64, 64), "unit frames are 64 px")
+
+
 func test_b_terrain_variants() -> void:
 	var ts: TileSet = PlaceholderTileset.build(DataLoader.get_table("terrain"))
 	var src: TileSetAtlasSource = ts.get_source(0)

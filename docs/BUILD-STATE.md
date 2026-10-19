@@ -113,6 +113,9 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D57 | F9 | La IA se rinde si no tiene aldeanos, tiene menos de 3 soldados y no puede entrenar un aldeano durante 30 s | Como en el género; antes había que demoler 25 edificios vacíos y la partida llegaba al tope de tiempo |
 | D58 | F9 | IA Difícil ataca la economía (campamentos y granjas) antes que el Centro Urbano; soldados ociosos lejos de casa van al edificio enemigo conocido más cercano | Sus oleadas se quedaban paradas junto a un objetivo destruido mientras llegaban refuerzos de 5 en 5 |
 | D59 | F9 | El duelo Difícil vs Normal se mide en un mapa simétrico (Tierras Doradas); los mapas curados van primero en el menú | En Escaramuza 120 (ruido, no simétrico) la esquina decidía: Difícil ganaba siempre desde una y empataba desde la otra |
+| D60 | F9 | Arte v2 tras el primer playtest de Pedro: sprites pintados a 2x y reducidos (bordes suaves), luz arriba-izquierda y contorno oscuro automático; unidades de 64 px con cara, brazos, cinturón y botas; edificios con piedra/tablas, tejas, ventanas y chimenea. El atlas se hornea con `tests/tools/bake_art.tscn` a `assets/art/` (pintarlo tarda ~8 s; cargarlo 24 ms) y se repinta solo si cambió la huella de los datos | "A los aldeanos y edificios les falta diseño" y arranque < 5 s |
+| D61 | F9 | Costos en botones con los mismos íconos de la barra superior + número (antes "50 C") | Pedro no entendía qué era "C" |
+| D62 | F9 | Unidad volteada: el rect de ancho negativo conserva su posición en Godot, así que el origen queda en -size/2; anillo de selección como elipse a los pies | Los círculos "se separaban" de los aldeanos al caminar a la izquierda |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers

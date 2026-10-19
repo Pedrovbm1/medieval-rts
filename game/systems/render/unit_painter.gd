@@ -1,11 +1,15 @@
 class_name UnitPainter
 extends RefCounted
-## Paints one original unit sprite (48x48, facing right) for a pose:
-## "idle", "walk0", "walk1", "attack0", "attack1", "dead".
+## Paints one original unit sprite for a pose ("idle", "walk0", "walk1",
+## "attack0", "attack1", "dead"), facing right. Shapes are laid out on a
+## 48x48 grid, drawn at 2x and shrunk to OUT (64x64): bigger and smoother.
 ## Team colour goes on tunics / caparisons / siege trim; everything else is
 ## fixed per unit type so silhouettes are readable at a glance.
 
 const SIZE: int = 48
+const OUT: Vector2i = Vector2i(64, 64)
+const HAIR: Color = Color(0.32, 0.2, 0.12)
+const BOOT: Color = Color(0.28, 0.18, 0.1)
 const SKIN: Color = Color(0.93, 0.76, 0.6)
 const STEEL: Color = Color(0.72, 0.74, 0.78)
 const WOOD: Color = Color(0.55, 0.38, 0.2)
@@ -14,14 +18,13 @@ const LEATHER: Color = Color(0.45, 0.3, 0.18)
 
 
 static func paint(type_id: String, team: Color, pose: String) -> Image:
-	var img: Image = Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
+	var img: Image = Raster.begin(Vector2i(SIZE, SIZE), 2.0, 0.4)
 	var dead: bool = pose == "dead"
 	var step: int = 1 if pose == "walk0" else (-1 if pose == "walk1" else 0)
 	var strike: int = 1 if pose == "attack1" else (0 if pose == "attack0" else -1)
 	if dead:
 		_paint_dead(img, type_id, team)
-		return img
+		return Raster.finish(img, OUT)
 	match type_id:
 		"sheep":
 			_quadruped(img, Color(0.95, 0.94, 0.88), Color(0.15, 0.13, 0.12), step, 9.0, false)
@@ -52,33 +55,59 @@ static func paint(type_id: String, team: Color, pose: String) -> Image:
 			_mangonel(img, team, strike)
 		_:
 			_infantry(img, type_id, team, step, strike)
-	return img
+	return Raster.finish(img, OUT)
 
 
 # ------------------------------------------------------------------ humans
 
 static func _infantry(img: Image, type_id: String, team: Color, step: int, strike: int) -> void:
 	var cx: float = 23.0
-	Raster.ellipse(img, Vector2(cx, 40), Vector2(10, 3.5), Color(0, 0, 0, 0.3))
-	# Legs
-	Raster.line(img, Vector2(cx - 3, 30), Vector2(cx - 3 + step * 2, 38), 3.0, DARK.lightened(0.15))
-	Raster.line(img, Vector2(cx + 3, 30), Vector2(cx + 3 - step * 2, 38), 3.0, DARK.lightened(0.15))
-	# Body
+	Raster.ellipse(img, Vector2(cx, 40.5), Vector2(10, 3.2), Color(0, 0, 0, 0.32))
+	# Legs with boots
+	var legs: Color = Color(0.36, 0.3, 0.26) if type_id != "monk" else Color(0.38, 0.27, 0.18)
+	for side: float in [-1.0, 1.0]:
+		var hip: Vector2 = Vector2(cx + side * 3.0, 30)
+		var foot: Vector2 = Vector2(cx + side * 3.0 + side * -step * 2.0, 37.5)
+		Raster.line(img, hip, foot, 3.4, DARK)
+		Raster.line(img, hip, foot, 2.4, legs)
+		Raster.blob(img, foot + Vector2(1.0, 0.6), Vector2(2.4, 1.4), BOOT, DARK, 0.6)
+	# Back arm (behind the body)
 	var tunic: Color = team
 	if type_id == "monk":
 		tunic = Color(0.45, 0.32, 0.22)
 	elif type_id == "villager":
-		tunic = team.lerp(Color(0.75, 0.65, 0.5), 0.45)
-	Raster.framed_polygon(img, PackedVector2Array([Vector2(cx - 7, 31), Vector2(cx + 7, 31), Vector2(cx + 5, 18), Vector2(cx - 5, 18)]), tunic, DARK)
-	if type_id in ["swordsman", "militia"]:
-		Raster.rect(img, Rect2(cx - 5, 20, 10, 4), STEEL if type_id == "swordsman" else LEATHER)
-	if type_id == "monk":
-		Raster.rect(img, Rect2(cx - 1, 19, 2, 12), team)  # team sash
-	# Head
-	Raster.blob(img, Vector2(cx, 13), Vector2(4.5, 4.5), SKIN, DARK, 1.0)
+		tunic = team.lerp(Color(0.78, 0.68, 0.52), 0.5)
+	Raster.line(img, Vector2(cx - 4, 20), Vector2(cx - 6 + step, 28), 3.6, DARK)
+	Raster.line(img, Vector2(cx - 4, 20), Vector2(cx - 6 + step, 28), 2.6, tunic.darkened(0.25))
+	# Body: tunic flaring to the hem, belt
+	var hem: float = 32.0 if type_id != "monk" else 36.0
+	Raster.framed_polygon(img, PackedVector2Array([Vector2(cx - 7.5, hem), Vector2(cx + 7.5, hem), Vector2(cx + 5.5, 18), Vector2(cx - 5.5, 18)]), tunic, DARK)
+	Raster.line(img, Vector2(cx, 19), Vector2(cx, hem - 1), 0.8, tunic.darkened(0.3))
+	if type_id == "villager":
+		Raster.polygon(img, PackedVector2Array([Vector2(cx - 4, 25), Vector2(cx + 4.5, 25), Vector2(cx + 5, hem - 0.5), Vector2(cx - 4.5, hem - 0.5)]), Color(0.9, 0.86, 0.74))
+	if type_id in ["swordsman", "militia", "spearman"]:
+		Raster.framed_rect(img, Rect2(cx - 5.5, 19, 11, 5), STEEL if type_id != "militia" else LEATHER, DARK)
+	if type_id != "monk":
+		Raster.rect(img, Rect2(cx - 6, 25, 12, 1.8), LEATHER.darkened(0.3))
+		Raster.rect(img, Rect2(cx - 1, 24.7, 2.4, 2.4), Color(0.85, 0.7, 0.3))
+	else:
+		Raster.rect(img, Rect2(cx - 1, 19, 2, 15), team)  # team sash
+		Raster.rect(img, Rect2(cx - 6, 25, 12, 1.2), Color(0.85, 0.75, 0.5))
+	# Front arm reaching to the weapon hand
+	var hand: Vector2 = Vector2(cx + 6, 23) if strike != 1 else Vector2(cx + 8, 24)
+	Raster.line(img, Vector2(cx + 4, 20), hand, 3.6, DARK)
+	Raster.line(img, Vector2(cx + 4, 20), hand, 2.6, tunic)
+	Raster.circle(img, hand, 1.6, SKIN)
+	# Head with hair and face
+	Raster.blob(img, Vector2(cx, 13), Vector2(4.6, 4.8), SKIN, DARK, 1.0)
+	Raster.ellipse(img, Vector2(cx - 1.2, 10.4), Vector2(4.2, 2.6), HAIR)
+	Raster.circle(img, Vector2(cx + 2.4, 13.0), 0.7, DARK)
+	Raster.line(img, Vector2(cx + 2.0, 15.6), Vector2(cx + 3.4, 15.4), 0.6, Color(0.55, 0.3, 0.25))
 	match type_id:
 		"villager":
-			Raster.ellipse(img, Vector2(cx, 10), Vector2(7, 2.5), Color(0.85, 0.7, 0.35))
+			Raster.ellipse(img, Vector2(cx, 10.2), Vector2(8, 2.4), Color(0.86, 0.72, 0.38))
+			Raster.ellipse(img, Vector2(cx, 8.6), Vector2(4.6, 2.6), Color(0.9, 0.78, 0.45))
+			Raster.rect(img, Rect2(cx - 4.4, 9.2, 8.8, 1.0), team)
 			_tool(img, Vector2(cx + 6, 24), strike)
 		"militia":
 			Raster.ellipse(img, Vector2(cx, 10), Vector2(5, 3), LEATHER)
@@ -162,7 +191,12 @@ static func _horse(img: Image, coat: Color, team: Color, step: int, barded: bool
 		Raster.line(img, Vector2(lx, 30), Vector2(lx + swing, 39), 2.6, coat.darkened(0.25))
 	Raster.blob(img, Vector2(24, 27), Vector2(13, 6.5), coat, DARK, 1.2)
 	Raster.framed_polygon(img, PackedVector2Array([Vector2(33, 26), Vector2(37, 16), Vector2(43, 18), Vector2(40, 22), Vector2(37, 28)]), coat, DARK)
-	Raster.line(img, Vector2(11, 25), Vector2(7, 32), 2.0, coat.darkened(0.4))
+	Raster.line(img, Vector2(34, 23), Vector2(37.5, 15.5), 1.8, coat.darkened(0.55))  # mane
+	Raster.circle(img, Vector2(40, 18.4), 0.8, DARK)  # eye
+	Raster.line(img, Vector2(11, 25), Vector2(6, 33), 2.6, coat.darkened(0.5))  # tail
+	for lx: float in [14.0, 19.0, 29.0, 34.0]:
+		var hoof: float = step * (2.0 if int(lx) % 2 == 0 else -2.0)
+		Raster.rect(img, Rect2(lx + hoof - 1.5, 38, 3, 1.6), DARK)
 	if barded:
 		Raster.ellipse(img, Vector2(24, 29), Vector2(12, 4.5), team)
 		Raster.rect(img, Rect2(13, 29, 22, 1.5), Color(0.95, 0.85, 0.4))
