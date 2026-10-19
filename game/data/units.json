@@ -10,18 +10,18 @@
 		"hunt_range_px": 112,
 		"carry_capacity": 10,
 		"gather_rates": {
-			"berries": 0.55,
-			"meat": 0.8,
-			"farm": 0.45,
-			"wood": 0.5,
-			"gold": 0.45,
-			"stone": 0.4
+			"berries": 0.688,
+			"meat": 1.0,
+			"farm": 0.562,
+			"wood": 0.625,
+			"gold": 0.562,
+			"stone": 0.5
 		},
 		"can_gather": true,
 		"cost": {
-			"food": 50
+			"food": 40
 		},
-		"train_time": 20,
+		"train_time": 14,
 		"pop": 1,
 		"classes": [
 			"civilian"
@@ -50,9 +50,9 @@
 		"radius_px": 15,
 		"placeholder_glyph": "E",
 		"cost": {
-			"food": 80
+			"food": 65
 		},
-		"train_time": 28,
+		"train_time": 20,
 		"pop": 1,
 		"classes": [
 			"cavalry",
@@ -83,10 +83,10 @@
 		"radius_px": 13,
 		"placeholder_glyph": "M",
 		"cost": {
-			"food": 60,
-			"gold": 20
+			"food": 50,
+			"gold": 15
 		},
-		"train_time": 21,
+		"train_time": 15,
 		"pop": 1,
 		"classes": [
 			"infantry"
@@ -198,10 +198,10 @@
 		"placeholder_glyph": "L",
 		"pop": 1,
 		"cost": {
-			"food": 35,
-			"wood": 25
+			"food": 30,
+			"wood": 20
 		},
-		"train_time": 22,
+		"train_time": 15,
 		"era": 2,
 		"armor": {
 			"hack": 1,
@@ -235,10 +235,10 @@
 		"placeholder_glyph": "R",
 		"pop": 1,
 		"cost": {
-			"wood": 25,
-			"gold": 45
+			"wood": 20,
+			"gold": 35
 		},
-		"train_time": 30,
+		"train_time": 21,
 		"era": 2,
 		"armor": {
 			"hack": 0,
@@ -274,10 +274,10 @@
 		"placeholder_glyph": "K",
 		"pop": 1,
 		"cost": {
-			"food": 60,
-			"gold": 75
+			"food": 50,
+			"gold": 60
 		},
-		"train_time": 30,
+		"train_time": 21,
 		"era": 3,
 		"armor": {
 			"hack": 2,
@@ -310,10 +310,10 @@
 		"placeholder_glyph": "T",
 		"pop": 2,
 		"cost": {
-			"wood": 160,
-			"gold": 75
+			"wood": 130,
+			"gold": 60
 		},
-		"train_time": 36,
+		"train_time": 25,
 		"era": 4,
 		"armor": {
 			"hack": 0,
@@ -349,10 +349,10 @@
 		"placeholder_glyph": "S",
 		"pop": 1,
 		"cost": {
-			"food": 25,
-			"wood": 35
+			"food": 20,
+			"wood": 30
 		},
-		"train_time": 22,
+		"train_time": 15,
 		"era": 2,
 		"armor": {
 			"hack": 0,
@@ -388,10 +388,10 @@
 		"placeholder_glyph": "W",
 		"pop": 1,
 		"cost": {
-			"food": 60,
-			"gold": 30
+			"food": 50,
+			"gold": 25
 		},
-		"train_time": 24,
+		"train_time": 17,
 		"era": 3,
 		"armor": {
 			"hack": 2,
@@ -422,9 +422,9 @@
 		"placeholder_glyph": "F",
 		"pop": 1,
 		"cost": {
-			"gold": 100
+			"gold": 80
 		},
-		"train_time": 40,
+		"train_time": 28,
 		"era": 3,
 		"armor": {
 			"hack": 0,
@@ -450,10 +450,10 @@
 		"placeholder_glyph": "G",
 		"pop": 3,
 		"cost": {
-			"wood": 160,
-			"gold": 135
+			"wood": 130,
+			"gold": 110
 		},
-		"train_time": 46,
+		"train_time": 32,
 		"era": 3,
 		"armor": {
 			"hack": 0,
@@ -493,10 +493,10 @@
 		"placeholder_glyph": "Q",
 		"pop": 1,
 		"cost": {
-			"food": 55,
-			"gold": 60
+			"food": 45,
+			"gold": 50
 		},
-		"train_time": 22,
+		"train_time": 15,
 		"era": 3,
 		"armor": {
 			"hack": 0,

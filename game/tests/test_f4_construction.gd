@@ -229,8 +229,11 @@ func test_d_production_queue_and_pop() -> void:
 	await frames(1)
 	check(hud.type_buttons.has("villager") and hud.type_buttons.has("scout"), "Town Center panel offers Villager and Scout")
 	var food: int = GameState.get_resource(0, "food")
+	var vdef: Dictionary = DataLoader.get_entry("units", "villager")
+	var vcost: int = int(Dictionary(vdef.get("cost", {})).get("food", 50))
+	var vtime: float = float(vdef.get("train_time", 20))
 	(hud.type_buttons["villager"] as Button).pressed.emit()
-	check(tc.queue.size() == 1 and GameState.get_resource(0, "food") == food - 50, "training a villager costs 50 food up front")
+	check(tc.queue.size() == 1 and GameState.get_resource(0, "food") == food - vcost, "training a villager costs %d food up front" % vcost)
 	var before: int = _villagers().size()
 	Engine.time_scale = 4.0
 	var t0: float = scen.elapsed
@@ -239,7 +242,7 @@ func test_d_production_queue_and_pop() -> void:
 	Engine.time_scale = 1.0
 	var took: float = scen.elapsed - t0
 	check(_villagers().size() == before + 1, "a villager came out")
-	check(absf(took - 20.0) < 1.5, "after its train_time from units.json (%.1f s)" % took)
+	check(absf(took - vtime) < 1.5, "after its train_time from units.json (%.1f s, data %.0f s)" % [took, vtime])
 	check(GameState.pop_used(0) == 5, "population counts the new unit (5)")
 	# Population cap blocks the queue.
 	GameState.add_resource(0, "food", 1000)
@@ -248,7 +251,7 @@ func test_d_production_queue_and_pop() -> void:
 	check(tc.queue.size() == 5 and not world.construction.enqueue(tc, "villager"), "queue holds at most 5")
 	var food_before: int = GameState.get_resource(0, "food")
 	world.construction.dequeue(tc, 4)
-	check(GameState.get_resource(0, "food") == food_before + 50, "removing from the queue refunds in full")
+	check(GameState.get_resource(0, "food") == food_before + vcost, "removing from the queue refunds in full")
 	Engine.time_scale = 6.0
 	t0 = scen.elapsed
 	while not tc.blocked_by_pop and scen.elapsed - t0 < 120.0:

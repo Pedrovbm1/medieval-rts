@@ -61,6 +61,7 @@ func _ready() -> void:
 	hud.place_confirm_pressed.connect(placement.confirm)
 	hud.place_cancel_pressed.connect(placement.cancel)
 	placement.state_changed.connect(hud.show_placing)
+	placement.placed.connect(func(_b: Building) -> void: selection.release(placement.builders))
 	hud.train_pressed.connect(_on_train_pressed)
 	hud.research_pressed.connect(_on_train_pressed)
 	hud.sell_pressed.connect(_on_sell_pressed)

@@ -139,6 +139,8 @@ func test_f_speed_button_cycles_and_resets() -> void:
 	var hud: Hud = main.get_node("Hud")
 	Engine.time_scale = 1.0
 	check(hud.speed_button != null and hud.speed_button.text == "x1", "there is a speed button showing x1")
+	await frames(2)
+	check(hud.is_point_over_ui(hud.speed_button.get_global_rect().get_center()), "a tap on the speed button never reaches the map (no stray orders)")
 	hud.cycle_speed()
 	check(is_equal_approx(Engine.time_scale, 2.0) and hud.speed_button.text == "x2", "one tap: x2")
 	hud.cycle_speed()
@@ -171,4 +173,94 @@ func test_h_farms_are_drawn_under_units() -> void:
 	check(farm.z_index < v.z_index, "a farm (ground) draws under units even where y-sort would put it on top")
 	check(house.z_index == v.z_index, "solid buildings still y-sort with units")
 	check(world.terrain_layer.z_index < farm.z_index, "the terrain stays under the farm")
+	await _close()
+
+
+func test_i_easy_gives_the_human_a_bonus_once() -> void:
+	await _open("skirmish", {1: "easy"})
+	var g: float = GameState.modifier(0, "gather.wood")
+	var t: float = GameState.modifier(0, "train_speed")
+	check(is_equal_approx(g, 1.2) and is_equal_approx(t, 1.25), "on Easy the player gathers +20%% and trains +25%% faster (%.2f, %.2f)" % [g, t])
+	check(is_equal_approx(GameState.modifier(1, "gather.wood"), 1.0), "the Easy AI gets no bonus")
+	main.save_match("bonus_test")
+	await _close()
+	GameState.launch = {"load": "bonus_test"}
+	main = load("res://scenes/main/main.tscn").instantiate()
+	add_to_tree(main)
+	await frames(1)
+	world = main.get_node("World")
+	scen = main.get_node("ScenarioRunner")
+	check(is_equal_approx(GameState.modifier(0, "gather.wood"), 1.2), "after loading the save the bonus is still x1.2, not doubled (%.2f)" % GameState.modifier(0, "gather.wood"))
+	SaveManager.delete_save("bonus_test")
+	await _close()
+
+
+func test_j_villagers_leave_selection_after_work_order() -> void:
+	await _open("eco12")
+	var sel: SelectionController = main.get_node("SelectionController")
+	var villagers: Array[Unit] = world.units.filter(func(u: Unit) -> bool: return u.owner_id == 0 and u.can_gather())
+	var two: Array[Unit] = villagers.slice(0, 2)
+	sel.set_selection(two)
+	var bush: ResourceNode = world.find_node_near("berries", two[0].position, 3000.0)
+	sel.issue_order(bush.position, sel.resolve_target(bush.position))
+	check(two.all(func(u: Unit) -> bool: return u.task is GatherTask), "the villagers start gathering")
+	check(sel.selected.is_empty(), "and leave the selection, so the next tap does not pull them away")
+	var soldier: Unit = world.spawn_unit("militia", 0, two[0].position + Vector2(100, 0))
+	sel.set_selection([soldier] as Array[Unit])
+	sel.order_move(soldier.position + Vector2(300, 0))
+	check(sel.selected.has(soldier), "soldiers stay selected after a move")
+	sel.set_selection([villagers[2]] as Array[Unit])
+	sel.order_move(villagers[2].position + Vector2(200, 0))
+	check(sel.selected.has(villagers[2]), "a villager told only to walk stays selected")
+	await _close()
+
+
+func test_k_tap_near_a_resource_with_a_villager_selected_means_work() -> void:
+	await _open("eco12")
+	var sel: SelectionController = main.get_node("SelectionController")
+	var cam: CameraController = main.get_node("CameraController")
+	var villagers: Array[Unit] = world.units.filter(func(u: Unit) -> bool: return u.owner_id == 0 and u.can_gather())
+	var mine: ResourceNode = world.find_node_near("gold", villagers[0].position, 4000.0)
+	# Another villager already works right at the mine.
+	villagers[1].position = mine.position + Vector2(mine.rect().size.x * 0.5 + 10, 0)
+	sel.set_selection([villagers[0]] as Array[Unit])
+	var near_edge: Vector2 = mine.position + Vector2(mine.rect().size.x * 0.5 + 12, 0)
+	var t: Dictionary = sel.resolve_target(near_edge)
+	check(String(t["kind"]) == "node" and (t["ref"] as ResourceNode).subtype == "gold", "tapping next to a mine (where another villager stands) targets the mine, not the villager (%s, mine at %s size %s, tap %s)" % [t["kind"], mine.position, mine.rect().size, near_edge])
+	sel.issue_order(near_edge, t)
+	check(villagers[0].task is GatherTask and (villagers[0].task as GatherTask).resource == "gold", "the selected villager goes to mine gold")
+	# A tap a little off a tree still means "cut that tree".
+	var cell: Vector2i = world.find_tree_near(villagers[2].position, 30)
+	sel.set_selection([villagers[2]] as Array[Unit])
+	var off: Vector2 = world.cell_center(cell) + Vector2(world.tile_size * 0.9, 0)
+	if world.is_tree(world.world_to_cell(off)):
+		off = world.cell_center(cell)
+	var tt: Dictionary = sel.resolve_target(off)
+	check(String(tt["kind"]) == "tree", "a tap just beside a tree targets the tree (%s)" % tt["kind"])
+	# Without villagers selected, a tap on a villager still selects it.
+	sel.clear_selection()
+	var t2: Dictionary = sel.resolve_target(villagers[1].position)
+	check(String(t2["kind"]) == "own_unit", "with nothing selected, tapping a villager selects it")
+	await _close()
+
+
+func test_l_build_orders_queue_up() -> void:
+	await _open("eco12")
+	var v: Unit = null
+	for u: Unit in world.units:
+		if u.owner_id == 0 and u.can_gather():
+			v = u
+			break
+	GameState.add_resource(0, "wood", 500)
+	var spot1: Vector2i = world.find_building_spot("house", v.position)
+	var h1: Building = world.construction.start_construction(0, "house", spot1, [v] as Array[Unit])
+	var spot2: Vector2i = world.find_building_spot("house", v.position + Vector2(400, 0))
+	var h2: Building = world.construction.start_construction(0, "house", spot2, [v] as Array[Unit])
+	check(h1 != null and h2 != null, "two houses ordered one after the other")
+	check(v.task is BuildTask and (v.task as BuildTask).building == h1, "the villager keeps building the first house")
+	check((v.task as BuildTask).queue.has(h2), "the second house waits in its queue")
+	Engine.time_scale = 4.0
+	await _wait_until(func() -> bool: return h1.is_complete() and h2.is_complete(), 180.0)
+	Engine.time_scale = 1.0
+	check(h1.is_complete() and h2.is_complete(), "both houses get built, in order")
 	await _close()

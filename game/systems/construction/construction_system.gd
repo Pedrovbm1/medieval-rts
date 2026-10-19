@@ -45,7 +45,13 @@ func start_construction(player_id: int, type_id: String, cell: Vector2i, builder
 	b.completed.connect(_on_completed)
 	world.economy.refresh_population()
 	for u: Unit in builders:
-		if is_instance_valid(u) and u.can_gather():
+		if not is_instance_valid(u) or not u.can_gather():
+			continue
+		if u.task is BuildTask and (u.task as BuildTask).is_building():
+			# Already building something: this one waits its turn instead
+			# of making the villager drop the unfinished foundation.
+			(u.task as BuildTask).queue.append(b)
+		else:
 			world.behavior.assign(u, BuildTask.new(u, world, b))
 	return b
 

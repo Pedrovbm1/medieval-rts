@@ -4,16 +4,20 @@
 			"name_key": "AI_EASY",
 			"think_s": 3.0,
 			"gather_mult": 1.0,
-			"army_mult": 0.6,
-			"phase_scale": 1.25,
+			"army_mult": 0.5,
+			"phase_scale": 1.4,
 			"scout_escort": 0,
-			"villager_mult": 0.6,
+			"villager_mult": 0.5,
 			"max_era": 3,
 			"research_chance": 0.35,
 			"wave_growth": 0.0,
 			"production_mult": 1.0,
-			"army_cap": 18,
-			"raid_economy": false
+			"army_cap": 12,
+			"raid_economy": false,
+			"human_bonus": {
+				"gather": 1.2,
+				"train_speed": 1.25
+			}
 		},
 		"normal": {
 			"name_key": "AI_NORMAL",

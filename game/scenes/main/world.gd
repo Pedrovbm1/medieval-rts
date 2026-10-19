@@ -425,6 +425,49 @@ func node_at(world_pos: Vector2, slack: float = 0.0) -> ResourceNode:
 	return null
 
 
+## Closest non-depleted node whose rect, grown by `slack`, contains the point.
+func nearest_node_at(world_pos: Vector2, slack: float) -> ResourceNode:
+	var best: ResourceNode = null
+	var best_d: float = INF
+	for n: ResourceNode in resource_nodes:
+		if n.is_depleted() or not n.rect().grow(slack).has_point(world_pos):
+			continue
+		var d: float = n.position.distance_squared_to(world_pos)
+		if d < best_d:
+			best_d = d
+			best = n
+	return best
+
+
+## Closest tree cell whose centre is within `radius` px of the point, or (-1, -1).
+func tree_near_point(world_pos: Vector2, radius: float) -> Vector2i:
+	var c: Vector2i = world_to_cell(world_pos)
+	var r: int = ceili(radius / tile_size)
+	var best: Vector2i = Vector2i(-1, -1)
+	var best_d: float = radius * radius
+	for dy: int in range(-r, r + 1):
+		for dx: int in range(-r, r + 1):
+			var cell: Vector2i = c + Vector2i(dx, dy)
+			if not is_tree(cell):
+				continue
+			var d: float = cell_center(cell).distance_squared_to(world_pos)
+			if d <= best_d:
+				best_d = d
+				best = cell
+	return best
+
+
+## First building whose rect, grown by `slack`, contains the point.
+func building_near(world_pos: Vector2, slack: float) -> Building:
+	var exact: Building = building_at(world_pos)
+	if exact != null:
+		return exact
+	for b: Building in buildings:
+		if b.rect().grow(slack).has_point(world_pos):
+			return b
+	return null
+
+
 ## Nearest non-depleted node with the given subtype within max_dist of world_pos.
 func find_node_near(subtype: String, world_pos: Vector2, max_dist: float) -> ResourceNode:
 	var best: ResourceNode = null

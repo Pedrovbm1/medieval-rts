@@ -208,6 +208,12 @@ func is_point_over_ui(screen_pos: Vector2) -> bool:
 		return true
 	if menu_button != null and menu_button.get_global_rect().has_point(screen_pos):
 		return true
+	if speed_button != null and speed_button.get_global_rect().has_point(screen_pos):
+		return true
+	# The tutorial panel (tips + Skip) is added to the HUD by TutorialDirector.
+	var tut: Control = get_node_or_null("TutorialPanel") as Control
+	if tut != null and tut.visible and tut.get_global_rect().has_point(screen_pos):
+		return true
 	for b: Button in group_buttons:
 		if b.get_global_rect().has_point(screen_pos):
 			return true

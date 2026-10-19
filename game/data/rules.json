@@ -5,7 +5,9 @@
 		"double_tap_ms": 320,
 		"double_tap_px": 48,
 		"pick_radius_px": 40,
-		"box_arm_vibration_ms": 25
+		"box_arm_vibration_ms": 25,
+		"deselect_after_work_order": true,
+		"work_pick_factor": 0.8
 	},
 	"movement": {
 		"base_speed_px": 96,

@@ -17,6 +17,8 @@ const ORDER_COLORS: Dictionary = {
 	"build": Color(1.0, 0.85, 0.3),
 }
 
+const WORK_KINDS: PackedStringArray = ["gather", "build", "hunt", "deliver"]
+
 var world: World
 var camera: CameraController
 var order_marker: OrderMarker
@@ -102,6 +104,14 @@ func on_box_end(screen_from: Vector2, screen_to: Vector2) -> void:
 ## kind: own_unit | animal | enemy_unit | node | own_building | enemy_building | tree | ground
 func resolve_target(world_pos: Vector2) -> Dictionary:
 	var radius: float = _pick_radius_screen / camera.get_zoom_factor()
+	# With villagers selected, a tap first means "work there": resources,
+	# trees, own farms / drop-offs / foundations win over another villager
+	# standing next to them, and the touch zone is generous (fingers are
+	# not precise, least of all zoomed out).
+	if selected.any(func(u: Unit) -> bool: return is_instance_valid(u) and u.can_gather()):
+		var work: Dictionary = _work_target(world_pos, radius)
+		if not work.is_empty():
+			return work
 	var own: Unit = world.pick_unit(world_pos, radius, player_id)
 	if own != null:
 		return {"kind": "own_unit", "ref": own}
@@ -118,6 +128,24 @@ func resolve_target(world_pos: Vector2) -> Dictionary:
 	if world.is_tree(cell):
 		return {"kind": "tree", "ref": cell}
 	return {"kind": "ground", "ref": null}
+
+
+## Something villagers can work on near the tap, or {} if nothing.
+func _work_target(world_pos: Vector2, radius: float) -> Dictionary:
+	var slack: float = radius * float(DataLoader.rule("input", "work_pick_factor", 0.8))
+	var node: ResourceNode = world.nearest_node_at(world_pos, slack)
+	if node != null:
+		return {"kind": "node", "ref": node}
+	var b: Building = world.building_near(world_pos, slack * 0.5)
+	if b != null and b.owner_id == player_id and _any_task_for({"kind": "own_building", "ref": b}):
+		return {"kind": "own_building", "ref": b}
+	var animal: Unit = world.pick_any_unit(world_pos, radius)
+	if animal != null and animal.is_animal():
+		return {"kind": "animal", "ref": animal}
+	var cell: Vector2i = world.tree_near_point(world_pos, slack + world.tile_size * 0.5)
+	if cell.x >= 0:
+		return {"kind": "tree", "ref": cell}
+	return {}
 
 
 ## Gives each selected unit the order that fits the target.
@@ -146,6 +174,28 @@ func issue_order(world_pos: Vector2, target: Dictionary) -> void:
 		order_marker.show_order(Formation.centroid(positions), world_pos, ORDER_COLORS.get(order_kind, ORDER_COLORS["move"]))
 	Sfx.play("order_move")
 	_trace("order_" + order_kind, world_pos)
+	_release_workers()
+
+
+## Villagers that just got work (gather, build, hunt, deliver) leave the
+## selection, so the next tap does not pull them off the job. Soldiers stay
+## selected: they usually get several orders in a row.
+func _release_workers() -> void:
+	if not bool(DataLoader.rule("input", "deselect_after_work_order", true)):
+		return
+	var keep: Array[Unit] = selected.filter(func(u: Unit) -> bool:
+		return not (u.can_gather() and u.task != null and WORK_KINDS.has(u.task.kind)))
+	if keep.size() != selected.size():
+		set_selection(keep)
+
+
+## Releases these villagers from the selection (after placing a building).
+func release(units: Array[Unit]) -> void:
+	if not bool(DataLoader.rule("input", "deselect_after_work_order", true)):
+		return
+	var keep: Array[Unit] = selected.filter(func(u: Unit) -> bool: return not units.has(u))
+	if keep.size() != selected.size():
+		set_selection(keep)
 
 
 ## Plain move for the whole selection (tests, HUD).

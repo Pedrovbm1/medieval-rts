@@ -73,7 +73,7 @@ static func _task_to_dict(task: RefCounted, ids: Dictionary) -> Variant:
 		return null
 	if task is GatherTask:
 		var g: GatherTask = task
-		var d: Dictionary = {"kind": "gather", "step": int(g.step), "anchor": [g.anchor.x, g.anchor.y]}
+		var d: Dictionary = {"kind": "gather", "step": int(g.step), "anchor": [g.anchor.x, g.anchor.y], "subtype": g.subtype}
 		match g.target:
 			GatherTask.Target.NODE:
 				d["node"] = ids.get(g.node, 0)
@@ -157,6 +157,11 @@ static func restore(main: Node, data: Dictionary) -> void:
 
 
 static func restore_ais(main: Node, data: Dictionary) -> void:
+	# AI setup applies difficulty bonuses (gather_mult, human_bonus) to the
+	# multipliers; the save already contains them, so put the saved ones back.
+	var saved_state: Dictionary = data.get("game_state", {})
+	if saved_state.has("multipliers"):
+		GameState.multipliers = GameState._int_keys(saved_state["multipliers"])
 	for ad: Variant in data.get("ais", []):
 		var a: Dictionary = ad
 		for ai: AIController in main.ais:
@@ -184,6 +189,17 @@ static func _task_from_dict(d: Variant, unit: Unit, world: World, by_id: Diction
 				task = GatherTask.for_farm(unit, world, by_id[int(t["farm"])])
 			elif t.has("deliver") and by_id.get(int(t["deliver"])) is Building:
 				task = GatherTask.deliver_to(unit, world, by_id[int(t["deliver"])])
+			elif t.has("node") and String(t.get("subtype", "")) != "":
+				# Its node ran out before the save (the villager was walking to
+				# drop off the last load): go on with the same kind of resource.
+				var anchor: Vector2 = Vector2(float(t["anchor"][0]), float(t["anchor"][1]))
+				var other: ResourceNode = world.find_node_near(String(t["subtype"]), anchor, GatherTask.RETARGET_NODE_PX)
+				if other != null:
+					task = GatherTask.for_node(unit, world, other)
+				elif unit.carry_amount >= 1.0:
+					var drop: Building = world.economy.nearest_dropoff(unit.owner_id, unit.carry_type, unit.position)
+					if drop != null:
+						return GatherTask.deliver_to(unit, world, drop)
 			if task != null:
 				task.step = int(t.get("step", 0)) as GatherTask.Step
 				task.anchor = Vector2(float(t["anchor"][0]), float(t["anchor"][1]))

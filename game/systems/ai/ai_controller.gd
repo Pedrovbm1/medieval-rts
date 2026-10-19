@@ -72,10 +72,31 @@ func setup(p_world: World, p_player: int, p_difficulty: String, p_seed: int = 1)
 		for sub: String in ["berries", "meat", "farm", "wood", "gold", "stone"]:
 			mults["gather." + sub] = float(mults.get("gather." + sub, 1.0)) * gm
 		GameState.multipliers[player_id] = mults
+	_apply_human_bonus()
 	var tc: Building = _first_of("town_center")
 	home = tc.position if tc != null else world.map_size_px * 0.5
 	_build_scout_points()
 	name = "AI_%d_%s" % [player_id, difficulty_id]
+
+
+## Easy: the human opponent(s) get a gathering and training bonus
+## (ai.json difficulties.easy.human_bonus), so a beginner can win.
+func _apply_human_bonus() -> void:
+	var bonus: Dictionary = diff.get("human_bonus", {})
+	if bonus.is_empty():
+		return
+	var human: int = GameState.PLAYER_HUMAN
+	if human == player_id:
+		return
+	var mults: Dictionary = GameState.multipliers.get(human, {})
+	var g: float = float(bonus.get("gather", 1.0))
+	if not is_equal_approx(g, 1.0):
+		for sub: String in ["berries", "meat", "farm", "wood", "gold", "stone"]:
+			mults["gather." + sub] = float(mults.get("gather." + sub, 1.0)) * g
+	var t: float = float(bonus.get("train_speed", 1.0))
+	if not is_equal_approx(t, 1.0):
+		mults["train_speed"] = float(mults.get("train_speed", 1.0)) * t
+	GameState.multipliers[human] = mults
 
 
 func _physics_process(delta: float) -> void:

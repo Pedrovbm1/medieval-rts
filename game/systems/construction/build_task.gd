@@ -13,6 +13,8 @@ const MAX_MOVE_ATTEMPTS: int = 6
 var building: Building
 ## What the villager was gathering when told to build (resumed afterwards).
 var resume: GatherTask = null
+## Foundations ordered while this one was in progress, built in order.
+var queue: Array[Building] = []
 var _attempts: int = 0
 
 
@@ -28,10 +30,15 @@ func _init(p_unit: Unit, p_world: World, p_building: Building = null) -> void:
 
 func tick(delta: float) -> void:
 	if building == null or not is_instance_valid(building):
-		finish()
+		finish(_next_in_queue())
 		return
 	if building.is_complete():
-		finish(_after_build())
+		var next: UnitTask = _next_in_queue()
+		if next != null:
+			building.builders.erase(unit)
+			finish(next)
+		else:
+			finish(_after_build())
 		return
 	var rect: Rect2 = building.rect()
 	if World.distance_to_rect(unit.position, rect) > unit.radius + REACH_SLACK:
@@ -57,6 +64,26 @@ func tick(delta: float) -> void:
 func cancel() -> void:
 	if building != null and is_instance_valid(building):
 		building.builders.erase(unit)
+
+
+## True while the foundation is still standing and unfinished.
+func is_building() -> bool:
+	return building != null and is_instance_valid(building) and not building.is_complete()
+
+
+## Build task for the next queued foundation that still needs work, carrying
+## over the rest of the queue and what to resume at the very end.
+func _next_in_queue() -> UnitTask:
+	while not queue.is_empty():
+		var b: Building = queue.pop_front()
+		if b != null and is_instance_valid(b) and not b.is_complete() and world.buildings.has(b):
+			var t: BuildTask = BuildTask.new(unit, world, b)
+			t.resume = resume
+			t.queue = queue
+			return t
+	if resume != null and (building == null or not is_instance_valid(building)):
+		return GatherTask.resume_like(resume, unit, world)
+	return null
 
 
 func _after_build() -> UnitTask:
