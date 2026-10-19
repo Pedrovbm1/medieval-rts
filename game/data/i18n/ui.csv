@@ -175,3 +175,8 @@ TUT_DONE,"¡Tutorial completado! Ya conoces lo básico: recolecta, construye, en
 TUT_SKIP,Saltar,Skip
 TUT_MISSION,Misión %d de %d,Mission %d of %d
 TUT_FINISH,Volver al menú,Back to menu
+BLDG_MARKET_NAME,Mercado,Market
+HUD_SELL,Vender,Sell
+HUD_MARKET_HINT,Cambia 100 de un recurso por oro. Cada venta baja el precio; se recupera con el tiempo.,Trade 100 of a resource for gold. Each sale lowers the price; it recovers over time.
+HUD_SPEED,Velocidad del juego,Game speed
+MENU_RESIGN,Rendirse,Resign

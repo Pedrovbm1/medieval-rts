@@ -45,6 +45,11 @@ var _last_target: Vector2 = Vector2.INF
 ## Push waves that died without razing their target: the next one is bigger.
 var failed_waves: int = 0
 var has_resigned: bool = false
+## Scout points ordered and how many times (unreachable ones get skipped).
+var _scout_tries: Dictionary = {}
+var _scout_goal: Dictionary = {}  # Unit -> Vector2 it was sent to
+var _explorers: Array[Unit] = []
+var _state_log_t: float = 0.0
 var _hopeless_since: float = -1.0
 ## Saving for an era gives up after a while (e.g. gold ran out) and retries later.
 var _saving_since: float = -1.0
@@ -95,9 +100,15 @@ func think() -> void:
 			villagers.append(u)
 		elif u.unit_type != "scout" and not u.data.has("heal"):
 			military.append(u)
+	if OS.is_debug_build() and elapsed - _state_log_t >= 60.0:
+		_state_log_t = elapsed
+		print("[REALM] ai %d state t=%.0f phase=%s known=%d scouts=%d army=%d waves=%d explorers=%d bank=f%d w%d g%d s%d" % [player_id, elapsed, phase,
+			_known_enemy_buildings(), _my_scouts().size(), military.size(), waves, _explorers.size(),
+			GameState.get_resource(player_id, "food"), GameState.get_resource(player_id, "wood"), GameState.get_resource(player_id, "gold"), GameState.get_resource(player_id, "stone")])
 	if _check_resign(villagers, military):
 		return
 	_economy(villagers)
+	_trade()
 	_advance(villagers)
 	# While saving for an era, keep only the standing army this phase needs.
 	var min_army: int = int(float(Dictionary(Dictionary(cfg.get("saving", {})).get("min_army", {})).get(phase, 0)) * float(diff.get("army_mult", 1.0)))
@@ -397,6 +408,22 @@ func _build(type_id: String, near: Vector2, villagers: Array[Unit], count: int) 
 # ------------------------------------------------------------------ eras & techs
 
 ## Advance era when the phase asks for it, then spend spare resources on techs.
+## Short of gold with a market: sell one lot of whatever piles up most
+## (keeping a reserve), like a player does once the mines run dry.
+func _trade() -> void:
+	var mcfg: Dictionary = cfg.get("market", {})
+	if GameState.get_resource(player_id, "gold") >= int(mcfg.get("sell_when_gold_below", 150)):
+		return
+	var keep: int = int(mcfg.get("keep_at_least", 400))
+	var best: String = ""
+	for res: String in ["food", "wood", "stone"]:
+		var have: int = GameState.get_resource(player_id, res)
+		if have >= keep + int(DataLoader.rule("market", "lot", 100)) and (best == "" or have > GameState.get_resource(player_id, best)):
+			best = res
+	if best != "" and world.economy.sell_error(player_id, best) == "":
+		world.economy.sell(player_id, best)
+
+
 ## Workforce goal for the current phase, scaled by difficulty.
 func _villager_target() -> int:
 	return int(round(float(Dictionary(cfg.get("villager_target", {})).get(phase, 20)) * float(diff.get("villager_mult", 1.0))))
@@ -534,6 +561,11 @@ func _attack(military: Array[Unit]) -> void:
 	var mult: float = float(diff.get("army_mult", 1.0))
 	var idle: Array[Unit] = military.filter(func(m: Unit) -> bool: return m.task == null and not m.is_moving())
 	idle = _press_on(idle)
+	if (phase == "harass" or phase == "push") and _known_enemy_buildings() == 0:
+		# Nothing of the enemy is known: send part of the army to explore
+		# instead of piling soldiers at home forever.
+		_explore_with(idle)
+		return
 	_harass = _harass.filter(func(m: Unit) -> bool: return world.units.has(m))
 	if phase == "harass" and _harass.is_empty():
 		var size: int = maxi(3, int(float(army.get("harass_group", 6)) * mult))
@@ -568,6 +600,38 @@ func _attack(military: Array[Unit]) -> void:
 		elif waves > 0 and idle.size() >= int(army.get("reinforce_min", 5)) and alive >= int(army.get("reinforce_needs_alive", 5)):
 			# Reinforce only a wave that is still fighting; otherwise build up a full one.
 			_order_attack(idle, target["pos"], "reinforce")
+
+
+## Enemy buildings we know about (seen and not seen destroyed).
+func _known_enemy_buildings() -> int:
+	return known_buildings.size()
+
+
+func _my_scouts() -> Array[Unit]:
+	return world.units.filter(func(u: Unit) -> bool: return u.owner_id == player_id and u.unit_type == "scout" and not u.is_dead)
+
+
+## A group of idle soldiers sweeps unexplored ground (attack-move, so they
+## fight whatever they meet). One group at a time.
+func _explore_with(idle: Array[Unit]) -> void:
+	_explorers = _explorers.filter(func(u: Unit) -> bool: return is_instance_valid(u) and not u.is_dead and world.units.has(u))
+	var acfg: Dictionary = cfg.get("army", {})
+	var size: int = int(acfg.get("explore_group", 6))
+	if _explorers.is_empty():
+		if idle.size() < size:
+			return
+		_explorers = idle.slice(0, size)
+	var lead: Unit = _explorers[0]
+	if lead.is_moving() or lead.task != null:
+		return
+	var next: Vector2 = _next_scout_point(lead.position)
+	if next == Vector2.INF:
+		_scout_tries.clear()  # everything seen once: sweep again
+		return
+	_scout_tries[next] = int(_scout_tries.get(next, 0)) + 1
+	world.combat.attack_move(_explorers, next)
+	if OS.is_debug_build():
+		print("[REALM] ai %d explore units=%d to=(%d,%d)" % [player_id, _explorers.size(), int(next.x), int(next.y)])
 
 
 ## Soldiers standing idle out in the field (their target fell and nothing
@@ -648,14 +712,22 @@ func _order_attack(group: Array[Unit], pos: Vector2, kind: String) -> void:
 # ------------------------------------------------------------------ scouting
 
 func _scouting() -> void:
-	var scouts: Array[Unit] = world.units.filter(func(u: Unit) -> bool: return u.owner_id == player_id and u.unit_type == "scout" and not u.is_dead)
+	var scouts: Array[Unit] = _my_scouts()
+	if scouts.is_empty() and _known_enemy_buildings() == 0 and phase != "opening":
+		# Lost the scout before finding anyone: train another.
+		var tc: Building = _first_of("town_center")
+		if tc != null and tc.is_complete() and not tc.queue.has("scout") and world.construction.can_enqueue(tc, "scout") == "":
+			world.construction.enqueue(tc, "scout")
 	for s: Unit in scouts:
 		s.stance = "passive"
 		if s.is_moving() or s.task != null:
 			continue
 		var next: Vector2 = _next_scout_point(s.position)
-		if next != Vector2.INF:
-			world.movement.move_unit(s, next)
+		if next == Vector2.INF:
+			_scout_tries.clear()  # all seen: sweep again (bases move, armies come)
+			continue
+		_scout_tries[next] = int(_scout_tries.get(next, 0)) + 1
+		world.movement.move_unit(s, next)
 
 
 func _build_scout_points() -> void:
@@ -676,6 +748,9 @@ func _next_scout_point(from: Vector2) -> Vector2:
 	var best_d: float = INF
 	for p: Vector2 in _scout_points:
 		if world.vision.grid.is_explored(player_id, p) or not world.nav.is_walkable_world(p):
+			continue
+		# Ordered twice and still unexplored: probably unreachable, skip it.
+		if int(_scout_tries.get(p, 0)) >= 2:
 			continue
 		var d: float = from.distance_squared_to(p)
 		if d < best_d:

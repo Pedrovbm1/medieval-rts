@@ -373,5 +373,36 @@
 				"speed_px": 640
 			}
 		}
+	},
+	"market": {
+		"name_key": "BLDG_MARKET_NAME",
+		"cost": {
+			"wood": 175
+		},
+		"hp": 1500,
+		"footprint": [
+			3,
+			3
+		],
+		"build_time": 45,
+		"era": 2,
+		"color": "#b08a3e",
+		"placeholder_glyph": "ME",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 2,
+			"pierce": 6,
+			"crush": 0
+		},
+		"market": {
+			"sells": [
+				"food",
+				"wood",
+				"stone"
+			]
+		}
 	}
 }

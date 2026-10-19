@@ -23,7 +23,7 @@ func _ready() -> void:
 	sel.set_selection(units)
 	var cam: Camera2D = main.get_node("CameraController")
 	cam.position = units[0].position
-	cam.zoom = Vector2(2.0, 2.0)
+	cam.zoom = Vector2(2.0, 2.0) if not OS.has_environment("REALM_ZOOM") else Vector2.ONE * float(OS.get_environment("REALM_ZOOM"))
 	for i: int in units.size():
 		units[i].face_left = i % 2 == 0
 		units[i].set_physics_process(false)
@@ -38,6 +38,7 @@ func _ready() -> void:
 		units[i].queue_redraw()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	print("[REALM] flip check selected=%d draw_calls=%d" % [sel.selected.size(), int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))])
 	get_viewport().get_texture().get_image().save_png(out)
 	print("[REALM] flip check saved ", out)
 	get_tree().quit()

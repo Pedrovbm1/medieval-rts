@@ -64,3 +64,6 @@ volteo, que están en 7ba0bd9).
 9. Un solo nombre para el edificio principal ("Plaza Mayor" contra "Centro Urbano") y plurales en el panel.
 
 **Ya hecho después de esta versión (7ba0bd9):** círculo de selección pegado a la unidad, arte v2, costos con íconos.
+
+## Arreglado después del playtest
+- Prioridades 1-4: D63 (aldeanos vuelven a trabajar), D64 (la IA busca al jugador), D65 (mercado), D66 (anillo en el atlas). Ver `docs/BUILD-STATE.md`.

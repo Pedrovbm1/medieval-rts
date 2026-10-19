@@ -138,7 +138,13 @@
 		},
 		"max_farms_while_saving": 4,
 		"float_step": 1200,
-		"float_extra_max": 2
+		"float_extra_max": 2,
+		"market": {
+			"opening": 0,
+			"development": 0,
+			"harass": 0,
+			"push": 1
+		}
 	},
 	"army": {
 		"train_when_villagers_ratio": 0.6,
@@ -167,7 +173,8 @@
 			"mangonel": 0.08
 		},
 		"field_px": 1500,
-		"press_on_px": 1400
+		"press_on_px": 1400,
+		"explore_group": 6
 	},
 	"scout": {
 		"waypoint_reach_px": 96
@@ -210,5 +217,9 @@
 	"resign": {
 		"max_army": 3,
 		"after_s": 30
+	},
+	"market": {
+		"sell_when_gold_below": 150,
+		"keep_at_least": 400
 	}
 }

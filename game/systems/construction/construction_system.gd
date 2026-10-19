@@ -130,6 +130,8 @@ func dequeue(b: Building, index: int) -> bool:
 
 
 func _physics_process(delta: float) -> void:
+	if world != null:
+		world.economy.tick_market(delta)
 	if world == null:
 		return
 	for b: Building in world.buildings.duplicate():

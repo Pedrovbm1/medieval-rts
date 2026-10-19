@@ -66,5 +66,20 @@
 	},
 	"alerts": {
 		"cooldown_s": 6.0
+	},
+	"market": {
+		"lot": 100,
+		"start_price": 70,
+		"min_price": 20,
+		"drop": 4,
+		"recover": 2,
+		"recover_s": 20
+	},
+	"speed": {
+		"steps": [
+			1.0,
+			2.0,
+			3.0
+		]
 	}
 }

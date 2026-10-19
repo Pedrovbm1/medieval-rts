@@ -63,6 +63,7 @@ func _ready() -> void:
 	placement.state_changed.connect(hud.show_placing)
 	hud.train_pressed.connect(_on_train_pressed)
 	hud.research_pressed.connect(_on_train_pressed)
+	hud.sell_pressed.connect(_on_sell_pressed)
 	hud.tech = world.tech
 	hud.dequeue_pressed.connect(_on_dequeue_pressed)
 	hud.cancel_construction_pressed.connect(_on_cancel_construction)
@@ -93,7 +94,11 @@ func _ready() -> void:
 		hud.close_pause_menu()
 		hud.show_banner(tr("MENU_SAVED")))
 	hud.menu_quit_pressed.connect(_quit_to_menu)
+	hud.menu_resign_pressed.connect(func() -> void:
+		hud.close_pause_menu()
+		rules.resign(GameState.PLAYER_HUMAN))
 	rules.setup(world)
+	hud.can_resign = rules.contenders.has(GameState.PLAYER_HUMAN) and tutorial == null
 	rules.match_ended.connect(_on_match_ended)
 	hud.retry_pressed.connect(_on_retry)
 	var ai_players: Dictionary = ai_override if not ai_override.is_empty() else Dictionary(def.get("ai", {}))
@@ -195,6 +200,16 @@ func _on_train_pressed(type_id: String) -> void:
 			Sfx.play("error")
 
 
+func _on_sell_pressed(resource: String) -> void:
+	var b: Building = selection.selected_building
+	if world.economy.sell(GameState.PLAYER_HUMAN, resource):
+		Sfx.play("deposit")
+	else:
+		Sfx.play("error")
+	if b != null and is_instance_valid(b):
+		hud.show_building(b)
+
+
 func _on_dequeue_pressed() -> void:
 	var b: Building = selection.selected_building
 	if b != null and is_instance_valid(b) and not b.queue.is_empty():
@@ -240,6 +255,7 @@ func save_match(slot: String) -> Error:
 
 func _quit_to_menu() -> void:
 	get_tree().paused = false
+	Engine.time_scale = 1.0
 	if not rules.ended and not ais.is_empty():
 		save_match("auto")
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

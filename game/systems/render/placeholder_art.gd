@@ -14,7 +14,7 @@ extends RefCounted
 ## (its fingerprint differs) the game paints the atlas at startup instead.
 
 ## Bump when a painter changes, so an old baked atlas is not used.
-const ART_VERSION: int = 2
+const ART_VERSION: int = 3
 const BAKED_PNG: String = "res://assets/art/atlas.png"
 const BAKED_JSON: String = "res://assets/art/atlas.json"
 const ATLAS_WIDTH: int = 2048
@@ -118,6 +118,12 @@ static func resource_region(type_id: String) -> Rect2:
 	return region("res:" + type_id)
 
 
+## White elliptical ring (tinted when drawn): unit selection on the ground.
+## Drawing it from the atlas keeps selected units in the same batch.
+static func ring_region() -> Rect2:
+	return region("fx:ring")
+
+
 static func icon_region(resource: String) -> Rect2:
 	return region("icon:" + resource)
 
@@ -172,10 +178,31 @@ static func build() -> void:
 
 	for res: String in ["food", "wood", "gold", "stone"]:
 		images["icon:" + res] = NaturePainter.icon(res)
+	images["fx:ring"] = _ring_image(Vector2i(96, 48), 5.0)
 
 	_pack(images)
 	if OS.is_debug_build():
 		print("[REALM] atlas built in %d ms (%d sprites)" % [Time.get_ticks_msec() - t0, images.size()])
+
+
+## Anti-aliased white ring along an ellipse that fills `size`.
+static func _ring_image(size: Vector2i, thickness: float) -> Image:
+	var img: Image = Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
+	img.fill(Color(1, 1, 1, 0))
+	var c: Vector2 = Vector2(size) * 0.5
+	var r: Vector2 = c - Vector2(thickness, thickness) * 0.5 - Vector2.ONE
+	for y: int in size.y:
+		for x: int in size.x:
+			var pv: Vector2 = Vector2(x + 0.5, y + 0.5) - c
+			var k: float = (pv / r).length()
+			if k <= 0.0:
+				continue
+			# Pixel distance to the ellipse along the ray from the centre.
+			var dist: float = absf(pv.length() * (1.0 - 1.0 / k))
+			var a: float = clampf(thickness * 0.5 + 0.5 - dist, 0.0, 1.0)
+			if a > 0.0:
+				img.set_pixel(x, y, Color(1, 1, 1, a))
+	return img
 
 
 ## Shelf packing: sort by height, fill rows left to right.

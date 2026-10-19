@@ -25,6 +25,8 @@ var additions: Dictionary = {}
 var stats: Dictionary = {}
 ## player_id -> { tech_id: true }
 var researched: Dictionary = {}
+## Market sell prices: player -> {resource: gold per lot}.
+var market_prices: Dictionary = {}
 ## Set by the main menu before loading the match scene:
 ## {"scenario": id, "ai": {"1": "normal"}} or {"load": slot}. Consumed once.
 var launch: Dictionary = {}
@@ -46,6 +48,7 @@ func new_match(map_id: String, human_civ: String, ai_civ: String) -> void:
 	additions = {}
 	stats = {}
 	researched = {}
+	market_prices = {}
 	for player_id: int in civs.keys():
 		var civ: Dictionary = DataLoader.get_entry("civs", String(civs[player_id]))
 		var starting: Dictionary = civ.get("starting_resources", {})
@@ -147,6 +150,7 @@ func to_dict() -> Dictionary:
 		"additions": additions.duplicate(true),
 		"stats": stats.duplicate(true),
 		"researched": researched.duplicate(true),
+		"market_prices": market_prices.duplicate(true),
 	}
 
 
@@ -165,6 +169,7 @@ func from_dict(data: Dictionary) -> void:
 		for res_id: Variant in bag.keys():
 			typed_bag[String(res_id)] = int(bag[res_id])
 		resources[int(key)] = typed_bag
+	market_prices = _int_keys(data.get("market_prices", {}))
 	multipliers = _int_keys(data.get("multipliers", {}))
 	additions = _int_keys(data.get("additions", {}))
 	stats = _int_keys(data.get("stats", {}))

@@ -22,10 +22,12 @@ signal dequeue_pressed
 signal cancel_construction_pressed
 signal retry_pressed
 signal research_pressed(item: String)
+signal sell_pressed(resource: String)
 signal group_pressed(n: int)
 signal group_held(n: int)
 signal menu_save_pressed
 signal menu_quit_pressed
+signal menu_resign_pressed
 
 const RESOURCE_ORDER: PackedStringArray = ["food", "wood", "gold", "stone"]
 const BUTTON_SIZE: Vector2 = Vector2(120, 72)
@@ -50,6 +52,9 @@ var banner: Label
 var minimap: Minimap
 var group_buttons: Array[Button] = []
 var menu_button: Button
+var speed_button: Button
+## Main sets this when there is a real match to give up (not sandbox/tutorial).
+var can_resign: bool = false
 var pause_panel: PanelContainer = null
 var _group_down_ms: Dictionary = {}
 var _last_alert_ms: int = -100000
@@ -324,10 +329,44 @@ func _fill_building() -> void:
 					_add_research_button(TechSystem.era_item(next), "%s %s" % [tr("ERA_ADVANCE"), tr(String(DataLoader.get_entry("eras", str(next)).get("name_key", "")))])
 			for id: String in tech.techs_at(_building):
 				_add_research_button(TechSystem.PREFIX + id, tr(String(DataLoader.get_entry("techs", id).get("name_key", id))))
+		var market: Dictionary = _building.data.get("market", {})
+		for res: Variant in market.get("sells", []):
+			_add_sell_button(String(res))
 		if not _building.queue.is_empty():
 			_add_button(tr("HUD_REMOVE"), dequeue_pressed)
 	deselect_button = _add_button(tr("HUD_DESELECT"), deselect_pressed)
 	_refresh_building()
+
+
+## "Vender" with [res icon] 100 -> [gold icon] price underneath.
+func _add_sell_button(res: String) -> void:
+	var lot: int = int(DataLoader.rule("market", "lot", 100))
+	var price: int = tech.world.economy.market_price(player_id, res) if tech != null and tech.world != null else int(DataLoader.rule("market", "start_price", 70))
+	var b: Button = _add_cost_button(tr("HUD_SELL"), {res: lot}, Vector2(170, 76))
+	b.tooltip_text = tr("HUD_MARKET_HINT")
+	var row: HBoxContainer = b.get_node("Cost")
+	var arrow: Label = Label.new()
+	arrow.text = "→"
+	arrow.add_theme_font_size_override("font_size", 17)
+	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var gold_icon: TextureRect = TextureRect.new()
+	gold_icon.texture = PlaceholderArt.icon_texture("gold")
+	gold_icon.custom_minimum_size = Vector2(22, 22)
+	gold_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	gold_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	gold_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var gain: Label = Label.new()
+	gain.text = str(price)
+	gain.add_theme_font_size_override("font_size", 17)
+	gain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(arrow)
+	row.add_child(gold_icon)
+	row.add_child(gain)
+	b.disabled = GameState.get_resource(player_id, res) < lot
+	b.pressed.connect(func() -> void:
+		Sfx.play("ui_click")
+		sell_pressed.emit(res))
+	type_buttons["sell:" + res] = b
 
 
 func _add_research_button(item: String, title: String) -> void:
@@ -514,6 +553,7 @@ func _emit_click(sig: Signal) -> void:
 func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary) -> void:
 	if end_panel != null:
 		return
+	set_speed(1.0)
 	_set_mode(Mode.NONE)
 	Music.stop()
 	Sfx.play("victory" if won else "defeat")
@@ -668,6 +708,39 @@ func _build_menu_button() -> void:
 	menu_button.offset_bottom = 80
 	menu_button.pressed.connect(open_pause_menu)
 	add_child(menu_button)
+	# Game speed: each tap cycles x1 -> x2 -> x3 (rules.json "speed").
+	speed_button = Button.new()
+	speed_button.text = "x1"
+	speed_button.tooltip_text = tr("HUD_SPEED")
+	speed_button.custom_minimum_size = Vector2(72, 72)
+	speed_button.focus_mode = Control.FOCUS_NONE
+	speed_button.add_theme_font_size_override("font_size", 26)
+	speed_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	speed_button.offset_left = -164
+	speed_button.offset_right = -92
+	speed_button.offset_top = 8
+	speed_button.offset_bottom = 80
+	speed_button.pressed.connect(cycle_speed)
+	add_child(speed_button)
+	if OS.is_debug_build():
+		_log_named.call_deferred(speed_button, "speed")
+
+
+## Next game speed from rules.json speed.steps (e.g. 1, 2, 3).
+func cycle_speed() -> void:
+	var steps: Array = DataLoader.rule("speed", "steps", [1.0, 2.0, 3.0])
+	var i: int = 0
+	for k: int in steps.size():
+		if is_equal_approx(float(steps[k]), Engine.time_scale):
+			i = (k + 1) % steps.size()
+	set_speed(float(steps[i]))
+	Sfx.play("ui_click")
+
+
+func set_speed(value: float) -> void:
+	Engine.time_scale = value
+	if speed_button != null:
+		speed_button.text = "x%d" % int(round(value))
 
 
 ## Pause panel: Resume / Save / Quit to menu. The tree is paused while open.
@@ -687,7 +760,11 @@ func open_pause_menu() -> void:
 	margin.add_child(box)
 	pause_panel.add_child(margin)
 	Sfx.play("ui_open")
-	for entry: Array in [["MENU_RESUME", close_pause_menu], ["MENU_SAVE", func() -> void: menu_save_pressed.emit()], ["MENU_QUIT", func() -> void: menu_quit_pressed.emit()]]:
+	var entries: Array = [["MENU_RESUME", close_pause_menu], ["MENU_SAVE", func() -> void: menu_save_pressed.emit()]]
+	if can_resign:
+		entries.append(["MENU_RESIGN", func() -> void: menu_resign_pressed.emit()])
+	entries.append(["MENU_QUIT", func() -> void: menu_quit_pressed.emit()])
+	for entry: Array in entries:
 		var b: Button = Button.new()
 		b.text = tr(String(entry[0]))
 		b.custom_minimum_size = Vector2(300, 76)

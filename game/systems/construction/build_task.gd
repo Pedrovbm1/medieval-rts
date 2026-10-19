@@ -4,12 +4,15 @@ extends UnitTask
 ## The first builder works at full speed; each extra one adds a reduced share
 ## (rules.json construction.extra_builder_factor). When the building is done,
 ## builders of a farm start farming it and builders of a drop-off start
-## gathering what it accepts nearby; otherwise they go idle.
+## gathering what it accepts nearby; anyone else goes back to the resource
+## they were gathering before the build order (instead of standing idle).
 
 const REACH_SLACK: float = 28.0
 const MAX_MOVE_ATTEMPTS: int = 6
 
 var building: Building
+## What the villager was gathering when told to build (resumed afterwards).
+var resume: GatherTask = null
 var _attempts: int = 0
 
 
@@ -17,6 +20,10 @@ func _init(p_unit: Unit, p_world: World, p_building: Building = null) -> void:
 	super(p_unit, p_world)
 	kind = "build"
 	building = p_building
+	if p_unit.task is GatherTask:
+		resume = p_unit.task
+	elif p_unit.task is BuildTask:
+		resume = (p_unit.task as BuildTask).resume
 
 
 func tick(delta: float) -> void:
@@ -69,4 +76,6 @@ func _after_build() -> UnitTask:
 			var n: ResourceNode = world.find_node_near(String(res), building.position, 512.0)
 			if n != null:
 				return GatherTask.for_node(unit, world, n)
+	if resume != null:
+		return GatherTask.resume_like(resume, unit, world)
 	return null

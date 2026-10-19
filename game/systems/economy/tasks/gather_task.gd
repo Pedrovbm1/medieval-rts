@@ -49,6 +49,29 @@ static func for_farm(p_unit: Unit, p_world: World, building: Building) -> Gather
 	return t
 
 
+## A fresh task that goes back to the same work as `old` (after a build
+## order): same farm or node if still there, else the nearest tree / node of
+## the same kind around where it was working. Null if nothing is left.
+static func resume_like(old: GatherTask, p_unit: Unit, p_world: World) -> GatherTask:
+	match old.target:
+		Target.FARM:
+			if old.farm != null and is_instance_valid(old.farm) and old.farm.is_complete() and old.farm.has_free_work_slot(p_unit):
+				return for_farm(p_unit, p_world, old.farm)
+		Target.NODE:
+			if old.node != null and is_instance_valid(old.node) and old.node.amount > 0.0:
+				return for_node(p_unit, p_world, old.node)
+		Target.TREE:
+			var cell: Vector2i = p_world.find_tree_near(old.anchor if old.anchor != Vector2.ZERO else p_unit.position, RETARGET_TREE_CELLS)
+			if cell.x >= 0:
+				return for_tree(p_unit, p_world, cell)
+			return null
+	if old.subtype != "" and old.subtype != "farm":
+		var n: ResourceNode = p_world.find_node_near(old.subtype, old.anchor if old.anchor != Vector2.ZERO else p_unit.position, RETARGET_NODE_PX)
+		if n != null:
+			return for_node(p_unit, p_world, n)
+	return null
+
+
 ## Only deliver what the unit carries to `building`, then go idle.
 static func deliver_to(p_unit: Unit, p_world: World, building: Building) -> GatherTask:
 	var t: GatherTask = GatherTask.new(p_unit, p_world)

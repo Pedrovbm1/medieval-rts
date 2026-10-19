@@ -116,6 +116,12 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D60 | F9 | Arte v2 tras el primer playtest de Pedro: sprites pintados a 2x y reducidos (bordes suaves), luz arriba-izquierda y contorno oscuro automático; unidades de 64 px con cara, brazos, cinturón y botas; edificios con piedra/tablas, tejas, ventanas y chimenea. El atlas se hornea con `tests/tools/bake_art.tscn` a `assets/art/` (pintarlo tarda ~8 s; cargarlo 24 ms) y se repinta solo si cambió la huella de los datos | "A los aldeanos y edificios les falta diseño" y arranque < 5 s |
 | D61 | F9 | Costos en botones con los mismos íconos de la barra superior + número (antes "50 C") | Pedro no entendía qué era "C" |
 | D62 | F9 | Unidad volteada: el rect de ancho negativo conserva su posición en Godot, así que el origen queda en -size/2; anillo de selección como elipse a los pies | Los círculos "se separaban" de los aldeanos al caminar a la izquierda |
+| D63 | F9 | El aldeano que recibe una orden de construir recuerda lo que recolectaba y vuelve a eso al terminar (si no es granja ni campamento) | Pedro usó "Ociosos" 28 veces en una partida: los constructores de casas se quedaban parados |
+| D64 | F9 | IA sin enemigo conocido: repone el explorador, descarta puntos de exploración inalcanzables (2 intentos) y manda 6 soldados a explorar con ataque-movimiento; registra su estado cada 60 s en debug | En la partida de Pedro no atacó en 50 min y luego llegó con 55 soldados |
+| D65 | F9 | Mercado (Era II, 175 madera): vender 100 de comida/madera/piedra por oro; precio inicial 70, baja 4 por venta (mínimo 20) y sube 2 cada 20 s; la IA vende su sobrante si tiene menos de 150 de oro | El oro se acababa en el min ~40 con miles de comida y madera sin uso |
+| D66 | F9 | Anillo de selección horneado en el atlas y dibujado con su textura | `draw_arc` cortaba el batching: 57 seleccionadas = 270 draw calls; ahora 75 seleccionadas = 40 |
+| D67 | F9 | Botón de velocidad x1/x2/x3 (`rules.json` speed.steps) junto al ≡; vuelve a x1 al salir al menú o al terminar | Pedro lo pidió; partidas de 40-70 min |
+| D68 | F9 | "Rendirse" en el menú de pausa (solo en partidas reales) | "Tarda mucho en terminar de destruirme" |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
@@ -125,6 +131,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
+- F9 tras playtest (2026-10-18): suite normal 328 pruebas sin fallas de código (la de rendimiento falló una vez con el CPU ocupado y dio 1.51 ms sola); playtest 26/26; duelo Difícil vs Normal 3/4 ✓; partida completa Difícil vs Fácil 39.3 min ✓. Instalada en S10 y S24 (SM-S938B).
 - F9 final (2026-10-18): suite normal 323/324, 0 errores de script (falla solo el pasivo 20.1 min, ver Blockers); F9 balance 7/7, contenido 31/31, arte+audio 19/19. Lentas: duelo Difícil vs Normal 3/4 ✓; partida completa Difícil vs Fácil 45.9 min ✓.
 - S10 (F9, 2026-10-18): stress150 60 fps / 32 DC / 60 MB; battle20 60 fps / 33-35 DC; tutorial 60 fps / 42 DC; F8 por toques 5/5. APK debug 29.9 MB.
 - F9 (parcial): suite normal F0-F9 318/318 (F6 y F7 re-corridas solas tras el ajuste de IA), 0 errores de script. F9 art+audio 19/19, mapas+tutorial 29/29, balance 3/3. Gate F8 lento: Difícil gana a Fácil en 28.4 y 29.3 min. PC 1280x720: stress150 60 fps / 32 DC; battle20 60 fps / 33-35 DC; APK debug 29.9 MB.

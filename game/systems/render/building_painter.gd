@@ -69,6 +69,8 @@ static func paint(type_id: String, size: Vector2i, team: Color) -> Image:
 			_hall(img, w, h, Color(0.78, 0.74, 0.66), ROOF, team, true)
 			_tower(img, Vector2(w * 0.78, h * 0.32), 12.0, 40.0, Color(0.8, 0.76, 0.68), ROOF)
 			Raster.circle(img, Vector2(w * 0.78, h * 0.28), 4.0, Color(0.85, 0.7, 0.25))
+		"market":
+			_market(img, w, h, team)
 		"watch_tower":
 			_tower(img, Vector2(w * 0.5, h * 0.55), 18.0, h * 0.8, STONE, ROOF)
 			for i: int in 4:
@@ -178,6 +180,39 @@ static func _window(img: Image, at: Vector2) -> void:
 static func _banner(img: Image, top: Vector2, team: Color, length: float) -> void:
 	Raster.line(img, top, top + Vector2(0, length + 8), 1.5, DARK)
 	Raster.framed_polygon(img, PackedVector2Array([top + Vector2(1, 1), top + Vector2(1 + length * 0.9, 3), top + Vector2(1, length * 0.55)]), team, DARK)
+
+
+## Open market: three stalls with striped awnings (team colour), crates,
+## sacks and a hanging sign.
+static func _market(img: Image, w: float, h: float, team: Color) -> void:
+	Raster.rect(img, Rect2(6, h * 0.3, w - 12, h * 0.64), Color(0.62, 0.55, 0.42))  # paved square
+	for k: int in 5:
+		Raster.rect(img, Rect2(8, h * 0.36 + k * h * 0.12, w - 16, 1), Color(0.5, 0.44, 0.33))
+	for i: int in 3:
+		var x0: float = 10.0 + i * (w - 20.0) / 3.0
+		var sw: float = (w - 20.0) / 3.0 - 6.0
+		var top: float = h * 0.24 + (i % 2) * h * 0.18
+		# Counter
+		Raster.framed_rect(img, Rect2(x0, top + 22, sw, 14), PLANK, DARK)
+		for gx: float in [x0 + 6, x0 + sw * 0.5, x0 + sw - 8]:
+			Raster.circle(img, Vector2(gx, top + 22), 3.5, [Color(0.9, 0.3, 0.2), Color(0.95, 0.75, 0.2), Color(0.45, 0.7, 0.3)][i])
+		# Posts
+		Raster.rect(img, Rect2(x0 + 1, top + 8, 2.5, 26), PLANK.darkened(0.4))
+		Raster.rect(img, Rect2(x0 + sw - 3.5, top + 8, 2.5, 26), PLANK.darkened(0.4))
+		# Striped awning
+		var awning: PackedVector2Array = PackedVector2Array([Vector2(x0 - 3, top + 12), Vector2(x0 + sw + 3, top + 12), Vector2(x0 + sw - 2, top), Vector2(x0 + 2, top)])
+		Raster.framed_polygon(img, awning, Color(0.95, 0.93, 0.86), DARK)
+		var stripe: float = x0
+		while stripe < x0 + sw:
+			Raster.polygon(img, PackedVector2Array([Vector2(stripe, top + 12), Vector2(stripe + 5, top + 12), Vector2(stripe + 5.5, top), Vector2(stripe + 0.5, top)]), team)
+			stripe += 10.0
+	# Crates and sacks in front
+	for i: int in 3:
+		Raster.framed_rect(img, Rect2(w * 0.18 + i * 13, h * 0.84, 10, 9), PLANK.lightened(0.1), DARK)
+	Raster.blob(img, Vector2(w * 0.72, h * 0.88), Vector2(7, 5), Color(0.85, 0.78, 0.6), DARK, 1.0)
+	Raster.blob(img, Vector2(w * 0.8, h * 0.86), Vector2(6, 5), Color(0.82, 0.74, 0.55), DARK, 1.0)
+	Raster.circle(img, Vector2(w * 0.76, h * 0.8), 3.5, Color(0.95, 0.78, 0.25))  # coin pile
+	_banner(img, Vector2(w * 0.5, h * 0.08), team, 12.0)
 
 
 static func _farm(img: Image, w: float, h: float, team: Color) -> void:

@@ -248,11 +248,11 @@ func _draw() -> void:
 		return
 	var region: Rect2 = PlaceholderArt.unit_frame(unit_type, owner_id, pose)
 	if selected:
-		# Selection ring as an ellipse on the ground at the unit's feet.
+		# Selection ring on the ground at the unit's feet, from the atlas (a
+		# draw_arc here broke batching: 57 selected units = 270 draw calls).
+		var ring_w: float = (radius + 9.0) * 2.0
 		var feet: float = region.size.y * 0.27
-		draw_set_transform(Vector2(0.0, feet), 0.0, Vector2(1.0, 0.5))
-		draw_arc(Vector2.ZERO, radius + 9.0, 0.0, TAU, 32, Color(0.35, 1.0, 0.35), 4.0, true)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		draw_texture_rect_region(tex, Rect2(Vector2(-ring_w * 0.5, feet - ring_w * 0.25), Vector2(ring_w, ring_w * 0.5)), PlaceholderArt.ring_region(), Color(0.35, 1.0, 0.35))
 	var tint: Color = Color(1.0, 0.45, 0.45) if flash_t > 0.0 else Color.WHITE
 	# Facing left = the same frame drawn with a negative width (a mirror),
 	# which keeps every unit in the same batch (no transform change).
