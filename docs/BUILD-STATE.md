@@ -149,6 +149,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
+- F9 noche 2026-10-19 (lentas): duelo Difícil vs Normal 3/4 (45, 38, empate, 33 min); partida completa Difícil vs Fácil 25.1 min 5/5; 0 errores de script.
 - F9 noche 2026-10-19: defensa 29/29, playtest 45/45, arte+audio 22/22, eras 21/21 (Era IV en 19.1 min); S10: F8 por toques 5/5, stress150 59.5 fps / 34 DC, battle20 60 fps, fortaleza (45 tramos + 130 unidades en batalla) 55-58 fps / 36 DC. La prueba de rendimiento de PC dio 7 ms con la máquina cargada por otras sesiones (1.5 ms sola el día anterior): no es del juego.
 - F9 tras playtest (2026-10-18): suite normal 328 pruebas sin fallas de código (la de rendimiento falló una vez con el CPU ocupado y dio 1.51 ms sola); playtest 26/26; duelo Difícil vs Normal 3/4 ✓; partida completa Difícil vs Fácil 39.3 min ✓. Instalada en S10 y S24 (SM-S938B).
 - F9 final (2026-10-18): suite normal 323/324, 0 errores de script (falla solo el pasivo 20.1 min, ver Blockers); F9 balance 7/7, contenido 31/31, arte+audio 19/19. Lentas: duelo Difícil vs Normal 3/4 ✓; partida completa Difícil vs Fácil 45.9 min ✓.

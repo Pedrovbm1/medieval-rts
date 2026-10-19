@@ -106,8 +106,10 @@ func test_c_stats_shown_before_and_after() -> void:
 	world.tech.complete(0, "#forging")
 	world.tech.complete(0, "#mail_armor")
 	var after: String = Hud.unit_stats_text(m)
-	check(before.contains("ATQ 6") and before.contains("ARM 1/3"), "militia panel before: %s" % before)
-	check(after.contains("ATQ 7") and after.contains("ARM 2/4"), "after Forging + Mail armor: %s" % after)
+	var atk: String = tr("STAT_ATTACK")
+	var arm: String = tr("STAT_ARMOR")
+	check(before.contains(atk + " 6") and before.contains(arm + " 1/3"), "militia panel before: %s" % before)
+	check(after.contains(atk + " 7") and after.contains(arm + " 2/4"), "after Forging + Mail armor: %s" % after)
 	await _close()
 
 
