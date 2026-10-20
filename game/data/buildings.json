@@ -456,7 +456,10 @@
 				"stone"
 			]
 		},
-		"desc_key": "BLDG_MARKET_DESC"
+		"desc_key": "BLDG_MARKET_DESC",
+		"trains": [
+			"caravan"
+		]
 	},
 	"palisade": {
 		"name_key": "BLDG_PALISADE_NAME",
@@ -539,5 +542,60 @@
 			"crush": 0
 		},
 		"desc_key": "BLDG_GATE_DESC"
+	},
+	"wonder": {
+		"name_key": "BLDG_WONDER_NAME",
+		"cost": {
+			"wood": 1000,
+			"stone": 1000,
+			"gold": 1000
+		},
+		"hp": 4800,
+		"footprint": [
+			4,
+			4
+		],
+		"build_time": 180,
+		"era": 4,
+		"max_count": {
+			"4": 1
+		},
+		"color": "#e8d27a",
+		"placeholder_glyph": "W",
+		"buildable": true,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 4,
+			"pierce": 10,
+			"crush": 0
+		},
+		"desc_key": "BLDG_WONDER_DESC",
+		"wonder": true
+	},
+	"trade_post": {
+		"name_key": "BLDG_TRADE_POST_NAME",
+		"cost": {},
+		"hp": 3000,
+		"footprint": [
+			2,
+			2
+		],
+		"build_time": 1,
+		"era": 1,
+		"color": "#c9b37a",
+		"placeholder_glyph": "T",
+		"buildable": false,
+		"classes": [
+			"building"
+		],
+		"armor": {
+			"hack": 99,
+			"pierce": 99,
+			"crush": 99
+		},
+		"desc_key": "BLDG_TRADE_POST_DESC",
+		"trade_post": true
 	}
 }

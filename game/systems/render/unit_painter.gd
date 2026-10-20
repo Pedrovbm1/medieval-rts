@@ -53,6 +53,8 @@ static func paint(type_id: String, team: Color, pose: String) -> Image:
 			_ram(img, team, strike)
 		"mangonel":
 			_mangonel(img, team, strike)
+		"caravan":
+			_caravan(img, team, step)
 		_:
 			_infantry(img, type_id, team, step, strike)
 	return Raster.finish(img, OUT)
@@ -286,6 +288,26 @@ static func _ram(img: Image, team: Color, strike: int) -> void:
 		Raster.blob(img, Vector2(wx, 36), Vector2(4, 4), WOOD.darkened(0.35), DARK, 1.0)
 
 
+## Trade cart: a covered wagon in the team colour pulled by a donkey.
+static func _caravan(img: Image, team: Color, step: int) -> void:
+	Raster.ellipse(img, Vector2(24, 41), Vector2(17, 3.5), Color(0, 0, 0, 0.3))
+	# Donkey in front (right), legs swing with the step.
+	var dk: Color = Color(0.5, 0.45, 0.4)
+	Raster.blob(img, Vector2(38, 29), Vector2(7, 4.5), dk, DARK, 1.0)
+	Raster.circle(img, Vector2(44, 25), 3.2, dk)
+	Raster.line(img, Vector2(45, 22), Vector2(46, 18), 1.5, dk.darkened(0.2))
+	for lx: float in [34.0, 41.0]:
+		Raster.line(img, Vector2(lx, 32), Vector2(lx + step * 2.0, 38), 1.8, dk.darkened(0.25))
+	# Wagon body, canvas cover and wheels.
+	Raster.framed_rect(img, Rect2(6, 26, 24, 8), WOOD, DARK)
+	Raster.framed_polygon(img, PackedVector2Array([Vector2(6, 26), Vector2(30, 26), Vector2(28, 14), Vector2(8, 14)]), team, DARK)
+	Raster.rect(img, Rect2(8, 19, 20, 1.5), team.lightened(0.35))
+	Raster.line(img, Vector2(30, 29), Vector2(37, 29), 2.0, WOOD.darkened(0.2))
+	for wx: float in [11.0, 25.0]:
+		Raster.blob(img, Vector2(wx, 35), Vector2(4.5, 4.5), WOOD.darkened(0.35), DARK, 1.0)
+		Raster.circle(img, Vector2(wx, 35), 1.2, DARK)
+
+
 static func _mangonel(img: Image, team: Color, strike: int) -> void:
 	Raster.ellipse(img, Vector2(24, 41), Vector2(16, 3.5), Color(0, 0, 0, 0.3))
 	Raster.framed_rect(img, Rect2(8, 30, 30, 5), WOOD, DARK)
@@ -303,12 +325,12 @@ static func _mangonel(img: Image, team: Color, strike: int) -> void:
 
 static func _paint_dead(img: Image, type_id: String, team: Color) -> void:
 	var animal: bool = type_id in ["sheep", "deer", "boar"]
-	var big: bool = type_id in ["scout", "knight", "camel_rider", "ram", "mangonel"]
+	var big: bool = type_id in ["scout", "knight", "camel_rider", "ram", "mangonel", "caravan"]
 	var w: float = 16.0 if big else 11.0
 	Raster.ellipse(img, Vector2(24, 34), Vector2(w + 2, 4.5), Color(0.35, 0.05, 0.05, 0.35))
 	var body: Color = team.darkened(0.35) if not animal else Color(0.5, 0.4, 0.32)
-	if type_id in ["ram", "mangonel"]:
+	if type_id in ["ram", "mangonel", "caravan"]:
 		body = WOOD.darkened(0.4)
 	Raster.blob(img, Vector2(24, 31), Vector2(w, 4.0), body, DARK, 1.0)
-	if not animal and not type_id in ["ram", "mangonel"]:
+	if not animal and not type_id in ["ram", "mangonel", "caravan"]:
 		Raster.circle(img, Vector2(24 + w, 30), 3.5, SKIN.darkened(0.2))

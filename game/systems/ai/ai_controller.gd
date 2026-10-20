@@ -157,7 +157,7 @@ func think() -> void:
 			continue
 		if u.can_gather():
 			villagers.append(u)
-		elif u.unit_type != "scout" and not u.data.has("heal"):
+		elif u.unit_type != "scout" and not u.data.has("heal") and not u.data.has("trade"):
 			military.append(u)
 	if OS.is_debug_build() and elapsed - _state_log_t >= 60.0:
 		_state_log_t = elapsed
@@ -177,6 +177,7 @@ func think() -> void:
 		_military(villagers, military)
 	_scouting()
 	_relics(military)
+	_wonder_push(military)
 	_repair_home(villagers)
 	var raided: bool = _defend(military)
 	_bell(raided, military)
@@ -225,6 +226,25 @@ func _relics(military: Array[Unit]) -> void:
 				if not free.is_empty():
 					_order_attack(free, Vector2(k["pos"]), "relics")
 				return
+
+
+## A finished enemy wonder is the only target that matters: everyone who is
+## not already fighting goes for it, again every 30 s while it stands.
+var _wonder_push_t: float = -999.0
+
+
+func _wonder_push(military: Array[Unit]) -> void:
+	var enemy: int = GameState.PLAYER_HUMAN if player_id != GameState.PLAYER_HUMAN else GameState.PLAYER_AI
+	var wonder: Building = world.wonder_of(enemy)
+	if wonder == null or elapsed - _wonder_push_t < 30.0:
+		return
+	var known: bool = known_buildings.has(wonder.get_instance_id())
+	if not known:
+		return
+	_wonder_push_t = elapsed
+	var free: Array[Unit] = military.filter(func(m: Unit) -> bool: return not (m.task is AttackTask))
+	if not free.is_empty():
+		_order_attack(free, wonder.position, "wonder")
 
 
 func _relic_claimed(n: ResourceNode) -> bool:
@@ -385,6 +405,8 @@ func _economy(villagers: Array[Unit]) -> void:
 			and not farms.any(func(b: Building) -> bool: return not b.is_complete()):
 		_build("farm", home + Vector2(rng.randf_range(-300, 300), rng.randf_range(-300, 300)), villagers, 1)
 	_expand(villagers)
+	_caravans(villagers)
+
 	# Buildings of the current era first: they unlock the next era.
 	var order: Array = bcfg.keys().filter(func(k: Variant) -> bool: return bcfg[k] is Dictionary)
 	var era_now: int = GameState.era_of(player_id)
@@ -408,6 +430,24 @@ func _economy(villagers: Array[Unit]) -> void:
 			_build(type_id, _front(), villagers, 2)
 	_assign_idle(villagers)
 	_rebalance(villagers)
+
+
+## Caravans from the market once the era allows it: up to caravans_max,
+## one per caravans_per_villagers villagers (ai.json buildings).
+func _caravans(villagers: Array[Unit]) -> void:
+	var bcfg: Dictionary = cfg.get("buildings", {})
+	var post: Building = world.nearest_trade_post(home)
+	var market: Building = world.nearest_market(player_id, home)
+	if post == null or market == null or saving_for_era:
+		return
+	var have: int = 0
+	for u: Unit in world.units:
+		if u.owner_id == player_id and not u.is_dead and u.data.has("trade"):
+			have += 1
+	have += market.queue.count("caravan")
+	var want: int = mini(int(bcfg.get("caravans_max", 4)), villagers.size() / maxi(1, int(bcfg.get("caravans_per_villagers", 8))))
+	if have < want and market.queue.size() < 2 and world.construction.can_enqueue(market, "caravan") == "":
+		world.construction.enqueue(market, "caravan")
 
 
 ## +1 production building per `float_step` resources banked (capped).

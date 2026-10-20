@@ -224,6 +224,14 @@ Pedro ganó a Fácil y pidió comparar con el RTS clásico y revisar: "no da tie
 
 ---
 
+## IDEAS-AOE2 — Lotes 2b, 2c y 3 (noche 2026-10-20)
+
+Reliquias con victoria por reliquias (D103), formaciones y attack-move (D104-D105), maravilla (D106) y caravana con puesto de comercio neutral (D107). La campaña de 6-8 misiones queda en `TODOS.md`: es contenido largo (lore, mapas, guion) y conviene diseñarla con Pedro.
+
+**Problemas**: una prueba de reliquias contaba el total con `recount_relics` tras quitar las del suelo (el total de un mapa no cambia: se fija a mano en la prueba); la IA en un escenario sin Centro Urbano "se rinde" y deja de pensar (la prueba le da un aldeano); comparar un nodo liberado con `Array.has` lanza error → se mira el suelo. El atlas cambia de huella con cada recurso/edificio nuevo: `bake_art` tras cada lote (ART_VERSION 8).
+
+---
+
 ## IDEAS-AOE2 — Lotes 1 y 2a (noche 2026-10-20)
 
 Pedro pidió implementar `docs/IDEAS-AOE2.md` (análisis de mecánicas del clásico escrito por otra sesión) trabajando toda la noche sin preguntar. Lote 1 (D93-D99): guarnición + campana, reparar, carnero en Era III con embestida y muralla de 1,200 con grietas y brecha, alertas en 3 niveles con íconos en el minimapa y flecha en pantalla, informe "por qué gané/perdí", IA justa por defecto con tarjeta de bonos en el menú. Lote 2a (D100-D102): granjas finitas con resiembra automática, segundo Centro Urbano en Era III, veta de oro y canteras en el centro de cada mapa, compra en el mercado.

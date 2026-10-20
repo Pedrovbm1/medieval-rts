@@ -135,6 +135,7 @@ func _ready() -> void:
 	EventBus.relic_taken.connect(_on_relic_taken)
 	EventBus.relic_stored.connect(_on_relic_stored)
 	EventBus.relic_countdown.connect(_on_relic_countdown)
+	EventBus.wonder_countdown.connect(_on_wonder_countdown)
 	EventBus.farm_reseeded.connect(func(b: Building) -> void:
 		if mode == Mode.BUILDING and b == _building:
 			_refresh_building())
@@ -855,6 +856,16 @@ func _on_building_attacked(b: Building, _source: Unit) -> void:
 		return
 	if alert_arrow != null:
 		alert_arrow.point(b.position)
+	if bool(b.data.get("wonder", false)):
+		var now_w: int = Time.get_ticks_msec()
+		if now_w - _last_wonder_alert_ms > int(float(DataLoader.rule("alerts", "wonder_cooldown_s", 10.0)) * 1000.0):
+			_last_wonder_alert_ms = now_w
+			_last_alert_ms = now_w
+			Sfx.play("alert")
+			show_banner(tr("ALERT_WONDER_ATTACK"), "critical")
+			if minimap != null:
+				minimap.alert(b.position, "attack")
+		return
 	if b.building_type != String(DataLoader.get_entry("eras", "_rules").get("researched_at", "town_center")):
 		return
 	var now: int = Time.get_ticks_msec()
@@ -873,6 +884,16 @@ func _on_unit_attacked(u: Unit, _source: Unit) -> void:
 		return
 	if alert_arrow != null:
 		alert_arrow.point(u.position)
+	if u.data.has("trade"):
+		var now_c: int = Time.get_ticks_msec()
+		if now_c - _last_caravan_alert_ms > int(float(DataLoader.rule("alerts", "caravan_cooldown_s", 15.0)) * 1000.0):
+			_last_caravan_alert_ms = now_c
+			_last_alert_ms = now_c
+			Sfx.play("alert_soft")
+			show_banner(tr("ALERT_CARAVAN"), "important")
+			if minimap != null:
+				minimap.alert(u.position, "villagers")
+		return
 	if not u.can_gather():
 		return
 	var now: int = Time.get_ticks_msec()
@@ -941,6 +962,36 @@ func _on_relic_taken(p: int, world_pos: Vector2) -> void:
 	else:
 		show_banner(tr("ALERT_RELIC_ENEMY"), "important")
 		Sfx.play("alert_soft")
+
+
+## Wonder countdown (mine or the rival's) in the top bar.
+var wonder_label: Label = null
+var _last_wonder_alert_ms: int = -100000
+var _last_caravan_alert_ms: int = -100000
+
+
+func set_wonder(mine_left: float, theirs_left: float) -> void:
+	if wonder_label == null:
+		wonder_label = Label.new()
+		wonder_label.name = "WonderLabel"
+		wonder_label.custom_minimum_size = Vector2(150, 0)
+		pop_label.get_parent().add_child(wonder_label)
+		pop_label.get_parent().move_child(wonder_label, era_label.get_index() + 1)
+	wonder_label.visible = mine_left >= 0.0 or theirs_left >= 0.0
+	if not wonder_label.visible:
+		return
+	var left: float = mine_left if mine_left >= 0.0 else theirs_left
+	wonder_label.text = "%s %s%d:%02d" % [tr("HUD_WONDER"), "" if mine_left >= 0.0 else "!", int(left) / 60, int(left) % 60]
+	wonder_label.modulate = Color(1, 0.85, 0.35) if mine_left >= 0.0 else Color(1, 0.4, 0.35)
+
+
+func _on_wonder_countdown(p: int, started: bool) -> void:
+	if not started:
+		return
+	var secs: int = int(DataLoader.rule("wonder", "victory_s", 180.0))
+	var key: String = "ALERT_WONDER_MINE" if p == player_id else "ALERT_WONDER_ENEMY"
+	show_banner(tr(key) % [secs / 60, secs % 60], "critical")
+	Sfx.play("alert")
 
 
 func _on_relic_stored(b: Building) -> void:

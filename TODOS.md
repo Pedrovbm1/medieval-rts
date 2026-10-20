@@ -1,7 +1,8 @@
 # TODOS (diferidos por el revisor 2026-10-19)
+- Campaña original de 6-8 misiones con el lore de REALM (IDEAS-AOE2 §Campaña): guion, mapas y objetivos por misión; diseñar con Pedro.
+- Zapador y trebuchet de Era IV (IDEAS-AOE2 §Asedio): el carnero con embestida ya cubre el boquete rápido.
+- Modo "sin rush" en el lobby y periodo de gracia por dificultad (hoy: ventana de paz fija por dificultad).
 - Unidades con 4 direcciones (frente/espalda): duplica atlas y pintado; validar estilo con Pedro primero.
-- Reliquias o pozo de oro central que dé ingreso: motivo para pelear el centro.
-- Maravilla como segunda condición de victoria.
 - Navegación por jugador (puertas sin bloqueo global del NavGrid).
 - IA que amuralla su propia base (hoy solo construye torres y mercado): subiría la dificultad de asediar a Difícil.
 - Puerta visible en el minimapa (el aviso de muralla caída ya existe: "brecha").

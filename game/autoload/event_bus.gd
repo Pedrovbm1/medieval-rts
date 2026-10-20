@@ -47,3 +47,5 @@ signal farm_reseeded(building: Building)
 signal relic_taken(player_id: int, world_pos: Vector2)
 signal relic_stored(building: Building)
 signal relic_countdown(player_id: int, started: bool)
+## A finished wonder started (or lost) its victory countdown.
+signal wonder_countdown(player_id: int, started: bool)

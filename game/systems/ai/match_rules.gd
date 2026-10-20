@@ -155,6 +155,36 @@ func _physics_process(delta: float) -> void:
 			finish(other, p)
 			return
 	_check_relics()
+	_check_wonder()
+
+
+## Wonder victory: a finished wonder that stands for wonder_victory_s
+## (rules wonder.victory_s) wins; razing it stops the clock.
+var wonder_victory_s: float = 180.0
+var _wonder_since: Dictionary = {}
+
+
+func _check_wonder() -> void:
+	for p: int in contenders:
+		var standing: bool = world.wonder_of(p) != null
+		if standing and not _wonder_since.has(p):
+			_wonder_since[p] = elapsed
+			EventBus.wonder_countdown.emit(p, true)
+		elif not standing and _wonder_since.has(p):
+			_wonder_since.erase(p)
+			EventBus.wonder_countdown.emit(p, false)
+		if standing and elapsed - float(_wonder_since[p]) >= wonder_victory_s:
+			var other: int = GameState.PLAYER_AI if p == GameState.PLAYER_HUMAN else GameState.PLAYER_HUMAN
+			reason = "wonder"
+			finish(p, other)
+			return
+
+
+## Seconds left on a player's wonder countdown, or -1 when it is not running.
+func wonder_countdown(player_id: int) -> float:
+	if not _wonder_since.has(player_id):
+		return -1.0
+	return maxf(0.0, wonder_victory_s - (elapsed - float(_wonder_since[player_id])))
 
 
 ## Relic victory: hold every relic on the map in your monasteries for
@@ -190,6 +220,7 @@ func relic_countdown(player_id: int) -> float:
 
 func _ready() -> void:
 	relic_victory_s = float(DataLoader.rule("relics", "victory_s", 180.0))
+	wonder_victory_s = float(DataLoader.rule("wonder", "victory_s", 180.0))
 
 
 ## A player gives up (the AI when it cannot recover): the rival wins.

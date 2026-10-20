@@ -82,6 +82,33 @@ static func paint(type_id: String, size: Vector2i, team: Color, era: int = 1) ->
 			Raster.circle(img, Vector2(w * 0.78, h * 0.28), 4.0, Color(0.85, 0.7, 0.25))
 		"market":
 			_market(img, w, h, team)
+		"wonder":
+			# A great stone hall with a gilded dome and four towers: the whole
+			# base reads it from across the map.
+			var pale: Color = Color(0.86, 0.83, 0.74)
+			_hall(img, w, h, pale, Color(0.36, 0.4, 0.52), team, false)
+			for tx: float in [w * 0.12, w * 0.88]:
+				for ty: float in [h * 0.3, h * 0.72]:
+					_tower(img, Vector2(tx, ty), 10.0, 44.0, pale.lightened(0.05), Color(0.36, 0.4, 0.52))
+			Raster.blob(img, Vector2(w * 0.5, h * 0.3), Vector2(w * 0.2, h * 0.14), Color(0.95, 0.8, 0.32), DARK, 2.0)
+			Raster.ellipse(img, Vector2(w * 0.46, h * 0.26), Vector2(w * 0.07, h * 0.04), Color(1, 0.95, 0.7, 0.8))
+			Raster.rect(img, Rect2(w * 0.5 - 2, h * 0.08, 4, h * 0.1), Color(0.95, 0.8, 0.32))
+			Raster.circle(img, Vector2(w * 0.5, h * 0.07), 4.0, Color(0.98, 0.88, 0.45))
+			for i: int in 5:
+				Raster.rect(img, Rect2(w * 0.22 + i * w * 0.14, h * 0.6, 6, h * 0.3), Color(0.95, 0.93, 0.88))
+			_banner(img, Vector2(w * 0.3, h * 0.5), team, 16.0)
+			_banner(img, Vector2(w * 0.7, h * 0.5), team, 16.0)
+		"trade_post":
+			# Neutral: a striped tent, crates and a pennant pole, no team colour.
+			Raster.rect(img, Rect2(6, h * 0.35, w - 12, h * 0.6), Color(0.6, 0.52, 0.4))
+			Raster.framed_polygon(img, PackedVector2Array([Vector2(w * 0.1, h * 0.75), Vector2(w * 0.9, h * 0.75), Vector2(w * 0.5, h * 0.18)]), Color(0.85, 0.7, 0.35), DARK)
+			for i: int in 4:
+				Raster.line(img, Vector2(w * 0.5, h * 0.18), Vector2(w * 0.12 + i * w * 0.25, h * 0.75), 3.0, Color(0.6, 0.3, 0.2))
+			Raster.framed_rect(img, Rect2(w * 0.12, h * 0.78, 16, 11), PLANK, DARK)
+			Raster.framed_rect(img, Rect2(w * 0.72, h * 0.8, 14, 9), PLANK.darkened(0.2), DARK)
+			Raster.blob(img, Vector2(w * 0.5, h * 0.86), Vector2(9, 6), Color(0.8, 0.72, 0.5), DARK, 1.0)
+			Raster.line(img, Vector2(w * 0.5, h * 0.18), Vector2(w * 0.5, h * 0.02), 2.0, DARK)
+			Raster.framed_polygon(img, PackedVector2Array([Vector2(w * 0.5, h * 0.03), Vector2(w * 0.5 + 14, h * 0.06), Vector2(w * 0.5, h * 0.12)]), Color(0.95, 0.9, 0.8), DARK)
 		"watch_tower":
 			_tower(img, Vector2(w * 0.5, h * 0.55), 18.0, h * 0.8, STONE, ROOF)
 			for i: int in 4:

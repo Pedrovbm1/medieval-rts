@@ -144,6 +144,8 @@ func resolve_target(world_pos: Vector2) -> Dictionary:
 		return {"kind": "node", "ref": node}
 	var b: Building = world.building_at(world_pos)
 	if b != null:
+		if b.owner_id < 0:
+			return {"kind": "neutral_building", "ref": b}  # the trade post: nobody attacks it
 		return {"kind": "own_building" if b.owner_id == player_id else "enemy_building", "ref": b}
 	var cell: Vector2i = world.world_to_cell(world_pos)
 	if world.is_tree(cell):
@@ -248,6 +250,10 @@ func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
 			return AttackTask.new(unit, world, ref, true)
 		if kind == "node" and (ref as ResourceNode).is_relic() and bool(unit.data.get("relic_carrier", false)):
 			return RelicTask.new(unit, world, ref)
+		if unit.data.has("trade") and kind == "neutral_building" and bool((ref as Building).data.get("trade_post", false)):
+			return TradeTask.new(unit, world, world.nearest_market(unit.owner_id, unit.position), ref)
+		if unit.data.has("trade") and kind == "own_building" and (ref as Building).data.has("market") and (ref as Building).is_complete():
+			return TradeTask.new(unit, world, ref, world.nearest_trade_post(unit.position))
 		if kind == "own_building" and unit.relic and bool((ref as Building).data.get("relic_vault", false)) and (ref as Building).is_complete():
 			return RelicTask.deliver_to(unit, world, ref)
 		if kind == "own_building" and (ref as Building).can_garrison(unit) and (ref as Building).in_danger(world):

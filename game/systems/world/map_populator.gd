@@ -14,8 +14,10 @@ static func populate(world: World, map_def: Dictionary) -> void:
 	var starts: Array[Vector2i] = starts_of(map_def)
 	if bool(map_def.get("center_veins", false)):
 		# A reason to fight for the middle: a rich gold vein and a big quarry
-		# at the centre of the map (self-symmetric, placed before mirroring).
+		# at the centre of the map (self-symmetric, placed before mirroring),
+		# and the neutral trade post caravans travel to.
 		_place_center(world)
+		_place_trade_post(world)
 	if String(map_def.get("symmetry", "")) == "point" and starts.size() == 2:
 		# Fair curated maps: lay out the first player's half, then mirror it.
 		var nodes_before: int = world.resource_nodes.size()
@@ -75,6 +77,17 @@ static func _place_center(world: World) -> void:
 	if quarry.x >= 0:
 		var size: Vector2i = Vector2i(world.map_width, world.map_height)
 		_place_near(world, "stone_quarry", size - quarry - Vector2i(2, 2), 8)
+
+
+## Neutral trade post a few cells off the centre (never on the veins).
+static func _place_trade_post(world: World) -> void:
+	if DataLoader.get_entry("buildings", "trade_post").is_empty():
+		return
+	var center: Vector2 = world.map_size_px * 0.5
+	var cell: Vector2i = world.find_building_spot("trade_post", center + Vector2(-5.0, 4.0) * world.tile_size, 12)
+	if cell.x >= 0:
+		var post: Building = world.place_building("trade_post", Unit.OWNER_GAIA, cell)
+		post.add_progress(1.0)
 
 
 ## Tries `cell` then a square spiral around it; returns the cell used or (-1,-1).

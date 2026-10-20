@@ -242,6 +242,12 @@ func _refresh_idle() -> void:
 		if p != GameState.PLAYER_HUMAN and p >= 0:
 			theirs = maxf(theirs, rules.relic_countdown(p))
 	hud.set_relics(world.relics_held(GameState.PLAYER_HUMAN), world.relic_total, mine, theirs)
+	var w_mine: float = rules.wonder_countdown(GameState.PLAYER_HUMAN)
+	var w_theirs: float = -1.0
+	for p: int in rules.contenders:
+		if p != GameState.PLAYER_HUMAN and p >= 0:
+			w_theirs = maxf(w_theirs, rules.wonder_countdown(p))
+	hud.set_wonder(w_mine, w_theirs)
 
 
 ## Town bell. First ring: every villager near a Town Center or tower runs
@@ -383,6 +389,8 @@ func _on_match_ended(winner_id: int, loser_id: int, seconds: float) -> void:
 			why = tr("END_WHY_RESIGN") if won else ""
 		"relics":
 			why = tr("END_WHY_RELICS_WIN") if won else tr("END_WHY_RELICS_LOSS")
+		"wonder":
+			why = tr("END_WHY_WONDER_WIN") if won else tr("END_WHY_WONDER_LOSS")
 	var rival: int = loser_id if won else winner_id
 	var lines: Array[String] = rules.report_lines(GameState.PLAYER_HUMAN, rival, won)
 	if not fair_ai:

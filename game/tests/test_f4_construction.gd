@@ -302,7 +302,7 @@ func test_g_tap_own_building_with_selection() -> void:
 	await _open("build4min")
 	var vs: Array[Unit] = _villagers()
 	await _box_select(vs)
-	var tc: Building = world.buildings[0]
+	var tc: Building = world.buildings.filter(func(b: Building) -> bool: return b.owner_id >= 0)[0]
 	cam.center_on(tc.position)
 	await frames(1)
 	_tap(cam.world_to_screen(tc.position))

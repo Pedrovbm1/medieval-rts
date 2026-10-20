@@ -545,5 +545,36 @@
 			"northvale"
 		],
 		"desc_key": "UNIT_CAMEL_RIDER_DESC"
+	},
+	"caravan": {
+		"name_key": "UNIT_CARAVAN_NAME",
+		"class": "civilian",
+		"classes": [
+			"civilian",
+			"trade"
+		],
+		"stance": "passive",
+		"hp": 70,
+		"speed": 1.0,
+		"radius_px": 16,
+		"placeholder_glyph": "C",
+		"pop": 1,
+		"cost": {
+			"wood": 100,
+			"gold": 50
+		},
+		"train_time": 30,
+		"era": 3,
+		"armor": {
+			"hack": 0,
+			"pierce": 0,
+			"crush": 0
+		},
+		"sight_px": 288,
+		"trade": {
+			"gold_per_px": 0.03,
+			"min_px": 400
+		},
+		"desc_key": "UNIT_CARAVAN_DESC"
 	}
 }

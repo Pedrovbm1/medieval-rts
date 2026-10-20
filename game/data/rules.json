@@ -74,7 +74,9 @@
 		"tc_cooldown_s": 10.0,
 		"villager_cooldown_s": 20.0,
 		"pop_cooldown_s": 45.0,
-		"relic_cooldown_s": 8.0
+		"relic_cooldown_s": 8.0,
+		"wonder_cooldown_s": 10.0,
+		"caravan_cooldown_s": 15.0
 	},
 	"market": {
 		"lot": 100,
@@ -131,6 +133,9 @@
 	"relics": {
 		"pairs": 2,
 		"gold_per_s": 0.5,
+		"victory_s": 180.0
+	},
+	"wonder": {
 		"victory_s": 180.0
 	}
 }

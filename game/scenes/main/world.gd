@@ -303,6 +303,12 @@ func place_building(type_id: String, player_id: int, origin_cell: Vector2i) -> B
 	var b: Building = Building.new()
 	b.setup(type_id, player_id, origin_cell, tile_size)
 	b.recompute_stats()
+	if player_id >= 0:
+		# Scenario / save placement skips can_place: a neutral building
+		# (the trade post) in the way gives up its spot.
+		for other: Building in buildings.duplicate():
+			if other.owner_id < 0 and other.rect().intersects(b.rect()):
+				remove_building(other)
 	entities.add_child(b)
 	buildings.append(b)
 	if not b.walkable:
@@ -449,6 +455,40 @@ func nearest_vault(player_id: int, from: Vector2) -> Building:
 				best_d = d
 				best = b
 	return best
+
+
+## Nearest finished market of a player (caravans trade from it).
+func nearest_market(player_id: int, from: Vector2) -> Building:
+	var best: Building = null
+	var best_d: float = INF
+	for b: Building in buildings:
+		if b.owner_id == player_id and b.is_complete() and b.data.has("market"):
+			var d: float = from.distance_squared_to(b.position)
+			if d < best_d:
+				best_d = d
+				best = b
+	return best
+
+
+## The neutral trade post nearest to `from` (null on maps without one).
+func nearest_trade_post(from: Vector2) -> Building:
+	var best: Building = null
+	var best_d: float = INF
+	for b: Building in buildings:
+		if bool(b.data.get("trade_post", false)):
+			var d: float = from.distance_squared_to(b.position)
+			if d < best_d:
+				best_d = d
+				best = b
+	return best
+
+
+## A player's finished wonder, or null.
+func wonder_of(player_id: int) -> Building:
+	for b: Building in buildings:
+		if b.owner_id == player_id and b.is_complete() and bool(b.data.get("wonder", false)):
+			return b
+	return null
 
 
 ## Puts a relic on the ground (a fallen monk, a razed monastery).

@@ -14,7 +14,7 @@ extends RefCounted
 ## (its fingerprint differs) the game paints the atlas at startup instead.
 
 ## Bump when a painter changes, so an old baked atlas is not used.
-const ART_VERSION: int = 7
+const ART_VERSION: int = 8
 const BAKED_PNG: String = "res://assets/art/atlas.png"
 const BAKED_JSON: String = "res://assets/art/atlas.json"
 const ATLAS_WIDTH: int = 2048

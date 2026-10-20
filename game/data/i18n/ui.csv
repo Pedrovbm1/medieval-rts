@@ -306,3 +306,18 @@ FORMATION_NONE,Libre,Loose
 FORMATION_LINE,Línea,Line
 FORMATION_BOX,Caja,Box
 FORMATION_WEDGE,Cuña,Wedge
+BLDG_WONDER_NAME,Maravilla,Wonder
+BLDG_WONDER_DESC,"Monumento de Era IV (1000 madera, 1000 piedra, 1000 oro). Si sigue en pie 3 minutos después de terminarla, ganas. El rival tiene que derribarla.","Era IV monument (1000 wood, 1000 stone, 1000 gold). Stand it for 3 minutes once finished and you win. The rival has to bring it down."
+BLDG_TRADE_POST_NAME,Puesto de comercio,Trade post
+BLDG_TRADE_POST_DESC,Puesto neutral en el centro del mapa: las caravanas que van y vuelven de aquí a tu mercado ganan oro según la distancia.,Neutral post in the middle of the map: caravans travelling between it and your market earn gold by the distance.
+UNIT_CARAVAN_NAME,Caravana,Caravan
+UNIT_CARAVAN_PLURAL,Caravanas,Caravans
+UNIT_CARAVAN_DESC,Carreta civil (Era III): viaja entre tu mercado y el puesto de comercio y trae oro según la distancia. No pelea: escóltala.,Civil cart (Era III): travels between your market and the trade post and brings gold by the distance. Does not fight: escort it.
+HUD_WONDER,Maravilla,Wonder
+ALERT_WONDER_MINE,¡Maravilla terminada! Defiéndela %d:%02d y ganas,Wonder complete! Defend it %d:%02d and you win
+ALERT_WONDER_ENEMY,¡El rival terminó una maravilla! Derríbala antes de %d:%02d,The rival completed a wonder! Bring it down before %d:%02d
+ALERT_WONDER_ATTACK,¡Atacan tu maravilla!,Your wonder is under attack!
+ALERT_CARAVAN,¡Atacan a tu caravana!,Your caravan is under attack!
+END_WHY_WONDER_WIN,Tu maravilla resistió el tiempo necesario.,Your wonder stood long enough.
+END_WHY_WONDER_LOSS,La maravilla del rival resistió el tiempo necesario.,The rival's wonder stood long enough.
+STAT_TRADE,Comercio,Trade

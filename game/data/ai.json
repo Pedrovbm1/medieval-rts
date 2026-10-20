@@ -163,7 +163,9 @@
 			"development": 0,
 			"harass": 1,
 			"push": 1
-		}
+		},
+		"caravans_max": 4,
+		"caravans_per_villagers": 8
 	},
 	"army": {
 		"train_when_villagers_ratio": 0.6,

@@ -269,7 +269,10 @@ func _finish_training(b: Building, type_id: String) -> void:
 	var toward: Vector2 = b.rally_point if b.rally_point != Vector2.INF else b.position + Vector2(0, b.rect().size.y)
 	var spawn: Vector2 = world.approach_point(b.rect(), toward)
 	var unit: Unit = world.spawn_unit(type_id, b.owner_id, spawn)
-	if b.rally_point != Vector2.INF:
+	if unit.data.has("trade") and world.nearest_trade_post(unit.position) != null:
+		# Caravans start their route at once: market <-> trade post.
+		world.behavior.assign(unit, TradeTask.new(unit, world, b, world.nearest_trade_post(unit.position)))
+	elif b.rally_point != Vector2.INF:
 		_send_to_rally(unit, b.rally_point)
 	b.changed.emit(b)
 	b.queue_redraw()
