@@ -24,7 +24,9 @@ func placement_error(player_id: int, type_id: String, cell: Vector2i, ignore: Ar
 	var def: Dictionary = DataLoader.get_entry("buildings", type_id)
 	if def.is_empty() or not bool(def.get("buildable", true)):
 		return "type"
-	if int(def.get("era", 1)) > GameState.era_of(player_id):
+	# "build_era": when a building may be BUILT later than its own era (an
+	# extra Town Center from Era III, while the first is Era I).
+	if int(def.get("build_era", def.get("era", 1))) > GameState.era_of(player_id):
 		return "era"
 	if count_limit(player_id, type_id) >= 0 and owned_count(world, player_id, type_id) >= count_limit(player_id, type_id):
 		return "limit"
@@ -230,6 +232,7 @@ func _physics_process(delta: float) -> void:
 	if world == null:
 		return
 	world.economy.tick_farms(delta)
+	world.economy.tick_relics(delta)
 	for b: Building in world.buildings.duplicate():
 		if b.queue.is_empty() or not b.is_complete():
 			continue

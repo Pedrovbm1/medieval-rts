@@ -257,6 +257,9 @@ func _on_unit_died(unit: Unit) -> void:
 	var carcass: String = String(Dictionary(unit.data.get("animal", {})).get("carcass", ""))
 	if carcass != "":
 		spawn_carcass(carcass, unit.position)
+	if unit.relic:
+		unit.relic = false
+		drop_relic(unit.position)
 	remove_unit(unit, true)
 
 
@@ -314,6 +317,13 @@ func remove_building(b: Building) -> void:
 	if not buildings.has(b):
 		return
 	eject_all(b)
+	if b.relics > 0:
+		# The vault falls: its relics spill out around it, up for grabs.
+		var n: int = b.relics
+		b.relics = 0
+		for i: int in n:
+			var ang: float = TAU * float(i) / n
+			drop_relic(approach_point(b.rect(), b.position + Vector2.from_angle(ang) * 400.0) + Vector2.from_angle(ang) * 20.0)
 	buildings.erase(b)
 	if not b.walkable or (b.is_gate() and not b.is_open):
 		nav.set_blocked(b.cells(), false)
@@ -396,6 +406,57 @@ func eject_all(b: Building) -> void:
 		eject(u, b)
 
 
+# ------------------------------------------------------------------ relics
+
+## Relics on the map at the start (on the ground + carried + stored never
+## changes); 0 = the map has none and the relic victory is off.
+var relic_total: int = 0
+
+
+func recount_relics() -> void:
+	var n: int = 0
+	for r: ResourceNode in resource_nodes:
+		if r.is_relic():
+			n += 1
+	for u: Unit in units:
+		if u.relic:
+			n += 1
+	for b: Building in buildings:
+		n += b.relics
+		for u: Unit in b.garrison:
+			if u.relic:
+				n += 1
+	relic_total = n
+
+
+## Relics stored in a player's finished monasteries.
+func relics_held(player_id: int) -> int:
+	var n: int = 0
+	for b: Building in buildings:
+		if b.owner_id == player_id and b.is_complete():
+			n += b.relics
+	return n
+
+
+## Nearest finished monastery (relic vault) of a player.
+func nearest_vault(player_id: int, from: Vector2) -> Building:
+	var best: Building = null
+	var best_d: float = INF
+	for b: Building in buildings:
+		if b.owner_id == player_id and b.is_complete() and bool(b.data.get("relic_vault", false)):
+			var d: float = from.distance_squared_to(b.position)
+			if d < best_d:
+				best_d = d
+				best = b
+	return best
+
+
+## Puts a relic on the ground (a fallen monk, a razed monastery).
+func drop_relic(world_pos: Vector2) -> ResourceNode:
+	var cell: Vector2i = nav.nearest_walkable(world_to_cell(world_pos))
+	return spawn_carcass("relic", cell_center(cell))
+
+
 ## Every unit of a player inside any building (bell state, saves, tests).
 func garrisoned_units(player_id: int) -> Array[Unit]:
 	var out: Array[Unit] = []
@@ -440,6 +501,8 @@ func can_place(type_id: String, origin_cell: Vector2i, ignore: Array[Unit] = [])
 ## The gather task a villager should get for a point (rally points, AI).
 func task_for_point(unit: Unit, point: Vector2) -> UnitTask:
 	var n: ResourceNode = node_at(point, 16.0)
+	if n != null and n.is_relic():
+		return null
 	if n != null and not n.is_depleted():
 		return GatherTask.for_node(unit, self, n)
 	var b: Building = building_at(point)
@@ -557,7 +620,7 @@ func nearest_node_at(world_pos: Vector2, slack: float) -> ResourceNode:
 	var best: ResourceNode = null
 	var best_d: float = INF
 	for n: ResourceNode in resource_nodes:
-		if n.is_depleted() or not n.rect().grow(slack).has_point(world_pos):
+		if n.is_depleted() or n.is_relic() or not n.rect().grow(slack).has_point(world_pos):
 			continue
 		var d: float = n.position.distance_squared_to(world_pos)
 		if d < best_d:

@@ -33,6 +33,26 @@ signal bell_pressed
 ## "Salir": every unit inside the selected building comes out.
 signal eject_pressed
 signal buy_pressed(resource: String)
+## Army panel: arm an attack-move for the next tap / cycle the formation.
+signal attack_move_pressed
+signal formation_pressed
+var attack_button: Button = null
+var formation_button: Button = null
+var _attack_armed: bool = false
+var _formation: String = "none"
+
+
+func set_attack_armed(on: bool) -> void:
+	_attack_armed = on
+	if attack_button != null:
+		attack_button.text = tr("HUD_ATTACK_ARMED") if on else tr("HUD_ATTACK_MOVE")
+		attack_button.modulate = Color(1, 0.55, 0.45) if on else Color.WHITE
+
+
+func set_formation(kind: String) -> void:
+	_formation = kind
+	if formation_button != null:
+		formation_button.text = "%s\n%s" % [tr("HUD_FORMATION"), tr("FORMATION_" + kind.to_upper())]
 
 const RESOURCE_ORDER: PackedStringArray = ["food", "wood", "gold", "stone"]
 const BUTTON_SIZE: Vector2 = Vector2(120, 72)
@@ -112,6 +132,9 @@ func _ready() -> void:
 	EventBus.wall_breached.connect(_on_wall_breached)
 	EventBus.garrison_changed.connect(_on_garrison_changed)
 	EventBus.farm_fallow.connect(_on_farm_fallow)
+	EventBus.relic_taken.connect(_on_relic_taken)
+	EventBus.relic_stored.connect(_on_relic_stored)
+	EventBus.relic_countdown.connect(_on_relic_countdown)
 	EventBus.farm_reseeded.connect(func(b: Building) -> void:
 		if mode == Mode.BUILDING and b == _building:
 			_refresh_building())
@@ -302,6 +325,8 @@ func _set_mode(m: Mode) -> void:
 	cancel_place_button = null
 	cancel_construction_button = null
 	eject_button = null
+	attack_button = null
+	formation_button = null
 	match m:
 		Mode.NONE:
 			selection_panel.visible = false
@@ -343,6 +368,11 @@ func _fill_units() -> void:
 		_set_info(unit_role_text(first) if counts.size() == 1 else "")
 	if _units.any(func(u: Unit) -> bool: return is_instance_valid(u) and u.can_gather()):
 		build_button = _add_button(tr("HUD_BUILD"), build_pressed)
+	if _units.any(func(u: Unit) -> bool: return is_instance_valid(u) and not u.can_gather() and not u.data.get("combat", {}).is_empty()):
+		attack_button = _add_button(tr("HUD_ATTACK_MOVE"), attack_move_pressed)
+		formation_button = _add_button(tr("HUD_FORMATION"), formation_pressed, Vector2(150, 72))
+		set_attack_armed(_attack_armed)
+		set_formation(_formation)
 	stop_button = _add_button(tr("HUD_STOP"), stop_pressed)
 	hold_button = _add_button(tr("HUD_HOLD"), hold_pressed)
 	deselect_button = _add_button(tr("HUD_DESELECT"), deselect_pressed)
@@ -353,7 +383,7 @@ func _fill_build_menu() -> void:
 	var table: Dictionary = DataLoader.get_table("buildings")
 	for type_id: String in table.keys():
 		var def: Dictionary = table[type_id]
-		if not bool(def.get("buildable", true)) or int(def.get("era", 1)) > GameState.era_of(player_id):
+		if not bool(def.get("buildable", true)) or int(def.get("build_era", def.get("era", 1))) > GameState.era_of(player_id):
 			continue
 		var b: Button = _add_cost_button(tr(String(def.get("name_key", type_id))), def.get("cost", {}), Vector2(150, 76))
 		b.pressed.connect(func() -> void:
@@ -606,6 +636,8 @@ func _refresh_building() -> void:
 			text += "  " + tr("HUD_FARM_LEFT") % [int(_building.food_left), int(_building.gather_info().get("amount", 0))]
 	if _building.is_complete() and _building.garrison_slots() > 0:
 		text += "  %s %d/%d" % [tr("HUD_GARRISON"), _building.garrison.size(), _building.garrison_slots()]
+	if _building.relics > 0:
+		text += "  %s %d" % [tr("HUD_RELICS"), _building.relics]
 	if not _building.repairers.is_empty():
 		text += "  " + tr("HUD_REPAIRING")
 	_refresh_queue_row()
@@ -870,6 +902,61 @@ func _on_garrison_changed(b: Building) -> void:
 
 
 var _last_farm_alert_ms: int = -100000
+var _last_relic_alert_ms: int = -100000
+## Relics held / countdown, in the top bar (hidden on maps without relics).
+var relic_label: Label = null
+
+
+func set_relics(held: int, total: int, mine_left: float, theirs_left: float) -> void:
+	if relic_label == null:
+		relic_label = Label.new()
+		relic_label.name = "RelicLabel"
+		relic_label.custom_minimum_size = Vector2(150, 0)
+		pop_label.get_parent().add_child(relic_label)
+		pop_label.get_parent().move_child(relic_label, era_label.get_index() + 1)
+	relic_label.visible = total > 0
+	if total <= 0:
+		return
+	var text: String = "%s %d/%d" % [tr("HUD_RELICS"), held, total]
+	relic_label.modulate = Color.WHITE
+	if mine_left >= 0.0:
+		text += "  %d:%02d" % [int(mine_left) / 60, int(mine_left) % 60]
+		relic_label.modulate = Color(1, 0.85, 0.35)
+	elif theirs_left >= 0.0:
+		text += "  !%d:%02d" % [int(theirs_left) / 60, int(theirs_left) % 60]
+		relic_label.modulate = Color(1, 0.4, 0.35)
+	relic_label.text = text
+
+
+func _on_relic_taken(p: int, world_pos: Vector2) -> void:
+	if minimap != null:
+		minimap.alert(world_pos, "relic")
+		minimap.rebake()
+	var now: int = Time.get_ticks_msec()
+	if now - _last_relic_alert_ms < int(float(DataLoader.rule("alerts", "relic_cooldown_s", 8.0)) * 1000.0):
+		return
+	_last_relic_alert_ms = now
+	if p == player_id:
+		show_banner(tr("ALERT_RELIC_MINE"), "soft")
+	else:
+		show_banner(tr("ALERT_RELIC_ENEMY"), "important")
+		Sfx.play("alert_soft")
+
+
+func _on_relic_stored(b: Building) -> void:
+	if mode == Mode.BUILDING and b == _building:
+		_refresh_building()
+	if b.owner_id == player_id:
+		show_banner(tr("ALERT_RELIC_STORED"), "soft")
+
+
+func _on_relic_countdown(p: int, started: bool) -> void:
+	if not started:
+		return
+	var secs: int = int(DataLoader.rule("relics", "victory_s", 180.0))
+	var key: String = "ALERT_RELICS_MINE" if p == player_id else "ALERT_RELICS_ENEMY"
+	show_banner(tr(key) % [secs / 60, secs % 60], "critical")
+	Sfx.play("alert")
 
 
 ## A farm of ours ran dry with no wood to reseed: soft alert, at most every

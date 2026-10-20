@@ -458,7 +458,8 @@
 			"range_px": 176
 		},
 		"sight_px": 352,
-		"desc_key": "UNIT_MONK_DESC"
+		"desc_key": "UNIT_MONK_DESC",
+		"relic_carrier": true
 	},
 	"mangonel": {
 		"name_key": "UNIT_MANGONEL_NAME",

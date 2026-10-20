@@ -60,6 +60,11 @@ func is_depleted() -> bool:
 	return _depleted
 
 
+## Relics are carried by monks, never gathered.
+func is_relic() -> bool:
+	return bool(data.get("relic", false))
+
+
 ## Removes up to `want` and returns what was actually taken.
 func take(want: float) -> float:
 	if _depleted:

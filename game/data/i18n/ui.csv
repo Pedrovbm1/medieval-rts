@@ -216,7 +216,7 @@ BLDG_BARRACKS_DESC,"Entrena infantería: milicianos, lanceros y espadachines.","
 BLDG_ARCHERY_RANGE_DESC,Entrena arqueros y escaramuzadores (a distancia).,Trains archers and skirmishers (ranged).
 BLDG_STABLE_DESC,"Entrena caballería: exploradores, caballeros y camelleros.","Trains cavalry: scouts, knights and camel riders."
 BLDG_SIEGE_WORKSHOP_DESC,Fabrica arietes y mangoneles: lo mejor contra edificios.,Builds rams and mangonels: best against buildings.
-BLDG_MONASTERY_DESC,"Entrena monjes, que curan a tus tropas.","Trains monks, who heal your troops."
+BLDG_MONASTERY_DESC,"Entrena monjes y guarda reliquias: cada una da oro, y tenerlas todas 3 minutos gana la partida.","Trains monks and keeps relics: each one gives gold, and holding all of them for 3 minutes wins."
 BLDG_BLACKSMITH_DESC,Mejoras de ataque y armadura para tus tropas.,Attack and armor upgrades for your troops.
 BLDG_UNIVERSITY_DESC,"Mejoras de economía y defensa (torres, murallas).","Economy and defence upgrades (towers, walls)."
 BLDG_WATCH_TOWER_DESC,Dispara flechas a los enemigos cercanos y ve lejos.,Shoots arrows at nearby enemies and sees far.
@@ -233,7 +233,7 @@ UNIT_KNIGHT_DESC,"Caballería pesada: fuerte y rápida, caza arqueros.","Heavy c
 UNIT_RAM_DESC,"Máquina de asedio (Era III): embiste edificios, el primer golpe pega doble.","Siege engine (Era III): rams buildings, the first blow hits twice as hard."
 UNIT_SKIRMISHER_DESC,Lanza jabalinas; contra arqueros.,Throws javelins; counters archers.
 UNIT_SWORDSMAN_DESC,Infantería pesada; aguanta y pega fuerte.,Heavy infantry; tough and hard-hitting.
-UNIT_MONK_DESC,Cura a tus tropas. No pelea.,Heals your troops. Does not fight.
+UNIT_MONK_DESC,Cura a tus tropas y recoge reliquias (llévalas al monasterio: dan oro). No pelea.,Heals your troops and fetches relics (store them in the monastery: they give gold). Does not fight.
 UNIT_MANGONEL_DESC,Piedras en área: grupos y edificios.,Area stones: groups and buildings.
 UNIT_CAMEL_RIDER_DESC,Caballería que gana a otra caballería.,Cavalry that beats other cavalry.
 UNIT_SHEEP_DESC,Comida: llévala a tu base.,Food: bring it to your base.
@@ -290,3 +290,19 @@ HUD_FALLOW,En barbecho: falta madera,Fallow: no wood to reseed
 ALERT_FARM_FALLOW,Granja agotada: falta madera para resembrar,Farm exhausted: no wood to reseed
 HUD_BUY,Comprar,Buy
 ERR_LIMIT,Máximo alcanzado en esta era,Limit reached for this era
+RES_RELIC_NAME,Reliquia,Relic
+HUD_RELICS,Reliquias,Relics
+ALERT_RELIC_ENEMY,El rival tomó una reliquia,The rival took a relic
+ALERT_RELIC_MINE,Reliquia recogida: llévala al monasterio,Relic picked up: take it to the monastery
+ALERT_RELIC_STORED,Reliquia guardada: el oro empieza a llegar,Relic stored: gold starts coming in
+ALERT_RELICS_MINE,¡Tienes todas las reliquias! Victoria en %d:%02d,You hold every relic! Victory in %d:%02d
+ALERT_RELICS_ENEMY,¡El rival tiene todas las reliquias! Quítaselas antes de %d:%02d,The rival holds every relic! Take them back before %d:%02d
+END_WHY_RELICS_WIN,Guardaste todas las reliquias el tiempo necesario.,You held every relic long enough.
+END_WHY_RELICS_LOSS,El rival guardó todas las reliquias el tiempo necesario.,The rival held every relic long enough.
+HUD_ATTACK_MOVE,Atacar aquí,Attack here
+HUD_ATTACK_ARMED,Toca el destino,Tap the target
+HUD_FORMATION,Formación,Formation
+FORMATION_NONE,Libre,Loose
+FORMATION_LINE,Línea,Line
+FORMATION_BOX,Caja,Box
+FORMATION_WEDGE,Cuña,Wedge

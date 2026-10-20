@@ -37,12 +37,12 @@ static func snapshot(main: Node) -> Dictionary:
 			"id": ids[b], "type": b.building_type, "owner": b.owner_id, "cell": [b.cell.x, b.cell.y], "hp": b.hp, "open": b.is_open,
 			"progress": b.build_progress, "queue": Array(b.queue), "train_elapsed": b.train_elapsed,
 			"rally": [b.rally_point.x, b.rally_point.y] if b.rally_point != Vector2.INF else null,
-			"garrison": inside, "food_left": b.food_left, "fallow": b.fallow, "reseeds": b.reseeds,
+			"garrison": inside, "food_left": b.food_left, "fallow": b.fallow, "reseeds": b.reseeds, "relics": b.relics,
 		})
 	for u: Unit in world.units:
 		units.append({
 			"id": ids[u], "type": u.unit_type, "owner": u.owner_id, "pos": [u.position.x, u.position.y], "hp": u.hp,
-			"stance": u.stance, "carry_type": u.carry_type, "carry": u.carry_amount,
+			"stance": u.stance, "carry_type": u.carry_type, "carry": u.carry_amount, "relic": u.relic,
 			"goal": [u.goal.x, u.goal.y] if u.goal != Vector2.INF else null,
 			"task": _task_to_dict(u.task, ids),
 		})
@@ -125,6 +125,7 @@ static func restore(main: Node, data: Dictionary) -> void:
 		building.food_left = float(b.get("food_left", building.food_left))
 		building.fallow = bool(b.get("fallow", false))
 		building.reseeds = int(b.get("reseeds", 0))
+		building.relics = int(b.get("relics", 0))
 		if building.is_gate() and not bool(b.get("open", true)):
 			building.set_gate_open(false, world.nav)
 		for item: Variant in b.get("queue", []):
@@ -149,6 +150,7 @@ static func restore(main: Node, data: Dictionary) -> void:
 		unit.stance = String(u.get("stance", unit.stance))
 		unit.carry_type = String(u.get("carry_type", ""))
 		unit.carry_amount = float(u.get("carry", 0.0))
+		unit.relic = bool(u.get("relic", false))
 		unit.queue_redraw()
 		by_id[int(u["id"])] = unit
 		pending_tasks.append([unit, u.get("task"), u.get("goal")])
@@ -160,6 +162,7 @@ static func restore(main: Node, data: Dictionary) -> void:
 		elif entry[2] != null:
 			world.movement.move_unit(unit, Vector2(float(entry[2][0]), float(entry[2][1])))
 	world.economy.refresh_population()
+	world.recount_relics()
 	for key: Variant in Dictionary(data.get("vision", {})).keys():
 		var raw: PackedByteArray = Marshalls.base64_to_raw(String(data["vision"][key]))
 		if world.vision.grid.states.has(int(key)) and raw.size() == world.vision.grid.width * world.vision.grid.height:

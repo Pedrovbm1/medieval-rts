@@ -24,13 +24,34 @@ static func populate(world: World, map_def: Dictionary) -> void:
 			_place_around(world, rng, starts[0], entry)
 		for entry: Variant in map_def.get("extra_resources", []):
 			_place_extra(world, rng, starts, entry, true)
+		if bool(map_def.get("center_veins", false)):
+			_place_relics(world, true)
 		_mirror_new(world, nodes_before, units_before)
+		world.recount_relics()
 		return
 	for start: Vector2i in starts:
 		for entry: Variant in map_def.get("start_layout", []):
 			_place_around(world, rng, start, entry)
 	for entry: Variant in map_def.get("extra_resources", []):
 		_place_extra(world, rng, starts, entry)
+	if bool(map_def.get("center_veins", false)):
+		_place_relics(world, false)
+	world.recount_relics()
+
+
+## Relics in pairs around the middle (rules relics.pairs): each pair is a
+## spot and its point mirror, so both players are the same distance away.
+## On a symmetric map only the first of each pair is placed here (the
+## mirroring step adds the other); elsewhere both are placed.
+static func _place_relics(world: World, half: bool) -> void:
+	var size: Vector2i = Vector2i(world.map_width, world.map_height)
+	var center: Vector2i = size / 2
+	var offsets: Array[Vector2i] = [Vector2i(-15, 9), Vector2i(10, -17), Vector2i(-20, -4), Vector2i(6, 20)]
+	var pairs: int = mini(int(DataLoader.rule("relics", "pairs", 2)), offsets.size())
+	for i: int in pairs:
+		var cell: Vector2i = _place_near(world, "relic", center + offsets[i], 6)
+		if cell.x >= 0 and not half:
+			_place_near(world, "relic", size - cell - Vector2i(1, 1), 6)
 
 
 ## Copies every node and animal placed since the given counts to the

@@ -157,6 +157,12 @@
 			"development": 0,
 			"harass": 1,
 			"push": 2
+		},
+		"monastery": {
+			"opening": 0,
+			"development": 0,
+			"harass": 1,
+			"push": 1
 		}
 	},
 	"army": {
@@ -170,7 +176,8 @@
 			"knight": 0.15,
 			"camel_rider": 0.05,
 			"mangonel": 0.05,
-			"ram": 0.05
+			"ram": 0.05,
+			"monk": 0.05
 		},
 		"harass_group": 6,
 		"wave_min": 14,

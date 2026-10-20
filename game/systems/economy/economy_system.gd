@@ -99,6 +99,25 @@ func tick_farms(delta: float) -> void:
 			b.reseed()
 
 
+var _relic_gold: Dictionary = {}
+
+
+## Each relic stored in a finished monastery trickles rules relics.gold_per_s
+## to its owner (whole gold only; fractions wait).
+func tick_relics(delta: float) -> void:
+	var per_s: float = float(DataLoader.rule("relics", "gold_per_s", 0.5))
+	for b: Building in world.buildings:
+		if b.relics <= 0 or not b.is_complete() or b.owner_id < 0:
+			continue
+		var acc: float = float(_relic_gold.get(b.owner_id, 0.0)) + b.relics * per_s * delta
+		var whole: int = int(floorf(acc))
+		if whole > 0:
+			GameState.add_resource(b.owner_id, "gold", whole)
+			GameState.record_gathered(b.owner_id, "gold", whole)
+			acc -= whole
+		_relic_gold[b.owner_id] = acc
+
+
 ## Farms of a player lying fallow (HUD, AI, tests).
 func fallow_farms(player_id: int) -> Array[Building]:
 	return world.buildings.filter(func(b: Building) -> bool: return b.owner_id == player_id and b.fallow)

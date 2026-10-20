@@ -276,12 +276,12 @@ func _nearest_attacker(unit: Unit, sight: float) -> Unit:
 
 
 ## Group order: walk to `target` and fight whatever is met on the way.
-func attack_move(group: Array[Unit], target: Vector2) -> void:
+func attack_move(group: Array[Unit], target: Vector2, formation: String = "none") -> void:
 	var movers: Array[Unit] = group.filter(func(u: Unit) -> bool: return is_instance_valid(u) and not u.is_dead)
 	for u: Unit in movers:
 		world.behavior.assign(u, null)
 		u.attack_move = true
-	world.movement.command_move(movers, target)
+	world.movement.command_move(movers, target, formation)
 
 
 # ------------------------------------------------------------------ death

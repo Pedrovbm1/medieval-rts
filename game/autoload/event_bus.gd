@@ -42,3 +42,8 @@ signal garrison_changed(building: Building)
 ## A farm ran out of food and could not be reseeded (no wood) / was reseeded.
 signal farm_fallow(building: Building)
 signal farm_reseeded(building: Building)
+## Relics: picked up by a monk of `player_id` / stored in a monastery / a
+## player holds every relic (the victory countdown starts or stops).
+signal relic_taken(player_id: int, world_pos: Vector2)
+signal relic_stored(building: Building)
+signal relic_countdown(player_id: int, started: bool)

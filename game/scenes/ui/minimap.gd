@@ -42,6 +42,11 @@ func alert(world_pos: Vector2, kind: String = "attack") -> void:
 	_alerts.append([world_pos, ALERT_SECONDS, kind])
 
 
+## Repaints the terrain layer (a relic left the ground, a tree fell).
+func rebake() -> void:
+	_bake_terrain()
+
+
 ## Kinds currently shown (tests).
 func alert_kinds() -> Array[String]:
 	var out: Array[String] = []
@@ -108,6 +113,11 @@ func _draw() -> void:
 			continue
 		var cu: Color = Color.html(String(colors[clampi(u.owner_id, 0, colors.size() - 1)]))
 		draw_rect(Rect2(to_local_point(u.position) - Vector2(1.5, 1.5), Vector2(3, 3)), cu.lightened(0.35))
+	# Relics on the ground show as gold diamonds once the spot is explored.
+	for n: ResourceNode in world.resource_nodes:
+		if n.is_relic() and grid.is_explored(player_id, n.position):
+			var rp: Vector2 = to_local_point(n.position)
+			draw_colored_polygon(PackedVector2Array([rp + Vector2(0, -4), rp + Vector2(4, 0), rp + Vector2(0, 4), rp + Vector2(-4, 0)]), Color(1, 0.9, 0.45))
 	if camera != null:
 		var view: Rect2 = camera.visible_world_rect()
 		draw_rect(Rect2(to_local_point(view.position), view.size / world.map_size_px * size), Color(1, 1, 1, 0.9), false, 1.5)
@@ -125,6 +135,9 @@ func _draw() -> void:
 			"army":
 				var s2: float = 6.0 + 2.0 * absf(sin(t * 4.0))
 				draw_colored_polygon(PackedVector2Array([p + Vector2(0, -s2), p + Vector2(s2, s2), p + Vector2(-s2, s2)]), Color(1, 0.6, 0.15, 0.95))
+			"relic":
+				var s3: float = 5.0 + 2.0 * absf(sin(t * 4.0))
+				draw_colored_polygon(PackedVector2Array([p + Vector2(0, -s3), p + Vector2(s3, 0), p + Vector2(0, s3), p + Vector2(-s3, 0)]), Color(1, 0.88, 0.45, 0.95))
 			_:
 				draw_arc(p, pulse, 0.0, TAU, 20, Color(1, 0.25, 0.2, 0.95), 2.0)
 

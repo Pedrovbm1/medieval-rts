@@ -112,5 +112,19 @@
 		"color": "#b8b8ad",
 		"placeholder_glyph": "P",
 		"art": "stone_mine"
+	},
+	"relic": {
+		"name_key": "RES_RELIC_NAME",
+		"resource": "gold",
+		"subtype": "relic",
+		"amount": 1,
+		"footprint": [
+			1,
+			1
+		],
+		"walkable": true,
+		"color": "#ffe27a",
+		"placeholder_glyph": "R",
+		"relic": true
 	}
 }

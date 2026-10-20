@@ -109,6 +109,15 @@ static func resource(type_id: String, size: Vector2i, base: Color) -> Image:
 					var at2: Vector2 = c + Vector2(Raster.noise(i, 1, 2), Raster.noise(1, i, 4)) * Vector2(size) * 0.35
 					Raster.blob(img, at2, Vector2(3.5, 2.8), base, DARK, 0.8)
 					Raster.circle(img, at2 + Vector2(-1, -1), 1.2, Color(1, 0.95, 0.7))
+		"relic":
+			# A gilded reliquary on a stone plinth: gold box, dark band, red gem.
+			Raster.ellipse(img, c + Vector2(0, 14), Vector2(size.x * 0.32, 6), Color(0, 0, 0, 0.25))
+			Raster.framed_rect(img, Rect2(c.x - 14, c.y + 4, 28, 10), Color(0.55, 0.53, 0.5), DARK)
+			Raster.framed_rect(img, Rect2(c.x - 11, c.y - 10, 22, 15), base, DARK)
+			Raster.rect(img, Rect2(c.x - 11, c.y - 4, 22, 3), Color(0.45, 0.3, 0.1))
+			Raster.framed_polygon(img, PackedVector2Array([c + Vector2(-11, -10), c + Vector2(0, -17), c + Vector2(11, -10)]), base.lightened(0.15), DARK)
+			Raster.circle(img, c + Vector2(0, -7), 2.6, Color(0.85, 0.15, 0.2))
+			Raster.circle(img, c + Vector2(-1, -8), 1.0, Color(1, 0.8, 0.8))
 		"berry_bush":
 			Raster.ellipse(img, c + Vector2(3, 9), Vector2(size.x * 0.4, 6), Color(0, 0, 0, 0.25))
 			Raster.blob(img, c, Vector2(size.x * 0.4, size.y * 0.35), Color(0.24, 0.48, 0.22), DARK, 1.2)

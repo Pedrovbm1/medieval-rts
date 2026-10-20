@@ -176,11 +176,62 @@ func think() -> void:
 	if not army_paused:
 		_military(villagers, military)
 	_scouting()
+	_relics(military)
 	_repair_home(villagers)
 	var raided: bool = _defend(military)
 	_bell(raided, military)
 	if not raided:
 		_attack(military)
+
+
+## Relics: once there is a monastery, idle monks fetch every relic the AI
+## has seen; a monk holding one brings it home. If the rival holds every
+## relic (the victory clock is running) the army goes for their monastery.
+var _relic_push_t: float = -999.0
+
+
+func _relics(military: Array[Unit]) -> void:
+	if world.relic_total <= 0:
+		return
+	var vault: Building = world.nearest_vault(player_id, home)
+	if vault != null:
+		for u: Unit in world.units:
+			if u.owner_id != player_id or u.is_dead or not bool(u.data.get("relic_carrier", false)) or u.task is RelicTask:
+				continue
+			if u.relic:
+				world.behavior.assign(u, RelicTask.deliver_to(u, world, vault))
+				continue
+			if u.task != null and not (u.task is HealTask):
+				continue
+			var best: ResourceNode = null
+			var best_d: float = INF
+			for n: ResourceNode in world.resource_nodes:
+				if not n.is_relic() or not world.vision.grid.is_explored(player_id, n.position) or _relic_claimed(n):
+					continue
+				var d: float = u.position.distance_squared_to(n.position)
+				if d < best_d:
+					best_d = d
+					best = n
+			if best != null:
+				world.behavior.assign(u, RelicTask.new(u, world, best))
+				if OS.is_debug_build():
+					print("[REALM] ai %d monk fetches relic t=%.0f" % [player_id, elapsed])
+	var enemy: int = GameState.PLAYER_HUMAN if player_id != GameState.PLAYER_HUMAN else GameState.PLAYER_AI
+	if world.relics_held(enemy) >= world.relic_total and elapsed - _relic_push_t > 30.0:
+		for k: Dictionary in known_buildings.values():
+			if String(k["type"]) == "monastery":
+				_relic_push_t = elapsed
+				var free: Array[Unit] = military.filter(func(m: Unit) -> bool: return not (m.task is AttackTask))
+				if not free.is_empty():
+					_order_attack(free, Vector2(k["pos"]), "relics")
+				return
+
+
+func _relic_claimed(n: ResourceNode) -> bool:
+	for u: Unit in world.units:
+		if u.owner_id == player_id and u.task is RelicTask and (u.task as RelicTask).relic == n:
+			return true
+	return false
 
 
 ## Villagers mend the Town Center and towers once the fight is over (same
@@ -874,7 +925,8 @@ func _pick_economy_target() -> Dictionary:
 func _order_attack(group: Array[Unit], pos: Vector2, kind: String) -> void:
 	var explored: bool = world.vision.grid.is_explored(player_id, pos)
 	attack_log.append({"t": elapsed, "pos": pos, "explored": explored, "kind": kind})
-	world.combat.attack_move(group, pos)
+	# Marching in line: melee in front, archers and siege behind.
+	world.combat.attack_move(group, pos, "line")
 	attack_ordered.emit(pos, explored)
 	if OS.is_debug_build():
 		print("[REALM] ai %d %s t=%.0f units=%d target=(%d,%d)" % [player_id, kind, elapsed, group.size(), int(pos.x), int(pos.y)])

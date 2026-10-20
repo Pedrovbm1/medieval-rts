@@ -24,6 +24,27 @@ var camera: CameraController
 var order_marker: OrderMarker
 var player_id: int = GameState.PLAYER_HUMAN
 var selected: Array[Unit] = []
+## Battle formation for group orders (FormationLayout.KINDS; "none" = spread).
+var formation: String = "none"
+## The next tap on the ground is an attack-move for the selected soldiers.
+var attack_armed: bool = false
+signal attack_armed_changed(armed: bool)
+signal formation_changed(kind: String)
+
+
+## Cycles none -> line -> box -> wedge -> none. Returns the new kind.
+func cycle_formation() -> String:
+	var i: int = FormationLayout.KINDS.find(formation)
+	formation = FormationLayout.KINDS[(i + 1) % FormationLayout.KINDS.size()]
+	formation_changed.emit(formation)
+	return formation
+
+
+func arm_attack_move(on: bool) -> void:
+	if attack_armed == on:
+		return
+	attack_armed = on
+	attack_armed_changed.emit(on)
 var selected_building: Building = null
 ## Control groups 1-5: number -> Array[Unit]
 var groups: Dictionary = {}
@@ -156,7 +177,15 @@ func issue_order(world_pos: Vector2, target: Dictionary) -> void:
 	var kind: String = String(target["kind"])
 	var movers: Array[Unit] = []
 	var order_kind: String = "move"
+	# Armed attack-move: the soldiers march and fight whatever they meet;
+	# anyone else in the selection just walks.
+	var fighters: Array[Unit] = []
+	if attack_armed:
+		fighters = selected.filter(func(u: Unit) -> bool: return not u.can_gather() and not u.data.get("combat", {}).is_empty())
+		arm_attack_move(false)
 	for unit: Unit in selected:
+		if fighters.has(unit):
+			continue
 		var task: UnitTask = _task_for(unit, kind, target.get("ref"))
 		if task != null:
 			world.behavior.assign(unit, task)
@@ -165,8 +194,11 @@ func issue_order(world_pos: Vector2, target: Dictionary) -> void:
 			world.behavior.assign(unit, null)
 			unit.attack_move = false
 			movers.append(unit)
+	if not fighters.is_empty():
+		world.combat.attack_move(fighters, world_pos, formation)
+		order_kind = "attack"
 	if not movers.is_empty():
-		world.movement.command_move(movers, world_pos)
+		world.movement.command_move(movers, world_pos, formation)
 	if order_marker != null:
 		var positions: Array[Vector2] = []
 		for unit: Unit in selected:
@@ -177,6 +209,7 @@ func issue_order(world_pos: Vector2, target: Dictionary) -> void:
 	_release_workers()
 
 
+## Monks (not gatherers) still take relic work from a tap.
 ## Villagers that just got work (gather, build, hunt, deliver) leave the
 ## selection, so the next tap does not pull them off the job. Soldiers stay
 ## selected: they usually get several orders in a row.
@@ -213,6 +246,10 @@ func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
 	if not unit.can_gather():
 		if kind == "animal" and not unit.data.get("combat", {}).is_empty():
 			return AttackTask.new(unit, world, ref, true)
+		if kind == "node" and (ref as ResourceNode).is_relic() and bool(unit.data.get("relic_carrier", false)):
+			return RelicTask.new(unit, world, ref)
+		if kind == "own_building" and unit.relic and bool((ref as Building).data.get("relic_vault", false)) and (ref as Building).is_complete():
+			return RelicTask.deliver_to(unit, world, ref)
 		if kind == "own_building" and (ref as Building).can_garrison(unit) and (ref as Building).in_danger(world):
 			return GarrisonTask.new(unit, world, ref)
 		return null
@@ -220,6 +257,8 @@ func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
 		"tree":
 			return GatherTask.for_tree(unit, world, ref)
 		"node":
+			if (ref as ResourceNode).is_relic():
+				return null
 			return GatherTask.for_node(unit, world, ref)
 		"animal", "own_unit":
 			var prey: Unit = ref

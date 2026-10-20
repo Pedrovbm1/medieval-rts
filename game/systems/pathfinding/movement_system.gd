@@ -36,7 +36,9 @@ func setup(p_nav: NavGrid, p_units: Array[Unit]) -> void:
 
 
 ## Group order: one shared path, formation slots at the destination.
-func command_move(group: Array[Unit], target: Vector2) -> void:
+## `formation`: "none" spreads the group around the point; "line", "box"
+## and "wedge" arrange it by role, facing the direction of the march.
+func command_move(group: Array[Unit], target: Vector2, formation: String = "none") -> void:
 	var movers: Array[Unit] = group.filter(func(u: Unit) -> bool: return is_instance_valid(u))
 	if movers.is_empty() or nav == null:
 		return
@@ -46,8 +48,12 @@ func command_move(group: Array[Unit], target: Vector2) -> void:
 	var positions: Array[Vector2] = []
 	for u: Unit in movers:
 		positions.append(u.position)
-	var slots: Array[Vector2] = Formation.walkable_slots(target, movers.size(), _spacing, nav)
-	var assigned: Array[Vector2] = Formation.assign(positions, slots)
+	var assigned: Array[Vector2]
+	if formation != "none" and movers.size() > 1:
+		assigned = FormationLayout.layout(formation, target, target - Formation.centroid(positions), movers, _spacing, nav)
+	else:
+		var slots: Array[Vector2] = Formation.walkable_slots(target, movers.size(), _spacing, nav)
+		assigned = Formation.assign(positions, slots)
 	var group_id: int = _next_group_id
 	_next_group_id += 1
 	for i: int in movers.size():

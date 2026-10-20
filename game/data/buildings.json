@@ -18,7 +18,7 @@
 			"stone"
 		],
 		"build_time": 150,
-		"era": 3,
+		"era": 1,
 		"color": "#8a6d4b",
 		"placeholder_glyph": "PM",
 		"trains": [
@@ -59,7 +59,8 @@
 		"max_count": {
 			"3": 2,
 			"4": 3
-		}
+		},
+		"build_era": 3
 	},
 	"house": {
 		"name_key": "BLDG_HOUSE_NAME",
@@ -320,7 +321,8 @@
 			"pierce": 6,
 			"crush": 0
 		},
-		"desc_key": "BLDG_MONASTERY_DESC"
+		"desc_key": "BLDG_MONASTERY_DESC",
+		"relic_vault": true
 	},
 	"blacksmith": {
 		"name_key": "BLDG_BLACKSMITH_NAME",

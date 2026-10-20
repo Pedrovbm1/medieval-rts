@@ -51,6 +51,8 @@ var repairers: Array[Unit] = []
 var food_left: float = -1.0
 var fallow: bool = false
 var reseeds: int = 0
+## Monasteries: relics stored inside (gold trickles; all of them = victory).
+var relics: int = 0
 ## Game-clock seconds (Time.get_ticks_msec) of the last enemy hit: repairs
 ## are slower right after one, and the HUD knows a fight is on.
 var last_hit_s: float = -999.0
@@ -326,6 +328,11 @@ func _draw() -> void:
 		var at: Vector2 = Vector2(half.x - 22.0, -half.y - 26.0)
 		draw_texture_rect_region(tex, Rect2(at + Vector2(6, 4), Vector2(4, 16)), PlaceholderArt.WHITE_RECT, Color(0.55, 0.35, 0.15))
 		draw_texture_rect_region(tex, Rect2(at, Vector2(16, 7)), PlaceholderArt.WHITE_RECT, Color(0.95, 0.85, 0.3))
+	if relics > 0:
+		# Gold boxes on the roof, one per relic.
+		for i: int in mini(relics, 6):
+			draw_texture_rect_region(tex, Rect2(Vector2(-half.x + 8.0 + i * 14.0, -half.y + 14.0), Vector2(11, 8)), PlaceholderArt.WHITE_RECT, Color(0.98, 0.85, 0.35))
+			draw_texture_rect_region(tex, Rect2(Vector2(-half.x + 8.0 + i * 14.0, -half.y + 17.0), Vector2(11, 2)), PlaceholderArt.WHITE_RECT, Color(0.45, 0.3, 0.1))
 	if not garrison.is_empty():
 		# One dot per sheltered unit along the top edge (up to 10).
 		for i: int in mini(garrison.size(), 10):

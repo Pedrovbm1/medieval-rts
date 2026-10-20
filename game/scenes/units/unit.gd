@@ -57,6 +57,8 @@ var charge_cd: float = 0.0
 ## Building this unit is sheltered in (null outside). Garrisoned units are
 ## hidden, out of World.units, and only count for population.
 var garrisoned_in: Building = null
+## Monks: carrying a relic (dropped where the monk dies).
+var relic: bool = false
 
 # --- combat visuals (CombatSystem drives the timers) ---
 var winding_up: bool = false
@@ -126,6 +128,7 @@ func reset_for_pool() -> void:
 	attack_move = false
 	charge_cd = 0.0
 	garrisoned_in = null
+	relic = false
 	visible = true
 	is_dead = false
 	brain = {}
@@ -289,3 +292,7 @@ func _draw() -> void:
 		# Small carried-resource chip at the shoulder.
 		var chip: Color = ResourceColors.color(carry_type)
 		draw_texture_rect_region(tex, Rect2(Vector2(radius * 0.4, -radius * 0.9), Vector2(8, 8)), PlaceholderArt.WHITE_RECT, chip)
+	if relic:
+		# The relic held high: a gold box with a dark band.
+		draw_texture_rect_region(tex, Rect2(Vector2(-6, -region.size.y * 0.5 - 4.0), Vector2(12, 9)), PlaceholderArt.WHITE_RECT, Color(0.98, 0.85, 0.35))
+		draw_texture_rect_region(tex, Rect2(Vector2(-6, -region.size.y * 0.5 - 1.0), Vector2(12, 2)), PlaceholderArt.WHITE_RECT, Color(0.45, 0.3, 0.1))

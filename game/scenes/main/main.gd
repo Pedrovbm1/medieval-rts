@@ -81,6 +81,10 @@ func _ready() -> void:
 	hud.eject_pressed.connect(_on_eject_pressed)
 	hud.economy = world.economy
 	hud.buy_pressed.connect(_on_buy_pressed)
+	hud.attack_move_pressed.connect(func() -> void: selection.arm_attack_move(not selection.attack_armed))
+	hud.formation_pressed.connect(func() -> void: selection.cycle_formation())
+	selection.attack_armed_changed.connect(hud.set_attack_armed)
+	selection.formation_changed.connect(hud.set_formation)
 
 	world.vision.fog_enabled = bool(def.get("fog", DataLoader.rule("vision", "fog", true)))
 	if world.vision.fog_enabled:
@@ -231,6 +235,13 @@ func _refresh_idle() -> void:
 	if bell_on and world.garrisoned_units(GameState.PLAYER_HUMAN).is_empty():
 		bell_on = false
 	hud.set_bell(bell_on)
+	# Relic countdown (mine or the rival's) in the top bar.
+	var mine: float = rules.relic_countdown(GameState.PLAYER_HUMAN)
+	var theirs: float = -1.0
+	for p: int in rules.contenders:
+		if p != GameState.PLAYER_HUMAN and p >= 0:
+			theirs = maxf(theirs, rules.relic_countdown(p))
+	hud.set_relics(world.relics_held(GameState.PLAYER_HUMAN), world.relic_total, mine, theirs)
 
 
 ## Town bell. First ring: every villager near a Town Center or tower runs
@@ -370,6 +381,8 @@ func _on_match_ended(winner_id: int, loser_id: int, seconds: float) -> void:
 			why = tr("END_WHY_TC_WIN") if won else tr("END_WHY_TC_LOSS")
 		"resign":
 			why = tr("END_WHY_RESIGN") if won else ""
+		"relics":
+			why = tr("END_WHY_RELICS_WIN") if won else tr("END_WHY_RELICS_LOSS")
 	var rival: int = loser_id if won else winner_id
 	var lines: Array[String] = rules.report_lines(GameState.PLAYER_HUMAN, rival, won)
 	if not fair_ai:

@@ -154,6 +154,42 @@ func _physics_process(delta: float) -> void:
 			reason = "town_center"
 			finish(other, p)
 			return
+	_check_relics()
+
+
+## Relic victory: hold every relic on the map in your monasteries for
+## relic_victory_s (rules relics.victory_s). Losing one stops the clock.
+var relic_victory_s: float = 180.0
+var _relic_since: Dictionary = {}  # player -> elapsed when the hold began
+
+
+func _check_relics() -> void:
+	if world.relic_total <= 0:
+		return
+	for p: int in contenders:
+		var all: bool = world.relics_held(p) >= world.relic_total
+		if all and not _relic_since.has(p):
+			_relic_since[p] = elapsed
+			EventBus.relic_countdown.emit(p, true)
+		elif not all and _relic_since.has(p):
+			_relic_since.erase(p)
+			EventBus.relic_countdown.emit(p, false)
+		if all and elapsed - float(_relic_since[p]) >= relic_victory_s:
+			var other: int = GameState.PLAYER_AI if p == GameState.PLAYER_HUMAN else GameState.PLAYER_HUMAN
+			reason = "relics"
+			finish(p, other)
+			return
+
+
+## Seconds left on a player's relic countdown, or -1 when it is not running.
+func relic_countdown(player_id: int) -> float:
+	if not _relic_since.has(player_id):
+		return -1.0
+	return maxf(0.0, relic_victory_s - (elapsed - float(_relic_since[player_id])))
+
+
+func _ready() -> void:
+	relic_victory_s = float(DataLoader.rule("relics", "victory_s", 180.0))
 
 
 ## A player gives up (the AI when it cannot recover): the rival wins.
