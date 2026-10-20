@@ -170,7 +170,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
-- IDEAS-AOE2 lotes 2b, 2c y 3 (2026-10-20): ideas3 30/30 (reliquias), ideas4 16/16 (formaciones), ideas5 21/21 (maravilla, caravana); suite completa 576/584 → las 8 fallas eran el atlas sin reimportar tras hornear ( después de ) y una prueba que tomaba  (ahora el puesto neutral va primero); F4 36/36, feedback 24/24, arte+audio 22/22 tras corregir.
+- IDEAS-AOE2 lotes 2b, 2c y 3 (2026-10-20): ideas3 30/30 (reliquias), ideas4 16/16 (formaciones), ideas5 21/21 (maravilla, caravana); suite completa 576/584 → las 8 fallas eran el atlas sin reimportar tras hornear (correr `--import` después de `bake_art`) y una prueba que tomaba `buildings[0]` (ahora el puesto neutral va primero); F4 36/36, feedback 24/24, arte+audio 22/22 tras corregir.
 - IDEAS-AOE2 lotes 1 y 2a (2026-10-20): suite completa 475/480 antes de los ajustes finales y luego las 5 fallas corregidas (F4 36/36, F8 UX 24/24, arte+audio 22/22); nuevas suites ideas1 52/52 (guarnición, reparar, asedio, alertas, informe, IA justa) e ideas2 35/35 (granjas, segundo CU, vetas, mercado).
 - F9 segundo playtest de Pedro (2026-10-19): suite completa 430/430, duelo Difícil vs Normal 4/4 (27, 37, 28, 23 min), partida completa Difícil vs Fácil 21.5 min, feedback 24/24, combate 37/37, roster 13/13, defensa 29/29, playtest 45/45, pasivo 20.0 min.
 - F9 noche 2026-10-19 (lentas): duelo Difícil vs Normal 3/4 (45, 38, empate, 33 min); partida completa Difícil vs Fácil 25.1 min 5/5; 0 errores de script.
