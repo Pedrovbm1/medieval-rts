@@ -72,11 +72,11 @@ func test_b_gate_opens_for_us_and_closes_on_enemies() -> void:
 	foe.stance = "passive"
 	Engine.time_scale = 4.0
 	await _wait_until(func() -> bool: return not gate.is_open, 10.0)
-	check(not gate.is_open and not world.nav.is_walkable(Vector2i(60, 60)), "an enemy 3 cells away closes it and the cell blocks")
+	check(not gate.is_open and not world.nav.is_walkable_for(Vector2i(60, 60), 1) and world.nav.is_walkable_for(Vector2i(60, 60), 0), "an enemy 3 cells away closes it: a wall for the enemy, open for us")
 	foe.position = world.cell_center(Vector2i(80, 60))
 	await _wait_until(func() -> bool: return gate.is_open, 15.0)
 	Engine.time_scale = 1.0
-	check(gate.is_open and world.nav.is_walkable(Vector2i(60, 60)), "once the enemy is gone it reopens")
+	check(gate.is_open and world.nav.is_walkable_for(Vector2i(60, 60), 1), "once the enemy is gone it reopens for everyone")
 	var wall: Building = world.place_building("palisade", 0, Vector2i(60, 62))
 	GameState.add_resource(0, "wood", 200)
 	var wood: int = GameState.get_resource(0, "wood")
@@ -181,4 +181,44 @@ func test_g_tutorial_has_a_wall_mission() -> void:
 	await _wait_until(func() -> bool: return tut.done, 200.0)
 	Engine.time_scale = 1.0
 	check(tut.done, "building 4 segments finishes the tutorial")
+	await _close()
+
+
+## Pedro's playtest: a closed gate used to be a wall for its own side too, so
+## his troops walked all the way around (or far away). Now the owner's units
+## path straight through a closed gate while the enemy's path stops at it.
+func test_h_own_troops_walk_through_a_closed_gate() -> void:
+	await _open("arena")
+	# A wall across x=66 from y=50 to 70 with a gate in the middle.
+	for y: int in range(50, 71):
+		if y == 60:
+			continue
+		world.place_building("palisade", 0, Vector2i(66, y))
+	var gate: Building = world.place_building("gate", 0, Vector2i(66, 60))
+	gate.add_progress(1.0)
+	var foe: Unit = world.spawn_unit("militia", 1, world.cell_center(Vector2i(69, 60)))
+	foe.stance = "passive"
+	Engine.time_scale = 4.0
+	await _wait_until(func() -> bool: return not gate.is_open, 10.0)
+	Engine.time_scale = 1.0
+	check(not gate.is_open, "the enemy next to it closes the gate")
+	var mine: PackedVector2Array = world.nav.find_path(world.cell_center(Vector2i(60, 60)), world.cell_center(Vector2i(72, 60)), 0)
+	var theirs: PackedVector2Array = world.nav.find_path(world.cell_center(Vector2i(72, 60)), world.cell_center(Vector2i(60, 60)), 1)
+	var mine_len: float = 0.0
+	for i: int in range(1, mine.size()):
+		mine_len += mine[i - 1].distance_to(mine[i])
+	check(mine.size() > 0 and mine_len < 14.0 * world.tile_size, "our path goes straight through the closed gate (%.0f px)" % mine_len)
+	var their_len: float = 0.0
+	for i: int in range(1, theirs.size()):
+		their_len += theirs[i - 1].distance_to(theirs[i])
+	check(their_len > mine_len * 1.8, "the enemy's path has to go around the wall instead (%.0f px vs %.0f)" % [their_len, mine_len])
+	var u: Unit = world.spawn_unit("militia", 0, world.cell_center(Vector2i(60, 60)))
+	u.stance = "passive"
+	world.movement.move_unit(u, world.cell_center(Vector2i(72, 60)))
+	Engine.time_scale = 8.0
+	await _wait_until(func() -> bool: return not u.is_moving(), 40.0)
+	Engine.time_scale = 1.0
+	check(not gate.is_open and u.position.distance_to(world.cell_center(Vector2i(72, 60))) < 48.0, "our militia walks through the still-closed gate to the other side (%d px off)" % int(u.position.distance_to(world.cell_center(Vector2i(72, 60)))))
+	world.remove_unit(foe)
+	world.movement.move_unit(foe, world.cell_center(Vector2i(60, 60)))
 	await _close()

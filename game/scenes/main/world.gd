@@ -331,8 +331,10 @@ func remove_building(b: Building) -> void:
 			var ang: float = TAU * float(i) / n
 			drop_relic(approach_point(b.rect(), b.position + Vector2.from_angle(ang) * 400.0) + Vector2.from_angle(ang) * 20.0)
 	buildings.erase(b)
-	if not b.walkable or (b.is_gate() and not b.is_open):
+	if not b.walkable:
 		nav.set_blocked(b.cells(), false)
+	elif b.is_gate() and not b.is_open:
+		nav.set_gate(b.cells(), b.owner_id, false)
 	if b.hp <= 0 and b.is_complete():
 		add_rubble(b.rect())
 		if (b.is_wall() or b.is_gate()) and b.owner_id >= 0:

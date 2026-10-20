@@ -42,7 +42,7 @@ func command_move(group: Array[Unit], target: Vector2, formation: String = "none
 	var movers: Array[Unit] = group.filter(func(u: Unit) -> bool: return is_instance_valid(u))
 	if movers.is_empty() or nav == null:
 		return
-	var goal_cell: Vector2i = nav.nearest_walkable(nav.to_cell(target))
+	var goal_cell: Vector2i = nav.nearest_walkable(nav.to_cell(target), 40, movers[0].owner_id)
 	if nav.to_cell(target) != goal_cell:
 		target = nav.cell_center(goal_cell)
 	var positions: Array[Vector2] = []
@@ -62,14 +62,14 @@ func command_move(group: Array[Unit], target: Vector2, formation: String = "none
 		_request_individual(movers[0])
 		return
 	var leader: Unit = _closest_to(movers, Formation.centroid(positions))
-	queue.request(-group_id, leader.position, target, _on_group_path.bind(group_id, target))
+	queue.request(-group_id, leader.position, target, _on_group_path.bind(group_id, target), leader.owner_id)
 
 
 ## Single unit order (used by unit behaviours: go gather, go build, chase...).
 func move_unit(unit: Unit, target: Vector2) -> void:
 	if nav == null:
 		return
-	var cell: Vector2i = nav.nearest_walkable(nav.to_cell(target))
+	var cell: Vector2i = nav.nearest_walkable(nav.to_cell(target), 40, unit.owner_id)
 	if cell != nav.to_cell(target):
 		target = nav.cell_center(cell)
 	_begin(unit, target, 0)
@@ -96,7 +96,7 @@ func _begin(unit: Unit, goal: Vector2, group_id: int) -> void:
 
 func _request_individual(unit: Unit) -> void:
 	unit.waiting_path = true
-	queue.request(unit.get_instance_id(), unit.position, unit.goal, _on_unit_path.bind(unit, unit.goal))
+	queue.request(unit.get_instance_id(), unit.position, unit.goal, _on_unit_path.bind(unit, unit.goal), unit.owner_id)
 
 
 func _on_unit_path(path: PackedVector2Array, unit: Unit, goal: Vector2) -> void:
@@ -131,7 +131,7 @@ func _on_group_path(shared: PackedVector2Array, group_id: int, target: Vector2) 
 func _join_shared(unit: Unit, shared: PackedVector2Array) -> PackedVector2Array:
 	var join: int = -1
 	for j: int in range(mini(4, shared.size() - 1), 0, -1):
-		if nav.has_los(unit.position, shared[j]):
+		if nav.has_los(unit.position, shared[j], 10.0, unit.owner_id):
 			join = j
 			break
 	if join == -1:
@@ -139,8 +139,8 @@ func _join_shared(unit: Unit, shared: PackedVector2Array) -> PackedVector2Array:
 	var body: PackedVector2Array = shared.slice(join, shared.size() - 1)
 	var last: Vector2 = unit.position if body.is_empty() else body[body.size() - 1]
 	var end: Vector2 = shared[shared.size() - 1]
-	if not nav.has_los(last, unit.goal):
-		if not nav.has_los(end, unit.goal):
+	if not nav.has_los(last, unit.goal, 10.0, unit.owner_id):
+		if not nav.has_los(end, unit.goal, 10.0, unit.owner_id):
 			return PackedVector2Array()
 		body.append(end)
 	body.append(unit.goal)
@@ -175,8 +175,8 @@ func _handle_nav_changes() -> void:
 	for unit: Unit in units:
 		if not unit.is_moving() or unit.waiting_path:
 			continue
-		if not nav.is_walkable_world(unit.goal):
-			unit.goal = nav.cell_center(nav.nearest_walkable(nav.to_cell(unit.goal)))
+		if not nav.is_walkable_world_for(unit.goal, unit.owner_id):
+			unit.goal = nav.cell_center(nav.nearest_walkable(nav.to_cell(unit.goal), 40, unit.owner_id))
 			_request_individual(unit)
 		elif changes["unblocked"] or not _route_clear(unit):
 			_request_individual(unit)
@@ -185,7 +185,7 @@ func _handle_nav_changes() -> void:
 func _route_clear(unit: Unit) -> bool:
 	var prev: Vector2 = unit.position
 	for i: int in range(unit.path_i, unit.path.size()):
-		if not nav.has_los(prev, unit.path[i], 0.0):
+		if not nav.has_los(prev, unit.path[i], 0.0, unit.owner_id):
 			return false
 		prev = unit.path[i]
 	return true
@@ -202,7 +202,7 @@ func _steer(unit: Unit, delta: float) -> void:
 		var reach: float = unit.arrive_distance if is_last else _waypoint_reach
 		if dist <= maxf(reach, unit.speed_px * delta):
 			if is_last:
-				unit.position = _slide(unit.position, wp)
+				unit.position = _slide(unit, unit.position, wp)
 				unit.finish_move()
 				return
 			unit.path_i += 1
@@ -216,10 +216,11 @@ func _steer(unit: Unit, delta: float) -> void:
 	else:
 		velocity = velocity.limit_length(unit.speed_px * 0.6)
 	if velocity.length_squared() > 0.01:
-		unit.position = _slide(unit.position, unit.position + velocity * delta)
-	if not nav.is_walkable_world(unit.position):
-		# Something was built on top of the unit: walk it out to free ground.
-		var free: Vector2 = nav.cell_center(nav.nearest_walkable(nav.to_cell(unit.position)))
+		unit.position = _slide(unit, unit.position, unit.position + velocity * delta)
+	if not nav.is_walkable_world_for(unit.position, unit.owner_id):
+		# Something was built on top of the unit (or a gate closed on an
+		# intruder): walk it out to free ground.
+		var free: Vector2 = nav.cell_center(nav.nearest_walkable(nav.to_cell(unit.position), 40, unit.owner_id))
 		unit.position = unit.position.move_toward(free, unit.speed_px * delta)
 
 
@@ -242,15 +243,16 @@ func _separation(unit: Unit) -> Vector2:
 	return push
 
 
-## Moves toward `to`, sliding along walls instead of entering blocked cells.
-func _slide(from: Vector2, to: Vector2) -> Vector2:
-	if nav.is_walkable_world(to):
+## Moves toward `to`, sliding along walls instead of entering blocked cells
+## (a closed gate is a wall for everyone but its owner).
+func _slide(unit: Unit, from: Vector2, to: Vector2) -> Vector2:
+	if nav.is_walkable_world_for(to, unit.owner_id):
 		return to
 	var try_x: Vector2 = Vector2(to.x, from.y)
-	if nav.is_walkable_world(try_x):
+	if nav.is_walkable_world_for(try_x, unit.owner_id):
 		return try_x
 	var try_y: Vector2 = Vector2(from.x, to.y)
-	if nav.is_walkable_world(try_y):
+	if nav.is_walkable_world_for(try_y, unit.owner_id):
 		return try_y
 	return from
 

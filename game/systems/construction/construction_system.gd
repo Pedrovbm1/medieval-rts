@@ -132,8 +132,9 @@ func _tick_gates(delta: float) -> void:
 				continue
 			nearest = minf(nearest, u.position.distance_to(b.position))
 		if b.is_open and nearest <= close_px:
-			# Do not trap a unit standing in the doorway: close once it is clear.
-			var standing: bool = world.units.any(func(u: Unit) -> bool: return not u.is_dead and b.rect().has_point(u.position))
+			# Do not trap an intruder standing in the doorway: close once it is
+			# clear (own units may stand there: the gate stays open for them).
+			var standing: bool = world.units.any(func(u: Unit) -> bool: return not u.is_dead and u.owner_id != b.owner_id and b.rect().has_point(u.position))
 			if not standing:
 				b.set_gate_open(false, world.nav)
 				b._open_since = -1.0

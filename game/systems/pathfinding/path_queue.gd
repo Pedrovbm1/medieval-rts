@@ -16,14 +16,16 @@ func size() -> int:
 
 
 ## owner: any object id key; callback(path: PackedVector2Array) runs when computed.
-func request(owner_id: int, from_world: Vector2, to_world: Vector2, callback: Callable) -> void:
+## `player`: whose unit walks (closed gates of the other side are walls); -1 = animals.
+func request(owner_id: int, from_world: Vector2, to_world: Vector2, callback: Callable, player: int = -1) -> void:
 	if _by_owner.has(owner_id):
 		var existing: Dictionary = _by_owner[owner_id]
 		existing["from"] = from_world
 		existing["to"] = to_world
 		existing["callback"] = callback
+		existing["player"] = player
 		return
-	var req: Dictionary = {"owner": owner_id, "from": from_world, "to": to_world, "callback": callback}
+	var req: Dictionary = {"owner": owner_id, "from": from_world, "to": to_world, "callback": callback, "player": player}
 	_pending.append(req)
 	_by_owner[owner_id] = req
 
@@ -44,7 +46,7 @@ func process(nav: NavGrid) -> int:
 			break
 		var req: Dictionary = _pending.pop_front()
 		_by_owner.erase(req["owner"])
-		var path: PackedVector2Array = nav.find_path(req["from"], req["to"])
+		var path: PackedVector2Array = nav.find_path(req["from"], req["to"], int(req.get("player", -1)))
 		total_computed += 1
 		done += 1
 		var cb: Callable = req["callback"]

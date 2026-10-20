@@ -224,6 +224,12 @@ Pedro ganó a Fácil y pidió comparar con el RTS clásico y revisar: "no da tie
 
 ---
 
+## Puertas por jugador (2026-10-20, mañana)
+
+Pedro jugó la versión de la noche ("sí se siente diferente") y reportó que al cerrarse una puerta sus tropas la tomaban por muro y daban la vuelta lejos. Causa: la puerta cerrada bloqueaba la celda en el NavGrid compartido. Arreglo (D108): celdas de puerta con dueño, una rejilla A* por jugador donde solo las puertas ajenas son sólidas, y el movimiento (rutas, línea de vista, deslizamiento) pasa el dueño de la unidad. Prueba nueva en `test_f9_defense.gd`: con la puerta cerrada por un enemigo pegado, la ruta propia la cruza en línea recta, la del rival da la vuelta por el extremo del muro y un miliciano propio la atraviesa físicamente.
+
+---
+
 ## IDEAS-AOE2 — Lotes 2b, 2c y 3 (noche 2026-10-20)
 
 Reliquias con victoria por reliquias (D103), formaciones y attack-move (D104-D105), maravilla (D106) y caravana con puesto de comercio neutral (D107). La campaña de 6-8 misiones queda en `TODOS.md`: es contenido largo (lore, mapas, guion) y conviene diseñarla con Pedro.

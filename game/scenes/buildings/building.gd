@@ -281,12 +281,13 @@ func is_wall() -> bool:
 	return Array(data.get("classes", [])).has("wall")
 
 
-## Opens or closes the gate: a closed gate blocks its cell for everyone.
+## Opens or closes the gate: a closed gate is a wall for the other side
+## only; the owner's own units walk through as if it were open.
 func set_gate_open(open: bool, nav: NavGrid) -> void:
 	if not is_gate() or open == is_open:
 		return
 	is_open = open
-	nav.set_blocked(cells(), not open)
+	nav.set_gate(cells(), owner_id, not open)
 	queue_redraw()
 	if OS.is_debug_build():
 		print("[REALM] gate %s at=(%d,%d)" % ["open" if open else "closed", cell.x, cell.y])
