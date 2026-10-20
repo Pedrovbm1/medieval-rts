@@ -170,6 +170,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
+- IDEAS-AOE2 partida completa lenta Difícil vs Fácil (2026-10-20, 02:40): termina en 24.0 min, gana Difícil, autoguardado cargable 5/5; en el log se ven la campana de Fácil ante raids, monjes de Difícil recogiendo reliquias y dos Centros Urbanos extra de Difícil. APK debug nuevo en `build/realm-debug.apk` (30.5 MB), sin teléfono conectado para instalarlo.
 - IDEAS-AOE2 lotes 2b, 2c y 3 (2026-10-20): ideas3 30/30 (reliquias), ideas4 16/16 (formaciones), ideas5 21/21 (maravilla, caravana); suite completa 576/584 → las 8 fallas eran el atlas sin reimportar tras hornear (correr `--import` después de `bake_art`) y una prueba que tomaba `buildings[0]` (ahora el puesto neutral va primero); F4 36/36, feedback 24/24, arte+audio 22/22 tras corregir.
 - IDEAS-AOE2 lotes 1 y 2a (2026-10-20): suite completa 475/480 antes de los ajustes finales y luego las 5 fallas corregidas (F4 36/36, F8 UX 24/24, arte+audio 22/22); nuevas suites ideas1 52/52 (guarnición, reparar, asedio, alertas, informe, IA justa) e ideas2 35/35 (granjas, segundo CU, vetas, mercado).
 - F9 segundo playtest de Pedro (2026-10-19): suite completa 430/430, duelo Difícil vs Normal 4/4 (27, 37, 28, 23 min), partida completa Difícil vs Fácil 21.5 min, feedback 24/24, combate 37/37, roster 13/13, defensa 29/29, playtest 45/45, pasivo 20.0 min.
