@@ -18,14 +18,14 @@
 			"stone"
 		],
 		"build_time": 150,
-		"era": 1,
+		"era": 3,
 		"color": "#8a6d4b",
 		"placeholder_glyph": "PM",
 		"trains": [
 			"villager",
 			"scout"
 		],
-		"buildable": false,
+		"buildable": true,
 		"classes": [
 			"building"
 		],
@@ -47,7 +47,19 @@
 				"speed_px": 640
 			}
 		},
-		"desc_key": "BLDG_TOWN_CENTER_DESC"
+		"desc_key": "BLDG_TOWN_CENTER_DESC",
+		"garrison": {
+			"slots": 15,
+			"classes": [
+				"civilian",
+				"infantry",
+				"archer"
+			]
+		},
+		"max_count": {
+			"3": 2,
+			"4": 3
+		}
 	},
 	"house": {
 		"name_key": "BLDG_HOUSE_NAME",
@@ -146,7 +158,8 @@
 		"gather": {
 			"resource": "food",
 			"subtype": "farm",
-			"workers": 1
+			"workers": 1,
+			"amount": 250
 		},
 		"build_time": 15,
 		"era": 1,
@@ -397,7 +410,14 @@
 				"speed_px": 640
 			}
 		},
-		"desc_key": "BLDG_WATCH_TOWER_DESC"
+		"desc_key": "BLDG_WATCH_TOWER_DESC",
+		"garrison": {
+			"slots": 5,
+			"classes": [
+				"infantry",
+				"archer"
+			]
+		}
 	},
 	"market": {
 		"name_key": "BLDG_MARKET_NAME",
@@ -424,6 +444,11 @@
 		},
 		"market": {
 			"sells": [
+				"food",
+				"wood",
+				"stone"
+			],
+			"buys": [
 				"food",
 				"wood",
 				"stone"
@@ -463,7 +488,7 @@
 		"cost": {
 			"stone": 5
 		},
-		"hp": 900,
+		"hp": 1200,
 		"footprint": [
 			1,
 			1

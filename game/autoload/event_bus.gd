@@ -31,3 +31,14 @@ signal era_changed(player_id: int, era: int)
 signal tech_researched(player_id: int, tech_id: String)
 ## Something of `player_id` was hit by an enemy at `world_pos` (alerts).
 signal under_attack(player_id: int, world_pos: Vector2)
+## A building / unit took a hit from an enemy (the HUD ranks the alert:
+## Town Center = critical, villagers = "ring the bell", the rest = normal).
+signal building_attacked(building: Building, source: Unit)
+signal unit_attacked(unit: Unit, source: Unit)
+## A wall segment or gate of `player_id` fell: there is a gap at `world_pos`.
+signal wall_breached(player_id: int, world_pos: Vector2)
+## Units entered / left a building's garrison (HUD, population).
+signal garrison_changed(building: Building)
+## A farm ran out of food and could not be reseeded (no wood) / was reseeded.
+signal farm_fallow(building: Building)
+signal farm_reseeded(building: Building)

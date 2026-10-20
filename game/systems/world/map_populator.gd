@@ -12,6 +12,10 @@ static func populate(world: World, map_def: Dictionary) -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = int(map_def.get("seed", 1)) * 7919 + 17
 	var starts: Array[Vector2i] = starts_of(map_def)
+	if bool(map_def.get("center_veins", false)):
+		# A reason to fight for the middle: a rich gold vein and a big quarry
+		# at the centre of the map (self-symmetric, placed before mirroring).
+		_place_center(world)
 	if String(map_def.get("symmetry", "")) == "point" and starts.size() == 2:
 		# Fair curated maps: lay out the first player's half, then mirror it.
 		var nodes_before: int = world.resource_nodes.size()
@@ -37,6 +41,32 @@ static func _mirror_new(world: World, nodes_before: int, units_before: int) -> v
 		world.place_resource(n.resource_type, size - n.cell - n.footprint)
 	for u: Unit in world.units.slice(units_before, world.units.size()):
 		world.spawn_unit(u.unit_type, Unit.OWNER_GAIA, world.map_size_px - u.position)
+
+
+## Gold vein on the exact centre (a 2x2 at size/2 - 1 is its own mirror
+## image) and a quarry a few cells to the side plus its mirror. Forest or
+## water in the way: the nearest free cell in a ring, still inside the
+## mirrored half so the quarry's mirror lands on the other side.
+static func _place_center(world: World) -> void:
+	var center: Vector2i = Vector2i(world.map_width / 2 - 1, world.map_height / 2 - 1)
+	_place_near(world, "gold_vein", center, 8)
+	var quarry: Vector2i = _place_near(world, "stone_quarry", center + Vector2i(5, -3), 8)
+	if quarry.x >= 0:
+		var size: Vector2i = Vector2i(world.map_width, world.map_height)
+		_place_near(world, "stone_quarry", size - quarry - Vector2i(2, 2), 8)
+
+
+## Tries `cell` then a square spiral around it; returns the cell used or (-1,-1).
+static func _place_near(world: World, type_id: String, cell: Vector2i, max_ring: int) -> Vector2i:
+	for ring: int in max_ring + 1:
+		for dy: int in range(-ring, ring + 1):
+			for dx: int in range(-ring, ring + 1):
+				if absi(dx) != ring and absi(dy) != ring:
+					continue
+				var c: Vector2i = cell + Vector2i(dx, dy)
+				if _try_place(world, type_id, c, false):
+					return c
+	return Vector2i(-1, -1)
 
 
 static func starts_of(map_def: Dictionary) -> Array[Vector2i]:

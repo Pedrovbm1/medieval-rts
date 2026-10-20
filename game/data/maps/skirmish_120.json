@@ -15,27 +15,137 @@
 	"water_threshold": -0.3,
 	"forest_threshold": 0.28,
 	"shore_margin": 0.1,
-	"starts": [[22, 22], [98, 98]],
+	"starts": [
+		[
+			22,
+			22
+		],
+		[
+			98,
+			98
+		]
+	],
 	"features": [
-		{ "type": "circle", "terrain": "grass", "center": [22, 22], "radius": 9 },
-		{ "type": "circle", "terrain": "grass", "center": [98, 98], "radius": 9 },
-		{ "type": "circle", "terrain": "forest", "center": [33, 13], "radius": 4.5 },
-		{ "type": "circle", "terrain": "forest", "center": [87, 107], "radius": 4.5 },
-		{ "type": "circle", "terrain": "forest", "center": [12, 34], "radius": 4 },
-		{ "type": "circle", "terrain": "forest", "center": [108, 86], "radius": 4 }
+		{
+			"type": "circle",
+			"terrain": "grass",
+			"center": [
+				22,
+				22
+			],
+			"radius": 9
+		},
+		{
+			"type": "circle",
+			"terrain": "grass",
+			"center": [
+				98,
+				98
+			],
+			"radius": 9
+		},
+		{
+			"type": "circle",
+			"terrain": "forest",
+			"center": [
+				33,
+				13
+			],
+			"radius": 4.5
+		},
+		{
+			"type": "circle",
+			"terrain": "forest",
+			"center": [
+				87,
+				107
+			],
+			"radius": 4.5
+		},
+		{
+			"type": "circle",
+			"terrain": "forest",
+			"center": [
+				12,
+				34
+			],
+			"radius": 4
+		},
+		{
+			"type": "circle",
+			"terrain": "forest",
+			"center": [
+				108,
+				86
+			],
+			"radius": 4
+		}
 	],
 	"start_layout": [
-		{ "type": "gold_mine", "count": 2, "min": 7, "max": 9, "cluster": true },
-		{ "type": "stone_mine", "count": 1, "min": 8, "max": 10 },
-		{ "type": "berry_bush", "count": 5, "min": 5, "max": 7, "cluster": true },
-		{ "type": "sheep", "count": 4, "min": 4, "max": 7, "kind": "animal" },
-		{ "type": "deer", "count": 3, "min": 11, "max": 15, "kind": "animal" },
-		{ "type": "boar", "count": 1, "min": 13, "max": 16, "kind": "animal" }
+		{
+			"type": "gold_mine",
+			"count": 2,
+			"min": 7,
+			"max": 9,
+			"cluster": true
+		},
+		{
+			"type": "stone_mine",
+			"count": 1,
+			"min": 8,
+			"max": 10
+		},
+		{
+			"type": "berry_bush",
+			"count": 5,
+			"min": 5,
+			"max": 7,
+			"cluster": true
+		},
+		{
+			"type": "sheep",
+			"count": 4,
+			"min": 4,
+			"max": 7,
+			"kind": "animal"
+		},
+		{
+			"type": "deer",
+			"count": 3,
+			"min": 11,
+			"max": 15,
+			"kind": "animal"
+		},
+		{
+			"type": "boar",
+			"count": 1,
+			"min": 13,
+			"max": 16,
+			"kind": "animal"
+		}
 	],
 	"extra_resources": [
-		{ "type": "gold_mine", "count": 4, "min_from_start": 22 },
-		{ "type": "stone_mine", "count": 3, "min_from_start": 22 },
-		{ "type": "berry_bush", "count": 4, "min_from_start": 20 },
-		{ "type": "deer", "count": 6, "min_from_start": 20, "kind": "animal" }
-	]
+		{
+			"type": "gold_mine",
+			"count": 4,
+			"min_from_start": 22
+		},
+		{
+			"type": "stone_mine",
+			"count": 3,
+			"min_from_start": 22
+		},
+		{
+			"type": "berry_bush",
+			"count": 4,
+			"min_from_start": 20
+		},
+		{
+			"type": "deer",
+			"count": 6,
+			"min_from_start": 20,
+			"kind": "animal"
+		}
+	],
+	"center_veins": true
 }

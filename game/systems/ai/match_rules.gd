@@ -18,6 +18,16 @@ var reason: String = ""
 ## two (sandbox, tests, demos) there is no match to decide.
 var contenders: Array[int] = []
 var _timer: float = 0.0
+## Timeline for the end-of-match report: when the first blow between players
+## landed, when each player reached each era, the biggest army and workforce
+## each one had (sampled every SAMPLE_INTERVAL s) and villagers lost.
+const SAMPLE_INTERVAL: float = 10.0
+var first_attack_s: float = -1.0
+var era_times: Dictionary = {}  # player -> {era: seconds}
+var peak_army: Dictionary = {}  # player -> int
+var peak_villagers: Dictionary = {}  # player -> int
+var villagers_lost: Dictionary = {}  # player -> int
+var _sample_t: float = 0.0
 
 
 func setup(p_world: World) -> void:
@@ -33,6 +43,87 @@ func setup(p_world: World) -> void:
 	EventBus.building_removed.connect(func(b: Building) -> void:
 		if b.hp <= 0:
 			_bump(b.owner_id, "buildings_lost", 1))
+	EventBus.under_attack.connect(func(_p: int, _pos: Vector2) -> void:
+		if first_attack_s < 0.0:
+			first_attack_s = elapsed)
+	EventBus.era_changed.connect(func(p: int, era: int) -> void:
+		var d: Dictionary = era_times.get(p, {})
+		d[era] = elapsed
+		era_times[p] = d)
+
+
+## Army and workforce sizes, kept as peaks per player.
+func _sample() -> void:
+	var army: Dictionary = {}
+	var vill: Dictionary = {}
+	for u: Unit in world.units:
+		if u.owner_id < 0 or u.is_dead or u.is_animal():
+			continue
+		if u.can_gather():
+			vill[u.owner_id] = int(vill.get(u.owner_id, 0)) + 1
+		elif not u.data.get("combat", {}).is_empty():
+			army[u.owner_id] = int(army.get(u.owner_id, 0)) + 1
+	for b: Building in world.buildings:
+		for u: Unit in b.garrison:
+			if u.can_gather():
+				vill[b.owner_id] = int(vill.get(b.owner_id, 0)) + 1
+	for p: int in army.keys():
+		peak_army[p] = maxi(int(peak_army.get(p, 0)), int(army[p]))
+	for p: int in vill.keys():
+		peak_villagers[p] = maxi(int(peak_villagers.get(p, 0)), int(vill[p]))
+
+
+## "Why I won / lost" in plain lines: first attack, eras, peak army and
+## workforce, plus one hint about the biggest gap between the two sides.
+func report_lines(me: int, them: int, won: bool) -> Array[String]:
+	_sample()
+	var lines: Array[String] = []
+	if first_attack_s >= 0.0:
+		lines.append(tr("REPORT_FIRST_ATTACK") % [int(first_attack_s) / 60, int(first_attack_s) % 60])
+	lines.append(tr("REPORT_ERAS") % [_eras_text(me), _eras_text(them)])
+	var my_army: int = int(peak_army.get(me, 0))
+	var their_army: int = int(peak_army.get(them, 0))
+	lines.append(tr("REPORT_ARMY") % [my_army, their_army])
+	var my_v: int = int(peak_villagers.get(me, 0))
+	var their_v: int = int(peak_villagers.get(them, 0))
+	lines.append(tr("REPORT_VILLAGERS") % [my_v, int(villagers_lost.get(me, 0)), their_v, int(villagers_lost.get(them, 0))])
+	# The hint: the largest gap, phrased for the side that is reading.
+	var v_gap: int = their_v - my_v
+	var a_gap: int = their_army - my_army
+	var my_era2: float = float(Dictionary(era_times.get(me, {})).get(2, INF))
+	var their_era2: float = float(Dictionary(era_times.get(them, {})).get(2, INF))
+	if not won:
+		if v_gap >= 5:
+			lines.append(tr("REPORT_HINT_ECO") % v_gap)
+		elif a_gap >= 5:
+			lines.append(tr("REPORT_HINT_ARMY") % [their_army, my_army])
+		elif their_era2 < my_era2 - 60.0:
+			lines.append(tr("REPORT_HINT_ERA"))
+		elif int(villagers_lost.get(me, 0)) >= 5:
+			lines.append(tr("REPORT_HINT_BELL") % int(villagers_lost.get(me, 0)))
+		else:
+			lines.append(tr("REPORT_HINT_DEFENSE"))
+	else:
+		if -v_gap >= 5:
+			lines.append(tr("REPORT_WIN_ECO") % -v_gap)
+		elif -a_gap >= 5:
+			lines.append(tr("REPORT_WIN_ARMY") % [my_army, their_army])
+		else:
+			lines.append(tr("REPORT_WIN_CLOSE"))
+	return lines
+
+
+func _eras_text(p: int) -> String:
+	var d: Dictionary = era_times.get(p, {})
+	if d.is_empty():
+		return "I"
+	var parts: PackedStringArray = PackedStringArray()
+	var keys: Array = d.keys()
+	keys.sort()
+	for era: Variant in keys:
+		var s: int = int(d[era])
+		parts.append("%s %d:%02d" % ["I II III IV".split(" ")[clampi(int(era) - 1, 0, 3)], s / 60, s % 60])
+	return ", ".join(parts)
 
 
 func _physics_process(delta: float) -> void:
@@ -40,6 +131,10 @@ func _physics_process(delta: float) -> void:
 		return
 	elapsed += delta
 	_timer += delta
+	_sample_t += delta
+	if _sample_t >= SAMPLE_INTERVAL:
+		_sample_t = 0.0
+		_sample()
 	if _timer < CHECK_INTERVAL:
 		return
 	_timer = 0.0
@@ -91,6 +186,8 @@ func _on_unit_removed(u: Unit) -> void:
 	if not u.is_dead or u.owner_id < 0:
 		return
 	_bump(u.owner_id, "lost", 1)
+	if u.can_gather():
+		villagers_lost[u.owner_id] = int(villagers_lost.get(u.owner_id, 0)) + 1
 	if u.last_attacker != null and is_instance_valid(u.last_attacker) and u.last_attacker.owner_id >= 0:
 		_bump(u.last_attacker.owner_id, "kills", 1)
 

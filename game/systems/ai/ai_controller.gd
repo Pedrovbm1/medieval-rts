@@ -57,12 +57,22 @@ var _no_saving_until: float = -1.0
 var _wave_was_alive: bool = false
 
 
-func setup(p_world: World, p_player: int, p_difficulty: String, p_seed: int = 1) -> void:
+## "Fair" play: the difficulty's hidden economic bonuses (gather_mult,
+## production_mult) are off; the AI must win by decisions. The human's own
+## bonus on Easy stays (it is shown in the menu, not hidden).
+var fair: bool = false
+
+
+func setup(p_world: World, p_player: int, p_difficulty: String, p_seed: int = 1, p_fair: bool = false) -> void:
 	world = p_world
 	player_id = p_player
 	difficulty_id = p_difficulty
+	fair = p_fair
 	cfg = DataLoader.get_table("ai")
-	diff = Dictionary(cfg.get("difficulties", {})).get(difficulty_id, {})
+	diff = Dictionary(Dictionary(cfg.get("difficulties", {})).get(difficulty_id, {})).duplicate()
+	if fair:
+		diff["gather_mult"] = 1.0
+		diff["production_mult"] = 1.0
 	_think_s = float(diff.get("think_s", 2.0))
 	rng.seed = p_seed
 	# Hard AI: economic bonus as a gather multiplier on every resource subtype.
@@ -77,6 +87,34 @@ func setup(p_world: World, p_player: int, p_difficulty: String, p_seed: int = 1)
 	home = tc.position if tc != null else world.map_size_px * 0.5
 	_build_scout_points()
 	name = "AI_%d_%s" % [player_id, difficulty_id]
+
+
+## The AI's own hidden bonuses of a difficulty as "+30% recolección, +50%
+## producción" (for the menu card and the end report); "" when it has none.
+static func bonus_text(difficulty: String) -> String:
+	var d: Dictionary = Dictionary(DataLoader.get_table("ai").get("difficulties", {})).get(difficulty, {})
+	var parts: PackedStringArray = PackedStringArray()
+	var gm: float = float(d.get("gather_mult", 1.0))
+	if gm > 1.0:
+		parts.append("+%d%% %s" % [int(round((gm - 1.0) * 100.0)), TranslationServer.translate("BONUS_GATHER")])
+	var pm: float = float(d.get("production_mult", 1.0))
+	if pm > 1.0:
+		parts.append("+%d%% %s" % [int(round((pm - 1.0) * 100.0)), TranslationServer.translate("BONUS_PRODUCTION")])
+	return ", ".join(parts)
+
+
+## What the human gets on this difficulty ("tú: +20% recolección") or "".
+static func human_bonus_text(difficulty: String) -> String:
+	var d: Dictionary = Dictionary(DataLoader.get_table("ai").get("difficulties", {})).get(difficulty, {})
+	var bonus: Dictionary = d.get("human_bonus", {})
+	var parts: PackedStringArray = PackedStringArray()
+	var g: float = float(bonus.get("gather", 1.0))
+	if g > 1.0:
+		parts.append("+%d%% %s" % [int(round((g - 1.0) * 100.0)), TranslationServer.translate("BONUS_GATHER")])
+	var t: float = float(bonus.get("train_speed", 1.0))
+	if t > 1.0:
+		parts.append("+%d%% %s" % [int(round((t - 1.0) * 100.0)), TranslationServer.translate("BONUS_TRAIN")])
+	return ", ".join(parts)
 
 
 ## Easy: the human opponent(s) get a gathering and training bonus
@@ -130,6 +168,7 @@ func think() -> void:
 		return
 	_economy(villagers)
 	_trade()
+	_buy_for_era()
 	_advance(villagers)
 	# While saving for an era, keep only the standing army this phase needs.
 	var min_army: int = int(float(Dictionary(Dictionary(cfg.get("saving", {})).get("min_army", {})).get(phase, 0)) * float(diff.get("army_mult", 1.0)))
@@ -137,8 +176,64 @@ func think() -> void:
 	if not army_paused:
 		_military(villagers, military)
 	_scouting()
-	if not _defend(military):
+	_repair_home(villagers)
+	var raided: bool = _defend(military)
+	_bell(raided, military)
+	if not raided:
 		_attack(military)
+
+
+## Villagers mend the Town Center and towers once the fight is over (same
+## repair rules as the player: it costs resources and takes time).
+func _repair_home(villagers: Array[Unit]) -> void:
+	if villagers.is_empty():
+		return
+	for b: Building in world.buildings:
+		if b.owner_id != player_id or not b.is_complete() or b.hp >= int(b.max_hp * 0.75):
+			continue
+		if b.building_type != "town_center" and b.data.get("combat", {}).is_empty():
+			continue
+		if b.recently_hit(8.0) or b.repairers.size() >= 2:
+			continue
+		var free: Array[Unit] = villagers.filter(func(v: Unit) -> bool: return not (v.task is RepairTask) and not (v.task is BuildTask))
+		free.sort_custom(func(x: Unit, y: Unit) -> bool: return x.position.distance_squared_to(b.position) < y.position.distance_squared_to(b.position))
+		for i: int in mini(2 - b.repairers.size(), free.size()):
+			world.behavior.assign(free[i], RepairTask.new(free[i], world, b))
+		return
+
+
+## Town bell: a raid at home with more attackers than defenders sends the
+## villagers inside; once it is quiet for a while they come back out.
+var _bell_on: bool = false
+var _calm_since: float = -1.0
+
+
+func _bell(raided: bool, military: Array[Unit]) -> void:
+	var tc: Building = _first_of("town_center")
+	if tc == null or not tc.is_complete():
+		return
+	var near: int = 0
+	for u: Unit in world.units:
+		if u.owner_id >= 0 and u.owner_id != player_id and not u.is_dead and not u.can_gather() and u.position.distance_to(tc.position) < 700.0:
+			near += 1
+	if near >= 3 and near > military.size() / 2 and not _bell_on:
+		var main: Node = get_parent()
+		if main != null and main.has_method("shelter_villagers") and int(main.call("shelter_villagers", player_id)) > 0:
+			_bell_on = true
+			_calm_since = -1.0
+			if OS.is_debug_build():
+				print("[REALM] ai %d bell t=%.0f threats=%d" % [player_id, elapsed, near])
+	elif _bell_on:
+		if near > 0 or raided:
+			_calm_since = -1.0
+			return
+		if _calm_since < 0.0:
+			_calm_since = elapsed
+		elif elapsed - _calm_since >= 15.0:
+			for b: Building in world.buildings:
+				if b.owner_id == player_id:
+					world.eject_all(b)
+			_bell_on = false
 
 
 ## Like computer players in the genre, resign when the match is lost:
@@ -238,6 +333,7 @@ func _economy(villagers: Array[Unit]) -> void:
 	if (minutes() >= float(bcfg.get("farms_from_min", 4)) or berries == null) and farms.size() < farm_cap \
 			and not farms.any(func(b: Building) -> bool: return not b.is_complete()):
 		_build("farm", home + Vector2(rng.randf_range(-300, 300), rng.randf_range(-300, 300)), villagers, 1)
+	_expand(villagers)
 	# Buildings of the current era first: they unlock the next era.
 	var order: Array = bcfg.keys().filter(func(k: Variant) -> bool: return bcfg[k] is Dictionary)
 	var era_now: int = GameState.era_of(player_id)
@@ -401,6 +497,43 @@ func _gather_task(v: Unit, res: String) -> UnitTask:
 
 
 ## Starts a building near `near` with `count` builders (idle first, then gatherers).
+## The boom: a second Town Center toward the middle of the map once the
+## era allows it and the workforce is big enough (buildings.json max_count).
+## It trains villagers too and is a closer drop-off for the central veins.
+func _expand(villagers: Array[Unit]) -> void:
+	var limit: int = ConstructionSystem.count_limit(player_id, "town_center")
+	if limit < 0 or saving_for_era or villagers.size() < int(Dictionary(cfg.get("buildings", {})).get("second_tc_at_villagers", 22)):
+		return
+	var tcs: Array[Building] = _mine("town_center")
+	if tcs.size() >= limit or tcs.any(func(b: Building) -> bool: return not b.is_complete()):
+		return
+	var cost: Dictionary = DataLoader.get_entry("buildings", "town_center").get("cost", {})
+	# Keep a cushion: the expansion must not starve houses and soldiers.
+	for res: String in cost.keys():
+		if GameState.get_resource(player_id, res) < int(cost[res]) + 100:
+			return
+	var toward: Vector2 = (world.map_size_px * 0.5 - home).normalized()
+	var site: Vector2 = home + toward * 760.0 + Vector2(rng.randf_range(-120, 120), rng.randf_range(-120, 120))
+	var b: Building = _build("town_center", site, villagers, 3)
+	if b != null and OS.is_debug_build():
+		print("[REALM] ai %d second town center t=%.0f at=(%d,%d)" % [player_id, elapsed, b.cell.x, b.cell.y])
+
+
+## Saving for an era and short of food (or wood) with gold to spare: buy a
+## lot at the market instead of waiting on the fields.
+func _buy_for_era() -> void:
+	if not saving_for_era or saving_reason != "cost":
+		return
+	var cost: Dictionary = TechSystem.item_cost(TechSystem.era_item(GameState.era_of(player_id) + 1))
+	for res: String in ["food", "wood"]:
+		var need: int = int(cost.get(res, 0)) - GameState.get_resource(player_id, res)
+		if need <= 0:
+			continue
+		var price: int = world.economy.buy_price(player_id, res)
+		if GameState.get_resource(player_id, "gold") >= int(cost.get("gold", 0)) + price + 50 and world.economy.buy(player_id, res):
+			return
+
+
 func _build(type_id: String, near: Vector2, villagers: Array[Unit], count: int) -> Building:
 	var cost: Dictionary = DataLoader.get_entry("buildings", type_id).get("cost", {})
 	if not GameState.can_afford(player_id, cost):

@@ -9,6 +9,7 @@ func test_full_match_ends_cleanly() -> void:
 	var main: Node = load("res://scenes/main/main.tscn").instantiate()
 	main.scenario = "skirmish"
 	main.ai_override = {0: "hard", 1: "easy"}
+	main.fair_ai = false
 	main.ai_seed = 7
 	add_to_tree(main)
 	await frames(1)

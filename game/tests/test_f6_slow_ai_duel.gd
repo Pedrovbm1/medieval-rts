@@ -16,6 +16,7 @@ func _duel(hard_player: int, seed: int) -> Dictionary:
 	main.map_override = DUEL_MAP
 	var normal_player: int = 1 - hard_player
 	main.ai_override = {hard_player: "hard", normal_player: "normal"}
+	main.fair_ai = false  # the gate measures Hard with its bonuses (the menu default is fair)
 	main.ai_seed = seed
 	add_to_tree(main)
 	await frames(1)

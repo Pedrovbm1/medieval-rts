@@ -337,6 +337,16 @@ def sfx_all():
     mix_into(dft, flute(midi(45), 2.6, rng), 0.3, 0.25)
     S("defeat", reverb(dft, 0.35), 0.7)
 
+    # --- town bell (two strikes of a bronze bell) and the soft alert chime
+    bell = silence(1.8)
+    for i in range(2):
+        mix_into(bell, partials(((523, 1.0, 1.0), (1046, 0.5, 0.7), (1255, 0.35, 0.6), (1569, 0.25, 0.45), (2196, 0.1, 0.3)), 1.2, 2.0), i * 0.45, 0.8)
+    S("bell", reverb(bell, 0.3), 0.8)
+    chime = silence(0.7)
+    for i, f in enumerate((784, 988)):
+        mix_into(chime, partials(((f, 1.0, 1.0), (f * 2.0, 0.3, 0.5)), 0.4, 2.0), i * 0.12, 0.6)
+    S("alert_soft", reverb(chime, 0.2), 0.55)
+
 
 # ----------------------------------------------------------------- music
 

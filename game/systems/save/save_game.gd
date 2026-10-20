@@ -30,10 +30,14 @@ static func snapshot(main: Node) -> Dictionary:
 		next_id += 1
 		nodes.append({"id": ids[n], "type": n.resource_type, "cell": [n.cell.x, n.cell.y], "pos": [n.position.x, n.position.y], "amount": n.amount, "free": n.walkable})
 	for b: Building in world.buildings:
+		var inside: Array = []
+		for u: Unit in b.garrison:
+			inside.append({"type": u.unit_type, "hp": u.hp, "carry_type": u.carry_type, "carry": u.carry_amount})
 		buildings.append({
 			"id": ids[b], "type": b.building_type, "owner": b.owner_id, "cell": [b.cell.x, b.cell.y], "hp": b.hp, "open": b.is_open,
 			"progress": b.build_progress, "queue": Array(b.queue), "train_elapsed": b.train_elapsed,
 			"rally": [b.rally_point.x, b.rally_point.y] if b.rally_point != Vector2.INF else null,
+			"garrison": inside, "food_left": b.food_left, "fallow": b.fallow, "reseeds": b.reseeds,
 		})
 	for u: Unit in world.units:
 		units.append({
@@ -56,6 +60,8 @@ static func snapshot(main: Node) -> Dictionary:
 		"scenario": main.get("scenario_id"),
 		"map_id": world.map_id,
 		"elapsed": rules.elapsed,
+		"fair_ai": bool(main.get("fair_ai")),
+		"bell_on": bool(main.get("bell_on")),
 		"game_state": GameState.to_dict(),
 		"terrain": Marshalls.raw_to_base64(world.terrain_grid),
 		"trees": world.tree_amounts_dict(),
@@ -116,6 +122,9 @@ static func restore(main: Node, data: Dictionary) -> void:
 		var building: Building = world.place_building(String(b["type"]), int(b["owner"]), Vector2i(int(b["cell"][0]), int(b["cell"][1])))
 		building.build_progress = float(b["progress"])
 		building.hp = int(b["hp"])
+		building.food_left = float(b.get("food_left", building.food_left))
+		building.fallow = bool(b.get("fallow", false))
+		building.reseeds = int(b.get("reseeds", 0))
 		if building.is_gate() and not bool(b.get("open", true)):
 			building.set_gate_open(false, world.nav)
 		for item: Variant in b.get("queue", []):
@@ -123,6 +132,13 @@ static func restore(main: Node, data: Dictionary) -> void:
 		building.train_elapsed = float(b.get("train_elapsed", 0.0))
 		if b.get("rally") != null:
 			building.rally_point = Vector2(float(b["rally"][0]), float(b["rally"][1]))
+		for gd: Variant in b.get("garrison", []):
+			var g: Dictionary = gd
+			var inside: Unit = world.spawn_unit(String(g["type"]), building.owner_id, building.position)
+			inside.hp = int(g.get("hp", inside.max_hp))
+			inside.carry_type = String(g.get("carry_type", ""))
+			inside.carry_amount = float(g.get("carry", 0.0))
+			world.garrison_unit(inside, building)
 		building.queue_redraw()
 		by_id[int(b["id"])] = building
 	var pending_tasks: Array = []
@@ -151,6 +167,7 @@ static func restore(main: Node, data: Dictionary) -> void:
 	world.vision.refresh()
 	var rules: MatchRules = main.get_node("MatchRules")
 	rules.elapsed = float(data.get("elapsed", 0.0))
+	main.set("bell_on", bool(data.get("bell_on", false)))
 	var cam: Array = data.get("camera", [])
 	if cam.size() == 3:
 		var camera: CameraController = main.get_node("CameraController")

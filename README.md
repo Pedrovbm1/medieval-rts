@@ -19,7 +19,8 @@ contenido propio, siempre.
 - [x] F6 — IA enemiga (pasivo pierde en ~20 min; sin map hack)
 - [x] F7 — Eras y 24 tecnologías
 - [x] F8 — Fog of war + UX (niebla, minimapa, guardado; Difícil gana a Fácil en ~29 min)
-- [ ] F9 — Arte y contenido (arte v3, audio, tutorial de 6 misiones, 3 mapas, murallas/puertas/torres, mercado; falta el playtest final de Pedro)
+- [ ] F9 — Arte y contenido (arte v3, audio, tutorial de 7 misiones, 3 mapas, murallas/puertas/torres, mercado; falta el playtest final de Pedro)
+- [ ] IDEAS-AOE2 — mecánicas del clásico (`docs/IDEAS-AOE2.md`): hechos guarnición + campana, reparar, carnero/brecha, alertas, informe de fin, IA justa, granjas finitas, segundo CU, vetas centrales, compra en el mercado
 - [ ] F10 — Publicación
 
 ## Cómo trabajar

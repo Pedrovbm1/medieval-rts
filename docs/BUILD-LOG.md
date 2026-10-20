@@ -224,6 +224,14 @@ Pedro ganó a Fácil y pidió comparar con el RTS clásico y revisar: "no da tie
 
 ---
 
+## IDEAS-AOE2 — Lotes 1 y 2a (noche 2026-10-20)
+
+Pedro pidió implementar `docs/IDEAS-AOE2.md` (análisis de mecánicas del clásico escrito por otra sesión) trabajando toda la noche sin preguntar. Lote 1 (D93-D99): guarnición + campana, reparar, carnero en Era III con embestida y muralla de 1,200 con grietas y brecha, alertas en 3 niveles con íconos en el minimapa y flecha en pantalla, informe "por qué gané/perdí", IA justa por defecto con tarjeta de bonos en el menú. Lote 2a (D100-D102): granjas finitas con resiembra automática, segundo Centro Urbano en Era III, veta de oro y canteras en el centro de cada mapa, compra en el mercado.
+
+**Problemas**: con la guarnición, tocar el CU con aldeanos ya no lo seleccionaba (prueba de F4) → solo guarece si hay peligro (D99). La alerta de aldeanos atacados reemplaza a "¡Te atacan!" y el minimapa guarda una marca por lugar (la más específica). Los recursos nuevos (vetas, canteras) cambian la huella del atlas → `bake_art` de nuevo y campo `art` para pintarlos como las minas.
+
+---
+
 ## F9 — Segundo playtest de Pedro (2026-10-19)
 
 Pedro ganó a Fácil y pidió: victoria al destruir el edificio principal, edificios que caigan más rápido y se reconozcan, razón cuando no puede subir de era, descripciones de edificios y unidades, y un nivel de daño por tropa. Hecho en D87-D92. De paso se encontró y arregló una persecución infinita contra un objetivo inalcanzable (D92).

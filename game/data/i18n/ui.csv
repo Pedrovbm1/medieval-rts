@@ -207,11 +207,11 @@ UNIT_CAMEL_RIDER_PLURAL,Camelleros,Camel riders
 UNIT_SHEEP_PLURAL,Ovejas,Sheep
 UNIT_DEER_PLURAL,Ciervos,Deer
 UNIT_BOAR_PLURAL,Jabalíes,Boars
-BLDG_TOWN_CENTER_DESC,"Tu edificio principal: entrena aldeanos, recibe recursos y sube de era. Si cae, pierdes.","Your main building: trains villagers, takes deliveries and advances eras. Lose it and you lose."
+BLDG_TOWN_CENTER_DESC,"Corazón de tu reino: entrena aldeanos, recibe recursos, sube de era y dispara flechas. Si cae, pierdes. Desde la Era III puedes construir otro.","Heart of your realm: trains villagers, takes resources, advances eras and shoots arrows. Lose it and you lose. From Era III you may build another."
 BLDG_HOUSE_DESC,+5 de población.,+5 population.
 BLDG_LUMBER_CAMP_DESC,Deja la madera aquí (ponlo junto al bosque).,Drop wood here (place it by the forest).
 BLDG_MINING_CAMP_DESC,Deja oro y piedra aquí (ponlo junto a las minas).,Drop gold and stone here (place it by the mines).
-BLDG_FARM_DESC,Comida sin fin para 1 aldeano.,Endless food for 1 villager.
+BLDG_FARM_DESC,Comida constante junto al Centro Urbano (250 por siembra; se resiembra sola con 60 de madera).,Steady food next to the Town Center (250 per sowing; reseeds itself for 60 wood).
 BLDG_BARRACKS_DESC,"Entrena infantería: milicianos, lanceros y espadachines.","Trains infantry: militia, spearmen and swordsmen."
 BLDG_ARCHERY_RANGE_DESC,Entrena arqueros y escaramuzadores (a distancia).,Trains archers and skirmishers (ranged).
 BLDG_STABLE_DESC,"Entrena caballería: exploradores, caballeros y camelleros.","Trains cavalry: scouts, knights and camel riders."
@@ -220,7 +220,7 @@ BLDG_MONASTERY_DESC,"Entrena monjes, que curan a tus tropas.","Trains monks, who
 BLDG_BLACKSMITH_DESC,Mejoras de ataque y armadura para tus tropas.,Attack and armor upgrades for your troops.
 BLDG_UNIVERSITY_DESC,"Mejoras de economía y defensa (torres, murallas).","Economy and defence upgrades (towers, walls)."
 BLDG_WATCH_TOWER_DESC,Dispara flechas a los enemigos cercanos y ve lejos.,Shoots arrows at nearby enemies and sees far.
-BLDG_MARKET_DESC,"Vende comida, madera o piedra por oro.","Sell food, wood or stone for gold."
+BLDG_MARKET_DESC,"Compra y vende recursos: vender baja el precio, comprar lo sube.","Buy and sell resources: selling lowers the price, buying raises it."
 BLDG_PALISADE_DESC,Muralla de madera barata. Traza una línea con dos toques.,Cheap wooden wall. Trace a line with two taps.
 BLDG_STONE_WALL_DESC,Muralla fuerte de piedra (Era II).,Strong stone wall (Era II).
 BLDG_GATE_DESC,Se abre para ti y se cierra cuando hay enemigos cerca.,Opens for you and closes when enemies are near.
@@ -230,7 +230,7 @@ UNIT_MILITIA_DESC,Soldado barato de inicio.,Cheap early soldier.
 UNIT_SPEARMAN_DESC,Barato; destroza caballería.,Cheap; shreds cavalry.
 UNIT_ARCHER_DESC,Ataca a distancia; bueno contra lanceros.,Ranged; good against spearmen.
 UNIT_KNIGHT_DESC,"Caballería pesada: fuerte y rápida, caza arqueros.","Heavy cavalry: strong and fast, hunts archers."
-UNIT_RAM_DESC,Solo ataca edificios y los derriba rápido.,Only attacks buildings and brings them down fast.
+UNIT_RAM_DESC,"Máquina de asedio (Era III): embiste edificios, el primer golpe pega doble.","Siege engine (Era III): rams buildings, the first blow hits twice as hard."
 UNIT_SKIRMISHER_DESC,Lanza jabalinas; contra arqueros.,Throws javelins; counters archers.
 UNIT_SWORDSMAN_DESC,Infantería pesada; aguanta y pega fuerte.,Heavy infantry; tough and hard-hitting.
 UNIT_MONK_DESC,Cura a tus tropas. No pelea.,Heals your troops. Does not fight.
@@ -253,3 +253,40 @@ ERR_DONE,Ya investigado,Already researched
 END_WHY_TC_WIN,Destruiste el Centro Urbano enemigo.,You destroyed the enemy Town Center.
 END_WHY_TC_LOSS,Tu Centro Urbano cayó.,Your Town Center fell.
 END_WHY_RESIGN,El rival se rindió.,The rival resigned.
+HUD_BELL,Campana,Bell
+HUD_BELL_OFF,A trabajar,Back to work
+HUD_EJECT,Salir,Come out
+HUD_GARRISON,Guarnición,Garrison
+HUD_REPAIRING,Reparando,Repairing
+ALERT_TC_ATTACK,¡Atacan tu Centro Urbano!,Your Town Center is under attack!
+ALERT_VILLAGERS,¡Atacan a tus aldeanos! Toca la campana,Your villagers are under attack! Ring the bell
+ALERT_BREACH,¡Brecha en la muralla!,Wall breached!
+ALERT_POP_FULL,Población llena: construye casas,Population full: build houses
+REPORT_FIRST_ATTACK,Primer ataque: minuto %d:%02d,First attack: minute %d:%02d
+REPORT_ERAS,Eras · tú: %s · IA: %s,Eras · you: %s · AI: %s
+REPORT_ARMY,Ejército máximo · tú: %d · IA: %d,Peak army · you: %d · AI: %d
+REPORT_VILLAGERS,Aldeanos · tú: %d (perdiste %d) · IA: %d (perdió %d),Villagers · you: %d (lost %d) · AI: %d (lost %d)
+REPORT_HINT_ECO,La IA tuvo %d aldeanos más. Más aldeanos = más ejército: entrena aldeanos sin parar.,The AI had %d more villagers. More villagers = bigger army: never stop training them.
+REPORT_HINT_ARMY,El rival juntó un ejército mayor (%d contra %d): más cuarteles y colas llenas.,The rival built a bigger army (%d vs %d): more barracks and full queues.
+REPORT_HINT_ERA,La IA subió de era antes: sube más rápido para desbloquear mejores tropas.,The AI advanced first: age up sooner to unlock better troops.
+REPORT_HINT_BELL,Perdiste %d aldeanos: toca la campana cuando veas enemigos cerca.,You lost %d villagers: ring the bell when enemies come close.
+REPORT_HINT_DEFENSE,"Estuvo cerrado. Prueba murallas y torres, y ataca cuando la IA salga.","It was close. Try walls and towers, and strike when the AI moves out."
+REPORT_WIN_ECO,Ganaste por economía: %d aldeanos más que la IA.,You won on economy: %d more villagers than the AI.
+REPORT_WIN_ARMY,Ganaste por ejército: %d contra %d en el pico.,You won on army: %d vs %d at the peak.
+REPORT_WIN_CLOSE,Partida pareja: ganaste por decisiones.,Close match: you won on decisions.
+REPORT_AI_BONUS,La IA jugó con bonos: %s.,The AI played with bonuses: %s.
+BONUS_GATHER,recolección,gathering
+BONUS_PRODUCTION,producción,production
+BONUS_TRAIN,entrenamiento,training
+MENU_FAIR_ON,IA justa: Sí (sin bonos ocultos),Fair AI: On (no hidden bonuses)
+MENU_FAIR_OFF,IA justa: No (la IA recibe bonos),Fair AI: Off (the AI gets bonuses)
+MENU_AI_BONUS,IA: %s,AI: %s
+MENU_YOU_BONUS,Tú: %s,You: %s
+MENU_NO_BONUS,sin bonos,no bonuses
+RES_GOLD_VEIN_NAME,Veta de oro,Gold vein
+RES_STONE_QUARRY_NAME,Cantera grande,Large quarry
+HUD_FARM_LEFT,Comida %d/%d,Food %d/%d
+HUD_FALLOW,En barbecho: falta madera,Fallow: no wood to reseed
+ALERT_FARM_FALLOW,Granja agotada: falta madera para resembrar,Farm exhausted: no wood to reseed
+HUD_BUY,Comprar,Buy
+ERR_LIMIT,Máximo alcanzado en esta era,Limit reached for this era

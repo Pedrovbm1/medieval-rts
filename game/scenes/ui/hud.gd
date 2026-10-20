@@ -28,6 +28,11 @@ signal group_held(n: int)
 signal menu_save_pressed
 signal menu_quit_pressed
 signal menu_resign_pressed
+## Town bell: villagers run into the Town Center / towers (or come back out).
+signal bell_pressed
+## "Salir": every unit inside the selected building comes out.
+signal eject_pressed
+signal buy_pressed(resource: String)
 
 const RESOURCE_ORDER: PackedStringArray = ["food", "wood", "gold", "stone"]
 const BUTTON_SIZE: Vector2 = Vector2(120, 72)
@@ -53,6 +58,16 @@ var minimap: Minimap
 var group_buttons: Array[Button] = []
 var menu_button: Button
 var speed_button: Button
+var bell_button: Button
+var eject_button: Button
+## Set by Main: the alert arrow needs to know what is on screen.
+var camera: CameraController = null
+var alert_arrow: AlertArrow = null
+var _last_tc_alert_ms: int = -100000
+var _last_villager_alert_ms: int = -100000
+var _last_pop_alert_ms: int = -100000
+## Last banner level shown ("critical" / "important" / "soft"): tests.
+var last_banner_level: String = ""
 var queue_row: HBoxContainer
 ## Main sets this when there is a real match to give up (not sandbox/tutorial).
 var can_resign: bool = false
@@ -80,6 +95,26 @@ var end_panel: PanelContainer = null
 func _ready() -> void:
 	idle_button.pressed.connect(_emit_click.bind(idle_pressed))
 	_build_resource_row()
+	# Town bell, right after the idle button: the one-finger defence.
+	bell_button = Button.new()
+	bell_button.name = "BellButton"
+	bell_button.text = tr("HUD_BELL")
+	bell_button.custom_minimum_size = Vector2(150, 68)
+	bell_button.focus_mode = Control.FOCUS_NONE
+	bell_button.pressed.connect(_emit_click.bind(bell_pressed))
+	idle_button.get_parent().add_child(bell_button)
+	idle_button.get_parent().move_child(bell_button, idle_button.get_index() + 1)
+	alert_arrow = AlertArrow.new()
+	alert_arrow.name = "AlertArrow"
+	add_child(alert_arrow)
+	EventBus.building_attacked.connect(_on_building_attacked)
+	EventBus.unit_attacked.connect(_on_unit_attacked)
+	EventBus.wall_breached.connect(_on_wall_breached)
+	EventBus.garrison_changed.connect(_on_garrison_changed)
+	EventBus.farm_fallow.connect(_on_farm_fallow)
+	EventBus.farm_reseeded.connect(func(b: Building) -> void:
+		if mode == Mode.BUILDING and b == _building:
+			_refresh_building())
 	era_label = Label.new()
 	era_label.custom_minimum_size = Vector2(150, 0)
 	pop_label.get_parent().add_child(era_label)
@@ -138,16 +173,38 @@ func _on_era_changed(p: int, era: int) -> void:
 
 
 ## Big centred message that fades out after a few seconds (new era...).
-func show_banner(text: String) -> void:
+## Three levels: "critical" (red, bigger, stays longer: Town Center under
+## attack, army coming, wall breached), "important" (gold: era, default)
+## and "soft" (white, smaller, short: population full).
+func show_banner(text: String, level: String = "important") -> void:
+	last_banner_level = level
 	banner.text = text
 	banner.visible = true
 	banner.modulate = Color.WHITE
+	match level:
+		"critical":
+			banner.add_theme_font_size_override("font_size", 46)
+			banner.add_theme_color_override("font_color", Color(1, 0.35, 0.3))
+		"soft":
+			banner.add_theme_font_size_override("font_size", 28)
+			banner.add_theme_color_override("font_color", Color(0.95, 0.95, 0.9))
+		_:
+			banner.add_theme_font_size_override("font_size", 40)
+			banner.add_theme_color_override("font_color", Color(1, 0.88, 0.45))
 	banner.size = Vector2(get_viewport().get_visible_rect().size.x, 60)
 	banner.position = Vector2(0, 110)
 	var tw: Tween = create_tween()
-	tw.tween_interval(2.2)
+	tw.tween_interval(3.2 if level == "critical" else (1.6 if level == "soft" else 2.2))
 	tw.tween_property(banner, "modulate:a", 0.0, 0.8)
 	tw.tween_callback(func() -> void: banner.visible = false)
+
+
+## Bell button state: on = villagers are sheltered, next tap sends them back.
+func set_bell(on: bool) -> void:
+	if bell_button == null:
+		return
+	bell_button.text = tr("HUD_BELL_OFF") if on else tr("HUD_BELL")
+	bell_button.modulate = Color(1, 0.75, 0.35) if on else Color.WHITE
 
 
 func set_idle_count(count: int) -> void:
@@ -244,6 +301,7 @@ func _set_mode(m: Mode) -> void:
 	confirm_button = null
 	cancel_place_button = null
 	cancel_construction_button = null
+	eject_button = null
 	match m:
 		Mode.NONE:
 			selection_panel.visible = false
@@ -337,6 +395,8 @@ func _refresh_placing() -> void:
 			selection_label.text = tr("ERR_COST")
 		"era":
 			selection_label.text = tr("ERR_ERA")
+		"limit":
+			selection_label.text = tr("ERR_LIMIT")
 		_:
 			selection_label.text = tr("ERR_OCCUPIED")
 	if confirm_button != null:
@@ -373,10 +433,25 @@ func _fill_building() -> void:
 		var market: Dictionary = _building.data.get("market", {})
 		for res: Variant in market.get("sells", []):
 			_add_sell_button(String(res))
+		for res: Variant in market.get("buys", []):
+			_add_buy_button(String(res))
 		if not _building.queue.is_empty():
 			_add_button(tr("HUD_REMOVE"), dequeue_pressed)
+		if not _building.garrison.is_empty():
+			eject_button = _add_button(tr("HUD_EJECT"), eject_pressed)
 	deselect_button = _add_button(tr("HUD_DESELECT"), deselect_pressed)
 	_refresh_building()
+
+
+## "Comprar" with [gold icon] price -> [res icon] 100 underneath.
+func _add_buy_button(res: String) -> void:
+	var price: int = world_economy().buy_price(player_id, res)
+	var b: Button = _add_cost_button("%s %s" % [tr("HUD_BUY"), tr("RESOURCE_%s_NAME" % res.to_upper())], {"gold": price}, Vector2(150, 76))
+	b.disabled = world_economy().buy_error(player_id, res) != ""
+	b.pressed.connect(func() -> void:
+		Sfx.play("ui_click")
+		buy_pressed.emit(res))
+	type_buttons["buy:" + res] = b
 
 
 ## "Vender" with [res icon] 100 -> [gold icon] price underneath.
@@ -525,6 +600,14 @@ func _refresh_building() -> void:
 		text += "  %s %d%%" % [tr("HUD_UNDER_CONSTRUCTION"), int(_building.build_progress * 100.0)]
 	elif not _building.gather_info().is_empty():
 		text += "  (%d/%d)" % [_building.workers.size(), int(_building.gather_info().get("workers", 1))]
+		if _building.fallow:
+			text += "  " + tr("HUD_FALLOW")
+		elif _building.food_left >= 0.0:
+			text += "  " + tr("HUD_FARM_LEFT") % [int(_building.food_left), int(_building.gather_info().get("amount", 0))]
+	if _building.is_complete() and _building.garrison_slots() > 0:
+		text += "  %s %d/%d" % [tr("HUD_GARRISON"), _building.garrison.size(), _building.garrison_slots()]
+	if not _building.repairers.is_empty():
+		text += "  " + tr("HUD_REPAIRING")
 	_refresh_queue_row()
 	var info: PackedStringArray = PackedStringArray()
 	if _building.data.has("desc_key"):
@@ -723,6 +806,94 @@ func _on_population_changed(p: int, used: int, cap: int) -> void:
 		return
 	pop_label.text = "%s %d/%d" % [tr("HUD_POP"), used, cap]
 	pop_label.modulate = Color(1, 0.5, 0.4) if used >= cap and cap > 0 else Color.WHITE
+	# Soft alert: the cap is reached and houses would still help.
+	if used >= cap and cap > 0 and cap < int(DataLoader.rule("economy", "pop_max", 100)):
+		var now: int = Time.get_ticks_msec()
+		if now - _last_pop_alert_ms > int(float(DataLoader.rule("alerts", "pop_cooldown_s", 45.0)) * 1000.0):
+			_last_pop_alert_ms = now
+			show_banner(tr("ALERT_POP_FULL"), "soft")
+			Sfx.play("alert_soft")
+
+
+# ------------------------------------------------------------------ ranked alerts
+
+## Town Center hit: critical, its own (shorter) cooldown, arrow on screen.
+func _on_building_attacked(b: Building, _source: Unit) -> void:
+	if b.owner_id != player_id:
+		return
+	if alert_arrow != null:
+		alert_arrow.point(b.position)
+	if b.building_type != String(DataLoader.get_entry("eras", "_rules").get("researched_at", "town_center")):
+		return
+	var now: int = Time.get_ticks_msec()
+	if now - _last_tc_alert_ms > int(float(DataLoader.rule("alerts", "tc_cooldown_s", 10.0)) * 1000.0):
+		_last_tc_alert_ms = now
+		_last_alert_ms = now  # swallow the generic "under attack" that follows
+		Sfx.play("alert")
+		show_banner(tr("ALERT_TC_ATTACK"), "critical")
+		if minimap != null:
+			minimap.alert(b.position, "attack")
+
+
+## Villagers hit: important, and the banner says what to do (the bell).
+func _on_unit_attacked(u: Unit, _source: Unit) -> void:
+	if u.owner_id != player_id:
+		return
+	if alert_arrow != null:
+		alert_arrow.point(u.position)
+	if not u.can_gather():
+		return
+	var now: int = Time.get_ticks_msec()
+	if now - _last_villager_alert_ms > int(float(DataLoader.rule("alerts", "villager_cooldown_s", 20.0)) * 1000.0):
+		_last_villager_alert_ms = now
+		_last_alert_ms = now
+		Sfx.play("alert_soft")
+		show_banner(tr("ALERT_VILLAGERS"), "important")
+		if minimap != null:
+			minimap.alert(u.position, "villagers")
+
+
+func _on_wall_breached(p: int, world_pos: Vector2) -> void:
+	if p != player_id:
+		return
+	Sfx.play("alert")
+	show_banner(tr("ALERT_BREACH"), "critical")
+	if minimap != null:
+		minimap.alert(world_pos, "breach")
+	if alert_arrow != null:
+		alert_arrow.point(world_pos)
+
+
+func _on_garrison_changed(b: Building) -> void:
+	if mode == Mode.BUILDING and b == _building:
+		_set_mode(Mode.BUILDING)
+
+
+var _last_farm_alert_ms: int = -100000
+
+
+## A farm of ours ran dry with no wood to reseed: soft alert, at most every
+## alerts.farm_cooldown_s.
+func _on_farm_fallow(b: Building) -> void:
+	if b.owner_id != player_id:
+		return
+	if mode == Mode.BUILDING and b == _building:
+		_refresh_building()
+	var now: int = Time.get_ticks_msec()
+	if now - _last_farm_alert_ms > int(float(DataLoader.rule("alerts", "farm_cooldown_s", 30.0)) * 1000.0):
+		_last_farm_alert_ms = now
+		show_banner(tr("ALERT_FARM_FALLOW"), "soft")
+		Sfx.play("alert_soft")
+
+
+## The match economy (buy/sell prices); set by Main.
+var economy: EconomySystem = null
+
+
+func world_economy() -> EconomySystem:
+	if economy == null and tech != null and tech.world != null:
+		economy = tech.world.economy
+	return economy
 
 
 ## Debug aid: logs every action button centre ("[REALM] hud btn <id>=(x,y)").
@@ -755,7 +926,7 @@ func _emit_click(sig: Signal) -> void:
 
 
 ## End of match: big result, a few stats for both sides, and Retry.
-func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary, why: String = "") -> void:
+func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary, why: String = "", lines: Array[String] = []) -> void:
 	if end_panel != null:
 		return
 	set_speed(1.0)
@@ -803,6 +974,16 @@ func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary, w
 		grid.add_child(_stat_label(str(row[1])))
 		grid.add_child(_stat_label(str(row[2])))
 	box.add_child(grid)
+	# "Why I won / lost": the match timeline in a few plain lines.
+	for line: String in lines:
+		var l: Label = Label.new()
+		l.name = "ReportLine"
+		l.text = line
+		l.add_theme_font_size_override("font_size", 18)
+		l.add_theme_color_override("font_color", Color(0.9, 0.88, 0.8))
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size = Vector2(560, 0)
+		box.add_child(l)
 	var retry: Button = Button.new()
 	retry.text = tr("END_RETRY")
 	retry.custom_minimum_size = Vector2(220, 80)

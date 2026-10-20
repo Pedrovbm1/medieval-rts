@@ -128,7 +128,7 @@ func test_a_live_validation() -> void:
 	check(cs.placement_error(0, "house", on_unit, [v]) == "" or cs.placement_error(0, "house", on_unit, [v]) == "occupied", "builders themselves can be ignored")
 	var free: Vector2i = world.find_building_spot("house", scen.start_of(0) + Vector2(400, 0))
 	check(cs.placement_error(0, "house", free) == "", "a free spot is valid")
-	check(cs.placement_error(0, "town_center", free) == "type", "the Town Center is not in the build menu")
+	check(cs.placement_error(0, "town_center", free) == "era", "a second Town Center needs Era III")
 	GameState.add_resource(0, "wood", -GameState.get_resource(0, "wood"))
 	check(cs.placement_error(0, "house", free) == "cost", "no wood -> invalid (cost)")
 	# Ghost turns red/green live while dragging.

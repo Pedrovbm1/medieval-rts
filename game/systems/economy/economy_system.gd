@@ -52,7 +52,56 @@ func sell(player_id: int, resource: String) -> bool:
 	return true
 
 
+## Gold asked for one lot of `resource` (sell price times market.buy_spread).
+func buy_price(player_id: int, resource: String) -> int:
+	return int(ceil(market_price(player_id, resource) * float(DataLoader.rule("market", "buy_spread", 1.3))))
+
+
+## "" if the player can buy a lot now, else "no_market" or "cost" (gold).
+func buy_error(player_id: int, resource: String) -> String:
+	var has_market: bool = world.buildings.any(func(b: Building) -> bool:
+		return b.owner_id == player_id and b.is_complete() and b.data.has("market"))
+	if not has_market:
+		return "no_market"
+	if GameState.get_resource(player_id, "gold") < buy_price(player_id, resource):
+		return "cost"
+	return ""
+
+
+## Buys one lot with gold; the price of that resource rises for this player.
+func buy(player_id: int, resource: String) -> bool:
+	if resource == "gold" or buy_error(player_id, resource) != "":
+		return false
+	var lot: int = int(DataLoader.rule("market", "lot", 100))
+	var price: int = buy_price(player_id, resource)
+	GameState.add_resource(player_id, "gold", -price)
+	GameState.add_resource(player_id, resource, lot)
+	var prices: Dictionary = GameState.market_prices.get(player_id, {})
+	prices[resource] = mini(int(DataLoader.rule("market", "max_price", 140)), market_price(player_id, resource) + int(DataLoader.rule("market", "drop", 4)))
+	GameState.market_prices[player_id] = prices
+	if OS.is_debug_build():
+		print("[REALM] market buy player=%d %d %s for %d gold (next sell %d)" % [player_id, lot, resource, price, prices[resource]])
+	return true
+
+
 var _market_t: float = 0.0
+var _farm_t: float = 0.0
+
+
+## Fallow farms reseed themselves as soon as their owner has the wood.
+func tick_farms(delta: float) -> void:
+	_farm_t += delta
+	if _farm_t < float(DataLoader.rule("farms", "tick_s", 2.0)):
+		return
+	_farm_t = 0.0
+	for b: Building in world.buildings:
+		if b.fallow and b.is_complete() and b.owner_id >= 0:
+			b.reseed()
+
+
+## Farms of a player lying fallow (HUD, AI, tests).
+func fallow_farms(player_id: int) -> Array[Building]:
+	return world.buildings.filter(func(b: Building) -> bool: return b.owner_id == player_id and b.fallow)
 
 
 ## Prices drift back toward the start price over time (called every frame).
@@ -112,6 +161,11 @@ func population_used(player_id: int) -> int:
 	for u: Unit in world.units:
 		if u.owner_id == player_id and not u.is_animal() and not u.is_dead:
 			used += int(u.data.get("pop", 1))
+	# Sheltered units are out of World.units but still eat and sleep.
+	for b: Building in world.buildings:
+		if b.owner_id == player_id:
+			for u: Unit in b.garrison:
+				used += int(u.data.get("pop", 1))
 	return used
 
 

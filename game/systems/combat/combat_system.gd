@@ -190,20 +190,24 @@ func _towers(interval: float) -> void:
 		if b.attack_cooldown > 0.0:
 			continue
 		var reach: float = Combat.range_of(b)
-		var best: Unit = null
-		var best_d: float = INF
+		var targets: Array[Unit] = []
 		for other: Object in world.movement.spatial.query(b.position, reach):
 			var u: Unit = other as Unit
 			if u.is_dead or u.owner_id < 0 or u.owner_id == b.owner_id:
 				continue
-			var d: float = b.position.distance_to(u.position)
-			if d <= reach and d < best_d:
-				best_d = d
-				best = u
-		if best != null:
-			b.attack_cooldown = Combat.repeat_of(b)
-			var proj: Dictionary = Dictionary(b.data["combat"]).get("projectile", {})
-			fire(b, best, Combat.hit_damage(b, best), float(proj.get("speed_px", 600)))
+			if b.position.distance_to(u.position) <= reach:
+				targets.append(u)
+		if targets.is_empty():
+			continue
+		targets.sort_custom(func(x: Unit, y: Unit) -> bool: return x.position.distance_squared_to(b.position) < y.position.distance_squared_to(b.position))
+		b.attack_cooldown = Combat.repeat_of(b)
+		var proj: Dictionary = Dictionary(b.data["combat"]).get("projectile", {})
+		# One arrow, plus one per sheltered unit: the volley spreads over the
+		# nearest enemies in range (a garrisoned Town Center is a hedgehog).
+		var volley: int = 1 + b.garrison_arrows()
+		for i: int in volley:
+			var target: Unit = targets[i % targets.size()]
+			fire(b, target, Combat.hit_damage(b, target), float(proj.get("speed_px", 600)))
 
 
 func _acquire_targets() -> void:

@@ -52,6 +52,11 @@ var brain: Dictionary = {}
 
 ## Attack-move: while walking, engage enemies met on the way.
 var attack_move: bool = false
+## Seconds until a siege "charge" (double first hit) is ready again.
+var charge_cd: float = 0.0
+## Building this unit is sheltered in (null outside). Garrisoned units are
+## hidden, out of World.units, and only count for population.
+var garrisoned_in: Building = null
 
 # --- combat visuals (CombatSystem drives the timers) ---
 var winding_up: bool = false
@@ -119,6 +124,9 @@ func reset_for_pool() -> void:
 	attack_cooldown = 0.0
 	last_attacker = null
 	attack_move = false
+	charge_cd = 0.0
+	garrisoned_in = null
+	visible = true
 	is_dead = false
 	brain = {}
 	winding_up = false
@@ -219,6 +227,7 @@ func take_damage(amount: int, source: Unit) -> void:
 		last_attacker = source
 		if owner_id >= 0 and source.owner_id >= 0 and source.owner_id != owner_id:
 			EventBus.under_attack.emit(owner_id, position)
+			EventBus.unit_attacked.emit(self, source)
 	queue_redraw()
 	if hp == 0:
 		is_dead = true

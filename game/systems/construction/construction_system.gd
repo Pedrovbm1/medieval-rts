@@ -26,6 +26,8 @@ func placement_error(player_id: int, type_id: String, cell: Vector2i, ignore: Ar
 		return "type"
 	if int(def.get("era", 1)) > GameState.era_of(player_id):
 		return "era"
+	if count_limit(player_id, type_id) >= 0 and owned_count(world, player_id, type_id) >= count_limit(player_id, type_id):
+		return "limit"
 	# A gate may replace one of our own wall segments.
 	var replaces: Building = world.wall_at(player_id, cell) if bool(def.get("gate", false)) else null
 	if replaces == null and not world.can_place(type_id, cell, ignore):
@@ -33,6 +35,28 @@ func placement_error(player_id: int, type_id: String, cell: Vector2i, ignore: Ar
 	if not GameState.can_afford(player_id, def.get("cost", {})):
 		return "cost"
 	return ""
+
+
+## How many of `type_id` a player may own in their era (buildings.json
+## "max_count": {"3": 2, "4": 3}, e.g. extra Town Centers); -1 = no limit.
+static func count_limit(player_id: int, type_id: String) -> int:
+	var limits: Dictionary = DataLoader.get_entry("buildings", type_id).get("max_count", {})
+	if limits.is_empty():
+		return -1
+	var best: int = 0
+	for era: int in range(1, GameState.era_of(player_id) + 1):
+		if limits.has(str(era)):
+			best = int(limits[str(era)])
+	return best
+
+
+## Own buildings of a type, foundations included.
+static func owned_count(p_world: World, player_id: int, type_id: String) -> int:
+	var n: int = 0
+	for b: Building in p_world.buildings:
+		if b.owner_id == player_id and b.building_type == type_id:
+			n += 1
+	return n
 
 
 func start_construction(player_id: int, type_id: String, cell: Vector2i, builders: Array[Unit]) -> Building:
@@ -205,6 +229,7 @@ func _physics_process(delta: float) -> void:
 		_tick_gates(delta)
 	if world == null:
 		return
+	world.economy.tick_farms(delta)
 	for b: Building in world.buildings.duplicate():
 		if b.queue.is_empty() or not b.is_complete():
 			continue

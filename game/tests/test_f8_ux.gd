@@ -64,7 +64,7 @@ func test_b_minimap_and_alerts() -> void:
 	world.combat.apply_hit(raider, villager, 3)
 	await frames(1)
 	check(mm._alerts.size() == 1, "an attack on our villager pings the minimap")
-	check(hud.banner.visible and hud.banner.text == tr("ALERT_UNDER_ATTACK"), "and shows %s" % tr("ALERT_UNDER_ATTACK"))
+	check(hud.banner.visible and hud.banner.text == tr("ALERT_VILLAGERS"), "and shows %s (villagers hit: the banner names the bell)" % tr("ALERT_VILLAGERS"))
 	await _close()
 
 

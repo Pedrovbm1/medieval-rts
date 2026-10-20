@@ -318,7 +318,7 @@
 		],
 		"stance": "aggressive",
 		"hp": 175,
-		"speed": 0.7,
+		"speed": 0.85,
 		"radius_px": 18,
 		"placeholder_glyph": "T",
 		"pop": 2,
@@ -327,7 +327,7 @@
 			"gold": 60
 		},
 		"train_time": 25,
-		"era": 4,
+		"era": 3,
 		"armor": {
 			"hack": 0,
 			"pierce": 8,
@@ -343,7 +343,11 @@
 			"bonus": {
 				"building": 75
 			},
-			"buildings_only": true
+			"buildings_only": true,
+			"charge": {
+				"mult": 2.0,
+				"cooldown_s": 20.0
+			}
 		},
 		"sight_px": 256,
 		"desc_key": "UNIT_RAM_DESC"

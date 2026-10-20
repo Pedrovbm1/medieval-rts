@@ -4,14 +4,20 @@
 		"resource": "wood",
 		"subtype": "wood",
 		"amount": 100,
-		"footprint": [1, 1]
+		"footprint": [
+			1,
+			1
+		]
 	},
 	"gold_mine": {
 		"name_key": "RES_GOLD_MINE_NAME",
 		"resource": "gold",
 		"subtype": "gold",
 		"amount": 800,
-		"footprint": [2, 2],
+		"footprint": [
+			2,
+			2
+		],
 		"color": "#e8c547",
 		"placeholder_glyph": "O"
 	},
@@ -20,7 +26,10 @@
 		"resource": "stone",
 		"subtype": "stone",
 		"amount": 500,
-		"footprint": [2, 2],
+		"footprint": [
+			2,
+			2
+		],
 		"color": "#a9a9a0",
 		"placeholder_glyph": "P"
 	},
@@ -29,7 +38,10 @@
 		"resource": "food",
 		"subtype": "berries",
 		"amount": 120,
-		"footprint": [1, 1],
+		"footprint": [
+			1,
+			1
+		],
 		"color": "#b0306a",
 		"placeholder_glyph": "B"
 	},
@@ -38,7 +50,10 @@
 		"resource": "food",
 		"subtype": "meat",
 		"amount": 100,
-		"footprint": [1, 1],
+		"footprint": [
+			1,
+			1
+		],
 		"walkable": true,
 		"decay_per_s": 0.15,
 		"color": "#d9c7b8",
@@ -49,7 +64,10 @@
 		"resource": "food",
 		"subtype": "meat",
 		"amount": 140,
-		"footprint": [1, 1],
+		"footprint": [
+			1,
+			1
+		],
 		"walkable": true,
 		"decay_per_s": 0.15,
 		"color": "#b9875a",
@@ -60,10 +78,39 @@
 		"resource": "food",
 		"subtype": "meat",
 		"amount": 300,
-		"footprint": [1, 1],
+		"footprint": [
+			1,
+			1
+		],
 		"walkable": true,
 		"decay_per_s": 0.15,
 		"color": "#6b4a3a",
 		"placeholder_glyph": "c"
+	},
+	"gold_vein": {
+		"name_key": "RES_GOLD_VEIN_NAME",
+		"resource": "gold",
+		"subtype": "gold",
+		"amount": 1500,
+		"footprint": [
+			2,
+			2
+		],
+		"color": "#f5d862",
+		"placeholder_glyph": "O",
+		"art": "gold_mine"
+	},
+	"stone_quarry": {
+		"name_key": "RES_STONE_QUARRY_NAME",
+		"resource": "stone",
+		"subtype": "stone",
+		"amount": 1000,
+		"footprint": [
+			2,
+			2
+		],
+		"color": "#b8b8ad",
+		"placeholder_glyph": "P",
+		"art": "stone_mine"
 	}
 }

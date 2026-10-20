@@ -39,6 +39,21 @@ var attack_cooldown: float = 0.0
 ## Gates: open lets everyone through; closed blocks the cell (enemies near).
 var is_open: bool = true
 var _open_since: float = 0.0
+## Units sheltered inside (Town Center, towers): hidden, safe, and each one
+## adds an arrow to the building's volley. World.garrison_unit / eject move
+## them in and out; `garrison_resume` remembers what each was doing.
+var garrison: Array[Unit] = []
+var garrison_resume: Dictionary = {}
+## Villagers currently repairing it (hammer icon, panel).
+var repairers: Array[Unit] = []
+## Farms: food left in the current sowing (-1 = endless). When it runs out
+## the farm reseeds itself for its cost, or lies fallow until there is wood.
+var food_left: float = -1.0
+var fallow: bool = false
+var reseeds: int = 0
+## Game-clock seconds (Time.get_ticks_msec) of the last enemy hit: repairs
+## are slower right after one, and the HUD knows a fight is on.
+var last_hit_s: float = -999.0
 var selected: bool = false:
 	set(value):
 		if selected != value:
@@ -59,6 +74,7 @@ func setup(type_id: String, player_id: int, origin_cell: Vector2i, p_tile_size: 
 	max_hp = int(data.get("hp", 100))
 	hp = max_hp
 	walkable = bool(data.get("walkable", false))
+	food_left = float(Dictionary(data.get("gather", {})).get("amount", -1.0))
 	# Walkable buildings (farms) are ground: always under units, whatever
 	# their position in the y-sort (villagers used to vanish under farms).
 	z_index = GROUND_Z if walkable else 0
@@ -143,6 +159,39 @@ func gather_info() -> Dictionary:
 	return data.get("gather", {})
 
 
+## Takes food from the sowing; endless farms (no "amount") always give.
+func take_food(want: float) -> float:
+	if food_left < 0.0:
+		return want
+	if fallow:
+		return 0.0
+	var got: float = minf(want, food_left)
+	food_left -= got
+	if food_left <= 0.001:
+		food_left = 0.0
+		if not reseed():
+			fallow = true
+			queue_redraw()
+			EventBus.farm_fallow.emit(self)
+	return got
+
+
+## Pays the farm's cost again for a fresh sowing (rules farms.auto_reseed).
+## False when the owner cannot afford it or the farm is not a finite farm.
+func reseed() -> bool:
+	var amount: float = float(Dictionary(data.get("gather", {})).get("amount", -1.0))
+	if amount <= 0.0 or not bool(DataLoader.rule("farms", "auto_reseed", true)):
+		return false
+	if not GameState.spend(owner_id, data.get("cost", {})):
+		return false
+	food_left = amount
+	fallow = false
+	reseeds += 1
+	queue_redraw()
+	EventBus.farm_reseeded.emit(self)
+	return true
+
+
 func has_free_work_slot(unit: Unit) -> bool:
 	workers = workers.filter(func(u: Unit) -> bool: return is_instance_valid(u) and not u.is_dead)
 	if workers.has(unit):
@@ -153,11 +202,73 @@ func has_free_work_slot(unit: Unit) -> bool:
 func take_damage(amount: int, source: Unit) -> void:
 	hp = maxi(0, hp - maxi(1, amount))
 	if source != null and is_instance_valid(source) and owner_id >= 0 and source.owner_id >= 0 and source.owner_id != owner_id:
+		last_hit_s = Time.get_ticks_msec() / 1000.0
+		# Ranked alert first (the HUD may swallow the generic one after it).
+		EventBus.building_attacked.emit(self, source)
 		EventBus.under_attack.emit(owner_id, position)
 	queue_redraw()
 	if hp == 0:
 		Sfx.play_at("collapse", position)
 		destroyed.emit(self)
+
+
+## Restores HP (repairs). Never above max; never on foundations.
+func repair(amount: int) -> void:
+	if not is_complete() or hp >= max_hp:
+		return
+	hp = mini(max_hp, hp + maxi(0, amount))
+	queue_redraw()
+
+
+## True while an enemy hit landed less than `window_s` seconds ago.
+func recently_hit(window_s: float) -> bool:
+	return Time.get_ticks_msec() / 1000.0 - last_hit_s < window_s
+
+
+## A tap on an own shelter sends units in only while it makes sense: the
+## building was hit lately or an enemy soldier is close (otherwise the tap
+## just selects the building, which is what a player usually wants).
+func in_danger(p_world: World) -> bool:
+	if recently_hit(float(DataLoader.rule("garrison", "danger_s", 20.0))):
+		return true
+	var radius: float = float(DataLoader.rule("garrison", "danger_px", 420.0))
+	for other: Object in p_world.movement.spatial.query(position, radius):
+		var u: Unit = other as Unit
+		if not u.is_dead and u.owner_id >= 0 and u.owner_id != owner_id and not u.can_gather() and u.position.distance_to(position) <= radius:
+			return true
+	return false
+
+
+# ------------------------------------------------------------------ garrison
+
+## {"slots", "classes"} for buildings that shelter units; empty otherwise.
+func garrison_info() -> Dictionary:
+	return data.get("garrison", {})
+
+
+func garrison_slots() -> int:
+	return int(garrison_info().get("slots", 0))
+
+
+## Whether this unit may shelter here now (own, built, class allowed, room).
+func can_garrison(unit: Unit) -> bool:
+	var info: Dictionary = garrison_info()
+	if info.is_empty() or not is_complete() or unit == null or unit.owner_id != owner_id or unit.is_dead:
+		return false
+	if garrison.size() >= int(info.get("slots", 0)):
+		return false
+	var allowed: Array = info.get("classes", [])
+	for c: Variant in Combat.classes_of(unit.data):
+		if allowed.has(String(c)):
+			return true
+	return false
+
+
+## Extra arrows per volley from the sheltered units (rules garrison.arrow_cap).
+func garrison_arrows() -> int:
+	if data.get("combat", {}).is_empty():
+		return 0
+	return mini(garrison.size(), int(DataLoader.rule("garrison", "arrow_cap", 10)))
 
 
 func is_gate() -> bool:
@@ -187,7 +298,8 @@ func _draw() -> void:
 	var region: Rect2 = PlaceholderArt.building_region(look, owner_id, GameState.era_of(owner_id) if building_type == "town_center" else 0)
 	var half: Vector2 = Vector2(footprint) * tile_size * 0.5
 	if is_complete():
-		draw_texture_rect_region(tex, Rect2(-half, region.size), region)
+		# A fallow farm is bare earth: dim and brown until it is reseeded.
+		draw_texture_rect_region(tex, Rect2(-half, region.size), region, Color(0.6, 0.5, 0.42) if fallow else Color.WHITE)
 	else:
 		# Foundation: faded building + construction progress bar.
 		draw_texture_rect_region(tex, Rect2(-half, region.size), region, Color(1, 1, 1, 0.35 + 0.5 * build_progress))
@@ -200,8 +312,41 @@ func _draw() -> void:
 		draw_texture_rect_region(tex, Rect2(tbar.position + Vector2(1, 1), Vector2((tbar.size.x - 2.0) * train_progress(), 4.0)), PlaceholderArt.WHITE_RECT, Color(0.4, 0.75, 1.0))
 	if selected:
 		draw_rect(Rect2(-half, half * 2.0), Color(0.35, 1.0, 0.35), false, 3.0)
+	if is_complete() and hp < max_hp:
+		_draw_cracks(tex, half)
 	if hp < max_hp:
 		var top: Vector2 = Vector2(-half.x + 8.0, -half.y - 10.0)
 		var w: float = half.x * 2.0 - 16.0
 		draw_texture_rect_region(tex, Rect2(top, Vector2(w, 6.0)), PlaceholderArt.WHITE_RECT, Color(0.1, 0.1, 0.1, 0.85))
-		draw_texture_rect_region(tex, Rect2(top + Vector2(1, 1), Vector2((w - 2.0) * float(hp) / max_hp, 4.0)), PlaceholderArt.WHITE_RECT, Color(0.3, 0.9, 0.3))
+		var ratio: float = float(hp) / max_hp
+		var col: Color = Color(0.3, 0.9, 0.3) if ratio > 0.5 else (Color(0.95, 0.8, 0.2) if ratio > 0.25 else Color(0.95, 0.3, 0.2))
+		draw_texture_rect_region(tex, Rect2(top + Vector2(1, 1), Vector2((w - 2.0) * ratio, 4.0)), PlaceholderArt.WHITE_RECT, col)
+	if not repairers.is_empty():
+		# Hammer over the roof: someone is repairing.
+		var at: Vector2 = Vector2(half.x - 22.0, -half.y - 26.0)
+		draw_texture_rect_region(tex, Rect2(at + Vector2(6, 4), Vector2(4, 16)), PlaceholderArt.WHITE_RECT, Color(0.55, 0.35, 0.15))
+		draw_texture_rect_region(tex, Rect2(at, Vector2(16, 7)), PlaceholderArt.WHITE_RECT, Color(0.95, 0.85, 0.3))
+	if not garrison.is_empty():
+		# One dot per sheltered unit along the top edge (up to 10).
+		for i: int in mini(garrison.size(), 10):
+			draw_texture_rect_region(tex, Rect2(Vector2(-half.x + 6.0 + i * 7.0, -half.y + 4.0), Vector2(5, 5)), PlaceholderArt.WHITE_RECT, Color(1.0, 0.95, 0.6))
+
+
+## Damage states: dark cracks appear at 60% and spread at 30%, so a wall
+## about to fall reads at a glance. Positions come from the cell, so each
+## building cracks differently but always the same way.
+func _draw_cracks(tex: Texture2D, half: Vector2) -> void:
+	var ratio: float = float(hp) / max_hp
+	if ratio >= 0.6:
+		return
+	var n: int = 2 if ratio >= 0.3 else 5
+	var seed_v: int = cell.x * 73 + cell.y * 151
+	var ink: Color = Color(0.08, 0.06, 0.05, 0.85)
+	for i: int in n:
+		var h: int = (seed_v + i * 97) % 1000
+		var x: float = -half.x + 6.0 + float(h % 100) / 100.0 * (half.x * 2.0 - 14.0)
+		var y: float = -half.y * 0.2 + float((h / 10) % 100) / 100.0 * (half.y * 1.1)
+		var len_v: float = 6.0 + float(h % 7) * 2.0
+		var vertical: bool = (h / 100) % 2 == 0
+		draw_texture_rect_region(tex, Rect2(Vector2(x, y), Vector2(2.0, len_v) if vertical else Vector2(len_v, 2.0)), PlaceholderArt.WHITE_RECT, ink)
+		draw_texture_rect_region(tex, Rect2(Vector2(x + (2.0 if vertical else len_v * 0.5), y + (len_v * 0.5 if vertical else 2.0)), Vector2(len_v * 0.6, 2.0) if vertical else Vector2(2.0, len_v * 0.6)), PlaceholderArt.WHITE_RECT, ink)

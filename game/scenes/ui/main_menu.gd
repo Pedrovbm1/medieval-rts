@@ -29,13 +29,37 @@ func _show_main() -> void:
 	tutorial.disabled = DataLoader.get_entry("scenarios", "tutorial").is_empty()
 
 
+## "Fair AI" (no hidden bonuses for the computer) is the default; the toggle
+## below the difficulties flips it for the next match and the cards say
+## exactly what each side gets, so a loss never feels like a cheat.
+static var fair_ai: bool = true
+
+
 func _show_difficulty() -> void:
 	_clear()
 	_heading(tr("MENU_CHOOSE_DIFFICULTY"))
 	for id: String in ["easy", "normal", "hard"]:
 		var key: String = String(Dictionary(Dictionary(DataLoader.get_table("ai").get("difficulties", {})).get(id, {})).get("name_key", id))
-		_button(tr(key), func() -> void: _show_maps(id))
+		var b: Button = _button(tr(key) + "\n" + difficulty_card(id, fair_ai), func() -> void: _show_maps(id))
+		b.add_theme_font_size_override("font_size", 22)
+		b.custom_minimum_size = Vector2(520, 96)
+	var toggle: Button = _button(tr("MENU_FAIR_ON") if fair_ai else tr("MENU_FAIR_OFF"), func() -> void:
+		fair_ai = not fair_ai
+		_show_difficulty())
+	toggle.add_theme_font_size_override("font_size", 22)
+	toggle.custom_minimum_size = Vector2(520, 72)
 	_button(tr("HUD_BACK"), _show_main)
+
+
+## One line per difficulty: what the AI gets and what you get.
+static func difficulty_card(id: String, fair: bool) -> String:
+	var ai_bonus: String = "" if fair else AIController.bonus_text(id)
+	var parts: PackedStringArray = PackedStringArray()
+	parts.append(TranslationServer.translate("MENU_AI_BONUS") % (ai_bonus if ai_bonus != "" else TranslationServer.translate("MENU_NO_BONUS")))
+	var mine: String = AIController.human_bonus_text(id)
+	if mine != "":
+		parts.append(TranslationServer.translate("MENU_YOU_BONUS") % mine)
+	return "  ·  ".join(parts)
 
 
 func _show_maps(difficulty: String) -> void:
@@ -46,7 +70,7 @@ func _show_maps(difficulty: String) -> void:
 		if def.is_empty():
 			continue
 		var id: String = String(map_id)
-		_button(tr(String(def.get("name_key", id))), func() -> void: _start({"scenario": "skirmish", "map": id, "ai": {"1": difficulty}}))
+		_button(tr(String(def.get("name_key", id))), func() -> void: _start({"scenario": "skirmish", "map": id, "ai": {"1": difficulty}, "fair": fair_ai}))
 	_button(tr("HUD_BACK"), _show_difficulty)
 
 

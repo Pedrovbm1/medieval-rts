@@ -15,6 +15,11 @@ var ai_override: Dictionary = {}
 var map_override: String = ""
 ## Tests: seed for AI decisions.
 var ai_seed: int = 1
+## "Fair AI": computer players get no hidden economic bonus (menu default).
+## Tests that measure the bonus set it to false.
+var fair_ai: bool = true
+## Town bell state: true while villagers are sheltered because of it.
+var bell_on: bool = false
 var ais: Array[AIController] = []
 ## Tests / menu: a SaveGame snapshot to load instead of running the scenario.
 var load_data: Dictionary = {}
@@ -69,6 +74,13 @@ func _ready() -> void:
 	hud.tech = world.tech
 	hud.dequeue_pressed.connect(_on_dequeue_pressed)
 	hud.cancel_construction_pressed.connect(_on_cancel_construction)
+	hud.camera = camera
+	if hud.alert_arrow != null:
+		hud.alert_arrow.camera = camera
+	hud.bell_pressed.connect(ring_bell)
+	hud.eject_pressed.connect(_on_eject_pressed)
+	hud.economy = world.economy
+	hud.buy_pressed.connect(_on_buy_pressed)
 
 	world.vision.fog_enabled = bool(def.get("fog", DataLoader.rule("vision", "fog", true)))
 	if world.vision.fog_enabled:
@@ -107,7 +119,7 @@ func _ready() -> void:
 	for key: Variant in ai_players.keys():
 		var ai: AIController = AIController.new()
 		add_child(ai)
-		ai.setup(world, int(key), String(ai_players[key]), ai_seed + int(key) * 101)
+		ai.setup(world, int(key), String(ai_players[key]), ai_seed + int(key) * 101, fair_ai)
 		ai.resigned.connect(rules.resign)
 		ais.append(ai)
 	if not load_data.is_empty():
@@ -150,6 +162,7 @@ func _consume_launch() -> void:
 			load_data = data
 			scenario = String(data.get("scenario", "skirmish"))
 			map_override = String(data.get("map_id", ""))
+			fair_ai = bool(data.get("fair_ai", true))
 			var ai_list: Dictionary = {}
 			for a: Variant in data.get("ais", []):
 				ai_list[int(a["player"])] = String(a["difficulty"])
@@ -157,6 +170,7 @@ func _consume_launch() -> void:
 	elif launch.has("scenario"):
 		scenario = String(launch["scenario"])
 		map_override = String(launch.get("map", ""))
+		fair_ai = bool(launch.get("fair", true))
 		for key: Variant in Dictionary(launch.get("ai", {})).keys():
 			ai_override[int(key)] = String(launch["ai"][key])
 
@@ -190,16 +204,23 @@ func _check_army_warning() -> void:
 		return
 	var radius: float = float(DataLoader.rule("alerts", "army_radius_px", 2200))
 	var seen: int = 0
+	var army_at: Vector2 = Vector2.ZERO
 	for u: Unit in world.units:
 		if u.owner_id < 0 or u.owner_id == p or u.is_dead or u.can_gather():
 			continue
 		var d: float = u.position.distance_to(tc.position)
 		if d < radius and d > 600.0 and world.vision.grid.is_visible(p, u.position):
 			seen += 1
+			army_at += u.position
+	if seen > 0:
+		army_at /= seen
 	if seen >= int(DataLoader.rule("alerts", "army_min_units", 6)):
 		_army_warn_t = now
-		hud.show_banner(tr("ALERT_ARMY"))
+		hud.show_banner(tr("ALERT_ARMY"), "critical")
 		Sfx.play("alert")
+		hud.minimap.alert(army_at, "army")
+		if hud.alert_arrow != null:
+			hud.alert_arrow.point(army_at)
 		if OS.is_debug_build():
 			print("[REALM] army warning seen=%d" % seen)
 
@@ -207,6 +228,70 @@ func _check_army_warning() -> void:
 func _refresh_idle() -> void:
 	_check_army_warning()
 	hud.set_idle_count(world.economy.idle_villagers(GameState.PLAYER_HUMAN).size())
+	if bell_on and world.garrisoned_units(GameState.PLAYER_HUMAN).is_empty():
+		bell_on = false
+	hud.set_bell(bell_on)
+
+
+## Town bell. First ring: every villager near a Town Center or tower runs
+## inside (rules garrison.bell_radius_px). Second ring: everyone comes out
+## and goes back to work. Returns how many units were sent in / let out.
+func ring_bell() -> int:
+	var p: int = GameState.PLAYER_HUMAN
+	var n: int = 0
+	if bell_on:
+		for b: Building in world.buildings:
+			if b.owner_id == p:
+				n += b.garrison.size()
+				world.eject_all(b)
+		bell_on = false
+	else:
+		n = shelter_villagers(p)
+		bell_on = n > 0
+	hud.set_bell(bell_on)
+	Sfx.play("bell")
+	if OS.is_debug_build():
+		print("[REALM] bell on=%s units=%d" % [bell_on, n])
+	return n
+
+
+## Sends every villager of `p` within reach of a sheltering building to the
+## nearest one with room (Town Center first). Shared with the AI.
+func shelter_villagers(p: int) -> int:
+	var radius: float = float(DataLoader.rule("garrison", "bell_radius_px", 1400))
+	var shelters: Array[Building] = []
+	for b: Building in world.buildings:
+		if b.owner_id == p and b.is_complete() and b.garrison_slots() > 0:
+			shelters.append(b)
+	shelters.sort_custom(func(a: Building, b: Building) -> bool: return (a.building_type == "town_center") and b.building_type != "town_center")
+	var room: Dictionary = {}
+	for b: Building in shelters:
+		room[b] = b.garrison_slots() - b.garrison.size()
+	var sent: int = 0
+	for u: Unit in world.units.duplicate():
+		if u.owner_id != p or u.is_dead or not u.can_gather() or u.task is GarrisonTask:
+			continue
+		var best: Building = null
+		var best_d: float = INF
+		for b: Building in shelters:
+			if int(room[b]) <= 0 or not b.can_garrison(u):
+				continue
+			var d: float = u.position.distance_to(b.position)
+			if d <= radius and d < best_d:
+				best_d = d
+				best = b
+		if best != null:
+			room[best] = int(room[best]) - 1
+			world.behavior.assign(u, GarrisonTask.new(u, world, best))
+			sent += 1
+	return sent
+
+
+func _on_eject_pressed() -> void:
+	var b: Building = selection.selected_building
+	if b != null and is_instance_valid(b):
+		world.eject_all(b)
+		hud.show_building(b)
 
 
 ## Idle bell: select the next idle villager and bring the camera to it.
@@ -250,6 +335,16 @@ func _on_sell_pressed(resource: String) -> void:
 		hud.show_building(b)
 
 
+func _on_buy_pressed(resource: String) -> void:
+	var b: Building = selection.selected_building
+	if world.economy.buy(GameState.PLAYER_HUMAN, resource):
+		Sfx.play("deposit")
+	else:
+		Sfx.play("error")
+	if b != null and is_instance_valid(b):
+		hud.show_building(b)
+
+
 func _on_dequeue_pressed() -> void:
 	var b: Building = selection.selected_building
 	if b != null and is_instance_valid(b) and not b.queue.is_empty():
@@ -275,7 +370,14 @@ func _on_match_ended(winner_id: int, loser_id: int, seconds: float) -> void:
 			why = tr("END_WHY_TC_WIN") if won else tr("END_WHY_TC_LOSS")
 		"resign":
 			why = tr("END_WHY_RESIGN") if won else ""
-	hud.show_end(won, seconds, GameState.stats.get(GameState.PLAYER_HUMAN, {}), GameState.stats.get(loser_id if won else winner_id, {}), why)
+	var rival: int = loser_id if won else winner_id
+	var lines: Array[String] = rules.report_lines(GameState.PLAYER_HUMAN, rival, won)
+	if not fair_ai:
+		for ai: AIController in ais:
+			var bonus: String = AIController.bonus_text(ai.difficulty_id)
+			if bonus != "":
+				lines.append(tr("REPORT_AI_BONUS") % bonus)
+	hud.show_end(won, seconds, GameState.stats.get(GameState.PLAYER_HUMAN, {}), GameState.stats.get(rival, {}), why, lines)
 
 
 func _on_retry() -> void:

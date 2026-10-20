@@ -17,7 +17,7 @@ const ORDER_COLORS: Dictionary = {
 	"build": Color(1.0, 0.85, 0.3),
 }
 
-const WORK_KINDS: PackedStringArray = ["gather", "build", "hunt", "deliver"]
+const WORK_KINDS: PackedStringArray = ["gather", "build", "hunt", "deliver", "repair", "garrison"]
 
 var world: World
 var camera: CameraController
@@ -213,6 +213,8 @@ func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
 	if not unit.can_gather():
 		if kind == "animal" and not unit.data.get("combat", {}).is_empty():
 			return AttackTask.new(unit, world, ref, true)
+		if kind == "own_building" and (ref as Building).can_garrison(unit) and (ref as Building).in_danger(world):
+			return GarrisonTask.new(unit, world, ref)
 		return null
 	match kind:
 		"tree":
@@ -227,10 +229,14 @@ func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
 			var b: Building = ref
 			if not b.is_complete():
 				return BuildTask.new(unit, world, b)
+			if RepairTask.can_repair(unit, b):
+				return RepairTask.new(unit, world, b)
 			if not b.gather_info().is_empty():
 				return GatherTask.for_farm(unit, world, b)
 			if unit.carry_amount >= 1.0 and b.accepts(unit.carry_type):
 				return GatherTask.deliver_to(unit, world, b)
+			if b.can_garrison(unit) and b.in_danger(world):
+				return GarrisonTask.new(unit, world, b)
 	return null
 
 

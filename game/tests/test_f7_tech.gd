@@ -6,10 +6,11 @@ var main: Node
 var world: World
 
 
-func _open(scenario: String, override: Dictionary = {}) -> void:
+func _open(scenario: String, override: Dictionary = {}, fair: bool = true) -> void:
 	main = load("res://scenes/main/main.tscn").instantiate()
 	main.scenario = scenario
 	main.ai_override = override
+	main.fair_ai = fair
 	add_to_tree(main)
 	await frames(1)
 	world = main.get_node("World")
@@ -168,7 +169,8 @@ func test_e_towers_shoot_and_battlements_help() -> void:
 ## "Era IV is reachable in 25 minutes": shown by the Hard AI (good economy).
 ## The Normal AI is the pacing opponent for the passive-player test in F6.
 func test_f_ai_reaches_era_four_in_25_minutes() -> void:
-	await _open("skirmish", {1: "hard"})
+	await _open("skirmish", {1: "hard"}, false)  # Hard with its economic bonus (the menu default is fair)
+
 	var ai: AIController = main.ais[0]
 	var rules: MatchRules = main.get_node("MatchRules")
 	rules.set_physics_process(false)  # keep playing after the passive human falls

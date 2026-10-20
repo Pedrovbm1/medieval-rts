@@ -184,7 +184,8 @@ static func build() -> void:
 		if not r.has("color"):
 			continue
 		var rfp: Array = r.get("footprint", [1, 1])
-		images["res:" + type_id] = NaturePainter.resource(type_id, Vector2i(int(rfp[0]) * tile, int(rfp[1]) * tile), Color.html(String(r.get("color", "#cccccc"))))
+		# "art": paint like another type (a rich gold vein looks like a gold mine).
+		images["res:" + type_id] = NaturePainter.resource(String(r.get("art", type_id)), Vector2i(int(rfp[0]) * tile, int(rfp[1]) * tile), Color.html(String(r.get("color", "#cccccc"))))
 
 	for res: String in ["food", "wood", "gold", "stone"]:
 		images["icon:" + res] = NaturePainter.icon(res)

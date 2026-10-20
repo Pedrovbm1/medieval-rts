@@ -100,6 +100,13 @@ func _strike() -> void:
 	if not Combat.target_alive(target):
 		return
 	var dmg: int = Combat.hit_damage(unit, target)
+	# Siege charge: the first blow on a building after a rest hits harder
+	# (units.json combat.charge {mult, cooldown_s}), so a ram opens a wall fast.
+	var charge: Dictionary = _attack.get("charge", {})
+	if not charge.is_empty() and unit.charge_cd <= 0.0 and target is Building:
+		dmg = int(round(dmg * float(charge.get("mult", 2.0))))
+		unit.charge_cd = float(charge.get("cooldown_s", 20.0))
+		Sfx.play_at("siege_hit", (target as Building).position)
 	var proj: Dictionary = _attack.get("projectile", {})
 	if not proj.is_empty():
 		world.combat.fire(unit, target, dmg, float(proj.get("speed_px", 600)), float(_attack.get("splash_px", 0.0)))

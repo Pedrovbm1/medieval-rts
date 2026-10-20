@@ -23,7 +23,9 @@
 		"siege_hit": 0.2,
 		"siege_fire": 0.2,
 		"heal": 0.4,
-		"error": 0.3
+		"error": 0.3,
+		"bell": 1.0,
+		"alert_soft": 1.5
 	},
 	"sfx": {
 		"alert": "res://assets/audio/sfx/alert.wav",
@@ -98,7 +100,9 @@
 		"ui_click": "res://assets/audio/sfx/ui_click.wav",
 		"ui_open": "res://assets/audio/sfx/ui_open.wav",
 		"unit_ready": "res://assets/audio/sfx/unit_ready.wav",
-		"victory": "res://assets/audio/sfx/victory.wav"
+		"victory": "res://assets/audio/sfx/victory.wav",
+		"bell": "res://assets/audio/sfx/bell.wav",
+		"alert_soft": "res://assets/audio/sfx/alert_soft.wav"
 	},
 	"music": {
 		"menu": "res://assets/audio/music/menu.wav",

@@ -30,12 +30,24 @@ func setup(p_world: World, p_camera: CameraController) -> void:
 	EventBus.tree_depleted.connect(func(_c: Vector2i) -> void: _bake_terrain())
 
 
-func alert(world_pos: Vector2) -> void:
+## Marks a spot: "attack" (red pulse), "villagers" (yellow pulse), "breach"
+## (red cross, a wall fell) or "army" (orange triangle, enemy army seen).
+func alert(world_pos: Vector2, kind: String = "attack") -> void:
 	for a: Array in _alerts:
 		if Vector2(a[0]).distance_to(world_pos) < 600.0:
+			# One mark per spot; the newest (most specific) kind wins.
 			a[1] = ALERT_SECONDS
+			a[2] = kind
 			return
-	_alerts.append([world_pos, ALERT_SECONDS])
+	_alerts.append([world_pos, ALERT_SECONDS, kind])
+
+
+## Kinds currently shown (tests).
+func alert_kinds() -> Array[String]:
+	var out: Array[String] = []
+	for a: Array in _alerts:
+		out.append(String(a[2]))
+	return out
 
 
 func _process(delta: float) -> void:
@@ -103,7 +115,18 @@ func _draw() -> void:
 	for a: Array in _alerts:
 		var p: Vector2 = to_local_point(a[0])
 		var pulse: float = 6.0 + 6.0 * absf(sin(t * 5.0))
-		draw_arc(p, pulse, 0.0, TAU, 20, Color(1, 0.25, 0.2, 0.95), 2.0)
+		match String(a[2]):
+			"villagers":
+				draw_arc(p, pulse, 0.0, TAU, 20, Color(1, 0.9, 0.3, 0.95), 2.0)
+			"breach":
+				var s: float = 5.0 + 2.0 * absf(sin(t * 4.0))
+				draw_line(p + Vector2(-s, -s), p + Vector2(s, s), Color(1, 0.2, 0.15, 0.95), 3.0)
+				draw_line(p + Vector2(s, -s), p + Vector2(-s, s), Color(1, 0.2, 0.15, 0.95), 3.0)
+			"army":
+				var s2: float = 6.0 + 2.0 * absf(sin(t * 4.0))
+				draw_colored_polygon(PackedVector2Array([p + Vector2(0, -s2), p + Vector2(s2, s2), p + Vector2(-s2, s2)]), Color(1, 0.6, 0.15, 0.95))
+			_:
+				draw_arc(p, pulse, 0.0, TAU, 20, Color(1, 0.25, 0.2, 0.95), 2.0)
 
 
 func _bake_terrain() -> void:

@@ -44,6 +44,8 @@ func _physics_process(delta: float) -> void:
 		if unit.is_dead or not is_instance_valid(unit):
 			continue
 		unit.attack_cooldown = maxf(0.0, unit.attack_cooldown - delta)
+		if unit.charge_cd > 0.0:
+			unit.charge_cd = maxf(0.0, unit.charge_cd - delta)
 		if unit.task != null:
 			var task: UnitTask = unit.task
 			task.tick(delta)

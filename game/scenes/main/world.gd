@@ -313,12 +313,96 @@ func place_building(type_id: String, player_id: int, origin_cell: Vector2i) -> B
 func remove_building(b: Building) -> void:
 	if not buildings.has(b):
 		return
+	eject_all(b)
 	buildings.erase(b)
 	if not b.walkable or (b.is_gate() and not b.is_open):
 		nav.set_blocked(b.cells(), false)
+	if b.hp <= 0 and b.is_complete():
+		add_rubble(b.rect())
+		if (b.is_wall() or b.is_gate()) and b.owner_id >= 0:
+			EventBus.wall_breached.emit(b.owner_id, b.position)
 	EventBus.building_removed.emit(b)
 	b.queue_free()
 	economy.refresh_population()
+
+
+## Dark stones where a building fell; they fade over rules walls.rubble_s.
+func add_rubble(rect: Rect2) -> void:
+	var r: Rubble = Rubble.new()
+	r.setup(rect, float(DataLoader.rule("walls", "rubble_s", 90.0)))
+	entities.add_child(r)
+
+
+# ------------------------------------------------------------------ garrison
+
+## Shelters `unit` inside `b`: hidden, out of World.units (nobody targets or
+## selects it), still counted for population. Remembers its gather/build task
+## so it can go back to work when it comes out.
+func garrison_unit(unit: Unit, b: Building, p_resume: GatherTask = null) -> bool:
+	if not b.can_garrison(unit) or not units.has(unit):
+		return false
+	var resume: UnitTask = p_resume
+	if resume == null:
+		resume = unit.task
+		if resume is BuildTask:
+			resume = (resume as BuildTask).resume
+		elif resume is GarrisonTask:
+			resume = (resume as GarrisonTask).resume
+		elif not (resume is GatherTask):
+			resume = null
+	units.erase(unit)
+	movement.stop(unit)
+	behavior.release(unit)
+	unit.selected = false
+	unit.visible = false
+	unit.attack_move = false
+	unit.garrisoned_in = b
+	unit.position = b.position
+	b.garrison.append(unit)
+	if resume != null:
+		b.garrison_resume[unit] = resume
+	EventBus.unit_removed.emit(unit)
+	EventBus.garrison_changed.emit(b)
+	economy.refresh_population()
+	b.queue_redraw()
+	return true
+
+
+## Brings `unit` out next to the building and sends it back to what it was
+## doing (gathering) if that still makes sense.
+func eject(unit: Unit, b: Building) -> void:
+	if not b.garrison.has(unit):
+		return
+	b.garrison.erase(unit)
+	var toward: Vector2 = b.rally_point if b.rally_point != Vector2.INF else b.position + Vector2(0, b.rect().size.y)
+	unit.position = approach_point(b.rect(), toward) + Vector2(randf_range(-10.0, 10.0), randf_range(-6.0, 6.0))
+	unit.visible = true
+	unit.garrisoned_in = null
+	units.append(unit)
+	EventBus.unit_spawned.emit(unit)
+	var old: UnitTask = b.garrison_resume.get(unit)
+	b.garrison_resume.erase(unit)
+	if old is GatherTask:
+		var again: GatherTask = GatherTask.resume_like(old as GatherTask, unit, self)
+		if again != null:
+			behavior.assign(unit, again)
+	EventBus.garrison_changed.emit(b)
+	economy.refresh_population()
+	b.queue_redraw()
+
+
+func eject_all(b: Building) -> void:
+	for u: Unit in b.garrison.duplicate():
+		eject(u, b)
+
+
+## Every unit of a player inside any building (bell state, saves, tests).
+func garrisoned_units(player_id: int) -> Array[Unit]:
+	var out: Array[Unit] = []
+	for b: Building in buildings:
+		if b.owner_id == player_id:
+			out.append_array(b.garrison)
+	return out
 
 
 func building_at(world_pos: Vector2) -> Building:

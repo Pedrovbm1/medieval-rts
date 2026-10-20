@@ -128,6 +128,8 @@ func _tick_to_target() -> void:
 
 
 func _tick_gathering(delta: float) -> void:
+	if _waiting_for_reseed(delta):
+		return
 	if not _target_valid():
 		if unit.carry_amount >= 1.0:
 			_begin_dropoff()
@@ -244,8 +246,22 @@ func _target_valid() -> bool:
 		Target.TREE:
 			return world.is_tree(tree_cell)
 		Target.FARM:
-			return farm != null and is_instance_valid(farm) and farm.is_complete() and farm.has_free_work_slot(unit)
+			return farm != null and is_instance_valid(farm) and farm.is_complete() and not farm.fallow and farm.has_free_work_slot(unit)
 	return false
+
+
+## A fallow farm (no wood to reseed): the farmer waits by it for a while
+## (rules farms.wait_s) instead of wandering off; once wood comes in the
+## farm reseeds itself and the work goes on. True while waiting.
+var _fallow_wait: float = 0.0
+
+
+func _waiting_for_reseed(delta: float) -> bool:
+	if target != Target.FARM or farm == null or not is_instance_valid(farm) or not farm.fallow:
+		_fallow_wait = 0.0
+		return false
+	_fallow_wait += delta
+	return _fallow_wait < float(DataLoader.rule("farms", "wait_s", 45.0))
 
 
 func _target_rect() -> Rect2:
@@ -282,7 +298,7 @@ func _take(want: float) -> float:
 		Target.TREE:
 			return world.take_from_tree(tree_cell, want)
 		Target.FARM:
-			return want
+			return farm.take_food(want)
 	return 0.0
 
 

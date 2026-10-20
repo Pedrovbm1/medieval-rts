@@ -163,5 +163,6 @@
 			"min_from_start": 16,
 			"kind": "animal"
 		}
-	]
+	],
+	"center_veins": true
 }
