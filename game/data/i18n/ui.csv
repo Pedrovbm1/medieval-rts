@@ -321,3 +321,23 @@ ALERT_CARAVAN,¡Atacan a tu caravana!,Your caravan is under attack!
 END_WHY_WONDER_WIN,Tu maravilla resistió el tiempo necesario.,Your wonder stood long enough.
 END_WHY_WONDER_LOSS,La maravilla del rival resistió el tiempo necesario.,The rival's wonder stood long enough.
 STAT_TRADE,Comercio,Trade
+MENU_MULTIPLAYER,Multijugador (Wi-Fi),Multiplayer (Wi-Fi)
+MENU_HOST,Crear partida,Host a match
+MENU_JOIN,Unirse con IP,Join with an IP
+MENU_YOUR_IP,Tu IP: %s,Your IP: %s
+MENU_NO_IP,Sin red Wi-Fi detectada,No Wi-Fi network detected
+MENU_WAITING_PLAYER,Esperando al rival… (que escriba tu IP),Waiting for the rival… (they type your IP)
+MENU_PLAYER_JOINED,Rival conectado,Rival connected
+MENU_START_MATCH,Iniciar partida,Start the match
+MENU_CONNECT,Conectar,Connect
+MENU_IP_HINT,IP del anfitrión (ej. 192.168.1.20),Host IP (e.g. 192.168.1.20)
+MENU_CONNECTING,Conectando…,Connecting…
+MENU_CONNECTED_WAIT,Conectado. Esperando a que el anfitrión inicie…,Connected. Waiting for the host to start…
+MENU_CONNECT_FAILED,No se pudo conectar. Revisa la IP y que estén en la misma Wi-Fi.,Could not connect. Check the IP and that both are on the same Wi-Fi.
+MENU_HOST_FAILED,No se pudo crear la partida (puerto %d ocupado),Could not host (port %d busy)
+MENU_CANCEL,Cancelar,Cancel
+MENU_MAP_LABEL,Mapa: %s,Map: %s
+NET_WAITING,Esperando al rival…,Waiting for the rival…
+NET_DESYNC,¡Desincronización en el turno %d! Los dos juegos ya no coinciden.,Desync at turn %d! The two games no longer match.
+NET_PEER_LOST,El rival se desconectó,The rival disconnected
+NET_SEAT,Juegas como jugador %d,You play as player %d

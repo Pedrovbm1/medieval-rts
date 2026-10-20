@@ -1273,6 +1273,43 @@ func set_speed(value: float) -> void:
 		speed_button.text = "x%d" % int(round(value))
 
 
+## Networked match: x1 only (time_scale would change the simulation tick).
+func lock_speed() -> void:
+	set_speed(1.0)
+	if speed_button != null:
+		speed_button.disabled = true
+		speed_button.visible = false
+
+
+# ------------------------------------------------------------------ network status
+
+var net_label: Label = null
+
+
+## Small persistent line under the top bar: seat, "waiting for the rival",
+## desync or lost peer. "" hides it.
+func set_net_status(text: String) -> void:
+	if net_label == null:
+		net_label = Label.new()
+		net_label.name = "NetStatus"
+		net_label.add_theme_font_size_override("font_size", 24)
+		net_label.add_theme_color_override("font_color", Color(1, 0.9, 0.6))
+		net_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+		net_label.add_theme_constant_override("outline_size", 6)
+		net_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		net_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		net_label.position = Vector2(0, 70)
+		add_child(net_label)
+	net_label.text = text
+	net_label.visible = text != ""
+	net_label.size = Vector2(get_viewport().get_visible_rect().size.x, 32)
+	net_label.position = Vector2(0, 70)
+
+
+func set_waiting(on: bool) -> void:
+	set_net_status(tr("NET_WAITING") if on else "")
+
+
 ## Pause panel: Resume / Save / Quit to menu. The tree is paused while open.
 func open_pause_menu() -> void:
 	if pause_panel != null or end_panel != null:

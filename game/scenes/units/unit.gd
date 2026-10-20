@@ -12,6 +12,9 @@ const OWNER_GAIA: int = -1
 
 var unit_type: String = ""
 var owner_id: int = 0
+## Simulation id: the same number on every device of a networked match
+## (World hands them out in creation order). Orders refer to units by it.
+var sim_id: int = 0
 var data: Dictionary = {}
 var radius: float = 12.0
 var speed_px: float = 96.0

@@ -23,6 +23,14 @@ var bell_on: bool = false
 var ais: Array[AIController] = []
 ## Tests / menu: a SaveGame snapshot to load instead of running the scenario.
 var load_data: Dictionary = {}
+## LAN match (NetSession): two humans, lockstep, no AI, no autosave, no speed.
+var net_match: bool = false
+## Seed every device shares (world RNG); tests set it to compare two runs.
+var match_seed: int = 0
+## Tests: fixed paths per tick (lockstep mode) even without a network.
+var deterministic: bool = false
+## Bell state per player (shelter / release); `bell_on` mirrors the local one.
+var bell_states: Dictionary = {}
 var scenario_id: String = ""
 var _autosave_timer: float = 0.0
 ## Guided tutorial (only in scenarios with "tutorial": true).
@@ -38,6 +46,8 @@ var _idle_cycle: int = 0
 @onready var runner: ScenarioRunner = $ScenarioRunner
 @onready var placement: PlacementController = $World/PlacementController
 @onready var rules: MatchRules = $MatchRules
+@onready var bus: CommandBus = $CommandBus
+@onready var lockstep: Lockstep = $Lockstep
 
 
 func _ready() -> void:
@@ -48,7 +58,14 @@ func _ready() -> void:
 	var map_id: String = map_override if map_override != "" and not DataLoader.get_map(map_override).is_empty() else String(def.get("map", "skirmish_120"))
 	GameState.new_match(map_id, "northvale", "northvale")
 	world.build_from_map(map_id)
+	if match_seed != 0:
+		world.set_match_seed(match_seed)
+	if net_match or deterministic:
+		world.set_deterministic(true)
 	camera.set_map_bounds(Rect2(Vector2.ZERO, world.map_size_px))
+	bus.setup(world, self)
+	selection.bus = bus
+	placement.bus = bus
 	selection.setup(world, camera, order_marker)
 	placement.setup(world, camera)
 	pointer.setup(camera, selection, hud, placement)
@@ -114,12 +131,15 @@ func _ready() -> void:
 	hud.menu_quit_pressed.connect(_quit_to_menu)
 	hud.menu_resign_pressed.connect(func() -> void:
 		hud.close_pause_menu()
-		rules.resign(GameState.PLAYER_HUMAN))
+		bus.submit({"type": "resign", "player": GameState.PLAYER_HUMAN}))
 	rules.setup(world)
 	hud.can_resign = rules.contenders.has(GameState.PLAYER_HUMAN) and tutorial == null
 	rules.match_ended.connect(_on_match_ended)
 	hud.retry_pressed.connect(_on_retry)
 	var ai_players: Dictionary = ai_override if not ai_override.is_empty() else Dictionary(def.get("ai", {}))
+	if net_match:
+		ai_players = {}  # two humans; the lockstep layer replaces the AI seat
+		_setup_lockstep()
 	for key: Variant in ai_players.keys():
 		var ai: AIController = AIController.new()
 		add_child(ai)
@@ -156,11 +176,80 @@ func _ready() -> void:
 			print("[REALM] unit %d %s screen=(%d,%d)" % [i, unit.unit_type, int(screen.x), int(screen.y)])
 
 
+## Networked match: the Lockstep node gates World / rules / scripted orders
+## until both devices have each turn's commands; the HUD shows stalls,
+## desyncs and a lost rival. No speed button (time_scale changes the tick).
+func _setup_lockstep() -> void:
+	var gated: Array[Node] = [world, rules, runner]
+	lockstep.setup(NetSession.local_player, NetSession.players, gated, bus.apply, world.state_hash)
+	bus.lockstep = lockstep
+	lockstep.waiting_changed.connect(hud.set_waiting)
+	lockstep.desync.connect(func(t: int, _mine: int, _theirs: int) -> void:
+		hud.show_banner(tr("NET_DESYNC") % t, "critical")
+		hud.set_net_status(tr("NET_DESYNC") % t))
+	lockstep.peer_lost.connect(func(_p: int) -> void:
+		hud.show_banner(tr("NET_PEER_LOST"), "critical")
+		hud.set_net_status(tr("NET_PEER_LOST")))
+	hud.lock_speed()
+	hud.set_net_status(tr("NET_SEAT") % (GameState.PLAYER_HUMAN + 1))
+	lockstep.started.connect(func() -> void: hud.set_net_status(""))
+	lockstep.start()
+	if OS.is_debug_build() and OS.get_cmdline_user_args().has("autoplay"):
+		_start_autoplay()
+
+
+## Debug soak test (`-- autoplay`): every few seconds this seat sends one of
+## its units somewhere near home, or trains a villager, through the normal
+## command path. Two instances left alone for minutes exercise the lockstep.
+var _autoplay_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+
+func _start_autoplay() -> void:
+	_autoplay_rng.randomize()
+	var t: Timer = Timer.new()
+	t.wait_time = 4.0
+	t.autostart = true
+	t.timeout.connect(_autoplay_step)
+	add_child(t)
+
+
+func _autoplay_step() -> void:
+	if rules.ended or not lockstep.is_started:
+		return
+	var p: int = GameState.PLAYER_HUMAN
+	var mine: Array[Unit] = []
+	var tc: Building = null
+	for u: Unit in world.units:
+		if u.owner_id == p and not u.is_dead and not u.is_animal():
+			mine.append(u)
+	for b: Building in world.buildings:
+		if b.owner_id == p and b.building_type == "town_center":
+			tc = b
+	if mine.is_empty() or tc == null:
+		return
+	if _autoplay_rng.randf() < 0.3:
+		if world.construction.can_enqueue(tc, "villager") == "":
+			bus.submit({"type": "train", "player": p, "building": tc.sim_id, "item": "villager"})
+		return
+	var u: Unit = mine[_autoplay_rng.randi_range(0, mine.size() - 1)]
+	var dest: Vector2 = tc.position + Vector2.from_angle(_autoplay_rng.randf() * TAU) * _autoplay_rng.randf_range(200.0, 900.0)
+	dest = world.nav.cell_center(world.nav.nearest_walkable(world.world_to_cell(dest.clamp(Vector2.ZERO, world.map_size_px - Vector2.ONE))))
+	var target: Dictionary = selection.resolve_target(dest)
+	bus.submit(CommandBus.order_cmd(p, [u] as Array[Unit], target, dest))
+	print("[REALM] autoplay seat=%d turn=%d unit=%d -> (%d,%d) %s" % [p, lockstep.turn, u.sim_id, int(dest.x), int(dest.y), String(target["kind"])])
+
+
 ## Menu choices (GameState.launch): scenario + AI, or a save slot to load.
 func _consume_launch() -> void:
 	var launch: Dictionary = GameState.launch
 	GameState.launch = {}
-	if launch.has("load"):
+	if launch.has("net"):
+		net_match = true
+		scenario = String(launch.get("scenario", "skirmish"))
+		map_override = NetSession.map_id
+		match_seed = NetSession.match_seed
+		fair_ai = true
+	elif launch.has("load"):
 		var data: Dictionary = SaveManager.load_payload(String(launch["load"]))
 		if not data.is_empty():
 			load_data = data
@@ -234,6 +323,7 @@ func _refresh_idle() -> void:
 	hud.set_idle_count(world.economy.idle_villagers(GameState.PLAYER_HUMAN).size())
 	if bell_on and world.garrisoned_units(GameState.PLAYER_HUMAN).is_empty():
 		bell_on = false
+		bell_states[GameState.PLAYER_HUMAN] = false
 	hud.set_bell(bell_on)
 	# Relic countdown (mine or the rival's) in the top bar.
 	var mine: float = rules.relic_countdown(GameState.PLAYER_HUMAN)
@@ -252,23 +342,43 @@ func _refresh_idle() -> void:
 
 ## Town bell. First ring: every villager near a Town Center or tower runs
 ## inside (rules garrison.bell_radius_px). Second ring: everyone comes out
-## and goes back to work. Returns how many units were sent in / let out.
+## and goes back to work. Returns how many units were sent in / let out
+## (0 in a networked match, where the command applies a couple of turns later).
 func ring_bell() -> int:
-	var p: int = GameState.PLAYER_HUMAN
+	var result: Variant = bus.submit({"type": "bell", "player": GameState.PLAYER_HUMAN})
+	Sfx.play("bell")
+	return int(result) if result != null else 0
+
+
+## The bell for any player (CommandBus): shelters or releases their villagers.
+## Which of the two is decided from the simulation alone (someone inside or
+## on the way in = release), never from a HUD flag: the HUD's idle timer runs
+## on the wall clock and must not steer a lockstep match.
+func apply_bell(p: int) -> int:
 	var n: int = 0
-	if bell_on:
+	var sheltering: bool = not world.garrisoned_units(p).is_empty()
+	for u: Unit in world.units:
+		if u.owner_id == p and u.task is GarrisonTask:
+			sheltering = true
+			break
+	var on: bool = false
+	if sheltering:
+		for u: Unit in world.units:
+			if u.owner_id == p and u.task is GarrisonTask:
+				world.behavior.assign(u, null)
 		for b: Building in world.buildings:
 			if b.owner_id == p:
 				n += b.garrison.size()
 				world.eject_all(b)
-		bell_on = false
 	else:
 		n = shelter_villagers(p)
-		bell_on = n > 0
-	hud.set_bell(bell_on)
-	Sfx.play("bell")
+		on = n > 0
+	bell_states[p] = on
+	if p == GameState.PLAYER_HUMAN:
+		bell_on = on
+		hud.set_bell(bell_on)
 	if OS.is_debug_build():
-		print("[REALM] bell on=%s units=%d" % [bell_on, n])
+		print("[REALM] bell player=%d on=%s units=%d" % [p, on, n])
 	return n
 
 
@@ -307,7 +417,7 @@ func shelter_villagers(p: int) -> int:
 func _on_eject_pressed() -> void:
 	var b: Building = selection.selected_building
 	if b != null and is_instance_valid(b):
-		world.eject_all(b)
+		bus.submit({"type": "eject", "player": GameState.PLAYER_HUMAN, "building": b.sim_id})
 		hud.show_building(b)
 
 
@@ -331,20 +441,25 @@ func _on_build_type_chosen(type_id: String) -> void:
 	placement.begin(type_id, builders)
 
 
+## Train / research: checked here first so the HUD can say why not, then
+## submitted as a command (applied now in solo play, next turns on LAN).
 func _on_train_pressed(type_id: String) -> void:
 	var b: Building = selection.selected_building
 	if b != null and is_instance_valid(b):
-		if not world.construction.enqueue(b, type_id):
+		if world.construction.can_enqueue(b, type_id) != "":
 			Sfx.play("error")
 			# Say why: which buildings are missing for the era, or what resources.
 			var why: String = hud.enqueue_reason(b, type_id)
 			if why != "":
 				hud.show_banner(why)
+			return
+		bus.submit({"type": "train", "player": GameState.PLAYER_HUMAN, "building": b.sim_id, "item": type_id})
 
 
 func _on_sell_pressed(resource: String) -> void:
 	var b: Building = selection.selected_building
-	if world.economy.sell(GameState.PLAYER_HUMAN, resource):
+	if resource != "gold" and world.economy.sell_error(GameState.PLAYER_HUMAN, resource) == "":
+		bus.submit({"type": "sell", "player": GameState.PLAYER_HUMAN, "resource": resource})
 		Sfx.play("deposit")
 	else:
 		Sfx.play("error")
@@ -354,7 +469,8 @@ func _on_sell_pressed(resource: String) -> void:
 
 func _on_buy_pressed(resource: String) -> void:
 	var b: Building = selection.selected_building
-	if world.economy.buy(GameState.PLAYER_HUMAN, resource):
+	if resource != "gold" and world.economy.buy_error(GameState.PLAYER_HUMAN, resource) == "":
+		bus.submit({"type": "buy", "player": GameState.PLAYER_HUMAN, "resource": resource})
 		Sfx.play("deposit")
 	else:
 		Sfx.play("error")
@@ -365,13 +481,13 @@ func _on_buy_pressed(resource: String) -> void:
 func _on_dequeue_pressed() -> void:
 	var b: Building = selection.selected_building
 	if b != null and is_instance_valid(b) and not b.queue.is_empty():
-		world.construction.dequeue(b, b.queue.size() - 1)
+		bus.submit({"type": "dequeue", "player": GameState.PLAYER_HUMAN, "building": b.sim_id, "index": b.queue.size() - 1})
 
 
 func _on_cancel_construction() -> void:
 	var b: Building = selection.selected_building
 	if b != null and is_instance_valid(b):
-		world.construction.cancel_construction(b)
+		bus.submit({"type": "cancel_construction", "player": GameState.PLAYER_HUMAN, "building": b.sim_id})
 		selection.select_building(null)
 
 
@@ -406,7 +522,7 @@ func _on_retry() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if rules == null or rules.ended or ais.is_empty():
+	if rules == null or rules.ended or ais.is_empty() or net_match:
 		return
 	_autosave_timer += delta
 	if _autosave_timer >= float(DataLoader.rule("save", "autosave_seconds", 120)):
@@ -415,8 +531,8 @@ func _physics_process(delta: float) -> void:
 
 
 func save_match(slot: String) -> Error:
-	if tutorial != null:
-		return ERR_UNAVAILABLE  # the tutorial is short and not resumable
+	if tutorial != null or net_match:
+		return ERR_UNAVAILABLE  # the tutorial is short and not resumable; LAN saves come later
 	var err: Error = SaveManager.save_payload(slot, SaveGame.snapshot(self))
 	if OS.is_debug_build():
 		print("[REALM] saved slot=%s err=%d" % [slot, err])
@@ -428,4 +544,6 @@ func _quit_to_menu() -> void:
 	Engine.time_scale = 1.0
 	if not rules.ended and not ais.is_empty():
 		save_match("auto")
+	if net_match:
+		NetSession.leave()
 	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

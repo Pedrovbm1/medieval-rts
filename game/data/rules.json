@@ -137,5 +137,13 @@
 	},
 	"wonder": {
 		"victory_s": 180.0
+	},
+	"net": {
+		"port": 7777,
+		"turn_ticks": 6,
+		"delay_turns": 2,
+		"hash_every_turns": 20,
+		"waiting_banner_s": 0.5,
+		"deterministic_paths_solo": false
 	}
 }

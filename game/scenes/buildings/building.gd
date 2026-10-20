@@ -12,6 +12,11 @@ signal changed(building: Building)
 
 var building_type: String = ""
 var owner_id: int = 0
+## Simulation id (same on every device of a networked match, see Unit).
+var sim_id: int = 0
+## The world this building lives in (set by World.place_building): its
+## simulation clock replaces the wall clock for "hit lately" checks.
+var world: World = null
 var data: Dictionary = {}
 var cell: Vector2i = Vector2i.ZERO
 var footprint: Vector2i = Vector2i(2, 2)
@@ -204,7 +209,7 @@ func has_free_work_slot(unit: Unit) -> bool:
 func take_damage(amount: int, source: Unit) -> void:
 	hp = maxi(0, hp - maxi(1, amount))
 	if source != null and is_instance_valid(source) and owner_id >= 0 and source.owner_id >= 0 and source.owner_id != owner_id:
-		last_hit_s = Time.get_ticks_msec() / 1000.0
+		last_hit_s = _now()
 		# Ranked alert first (the HUD may swallow the generic one after it).
 		EventBus.building_attacked.emit(self, source)
 		EventBus.under_attack.emit(owner_id, position)
@@ -224,7 +229,15 @@ func repair(amount: int) -> void:
 
 ## True while an enemy hit landed less than `window_s` seconds ago.
 func recently_hit(window_s: float) -> bool:
-	return Time.get_ticks_msec() / 1000.0 - last_hit_s < window_s
+	return _now() - last_hit_s < window_s
+
+
+## Simulation seconds (deterministic across devices); wall clock only for
+## buildings created outside a World (unit tests).
+func _now() -> float:
+	if world != null and is_instance_valid(world):
+		return world.sim_time
+	return Time.get_ticks_msec() / 1000.0
 
 
 ## A tap on an own shelter sends units in only while it makes sense: the

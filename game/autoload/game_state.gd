@@ -2,8 +2,12 @@ extends Node
 ## Holds the match state shared by every system: resources, era, population,
 ## per-player modifiers (techs) and match statistics.
 
-const PLAYER_HUMAN: int = 0
-const PLAYER_AI: int = 1
+## The player this device controls (0 in solo play and for the LAN host, 1
+## for the LAN client) and its rival. Variables with the old constant names so
+## every HUD / fog / camera lookup follows the local seat without changes.
+## Set with set_local_player() BEFORE the match scene is instantiated.
+var PLAYER_HUMAN: int = 0
+var PLAYER_AI: int = 1
 const RESOURCE_IDS: PackedStringArray = ["food", "wood", "gold", "stone"]
 
 var current_map_id: String = ""
@@ -36,12 +40,20 @@ func _ready() -> void:
 	new_match("skirmish_120", "northvale", "northvale")
 
 
+## Which seat this device plays (LAN client = 1). The rival is the other seat.
+func set_local_player(player_id: int) -> void:
+	PLAYER_HUMAN = player_id
+	PLAYER_AI = 1 - player_id
+
+
 ## Resets the state for a fresh match using starting values from civs.json.
+## Players are always inserted as 0 then 1 so dictionary order (and therefore
+## iteration order) is the same on every device of a networked match.
 func new_match(map_id: String, human_civ: String, ai_civ: String) -> void:
 	current_map_id = map_id
 	era = 1
-	eras = {PLAYER_HUMAN: 1, PLAYER_AI: 1}
-	civs = {PLAYER_HUMAN: human_civ, PLAYER_AI: ai_civ}
+	eras = {0: 1, 1: 1}
+	civs = {0: human_civ if PLAYER_HUMAN == 0 else ai_civ, 1: ai_civ if PLAYER_HUMAN == 0 else human_civ}
 	resources = {}
 	population = {}
 	multipliers = {}

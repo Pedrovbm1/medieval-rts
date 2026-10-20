@@ -11,6 +11,8 @@ signal line_changed(anchored: bool, count: int, cost: Dictionary)
 
 var world: World
 var camera: CameraController
+## Builds go out as commands (null = call the construction system directly).
+var bus: CommandBus = null
 var player_id: int = GameState.PLAYER_HUMAN
 var active: bool = false
 var type_id: String = ""
@@ -73,10 +75,20 @@ func confirm() -> Building:
 	if error != "":
 		Sfx.play("order_stop")
 		return null
-	var b: Building = world.construction.start_construction(player_id, type_id, cell, builders)
-	if b == null:
-		_revalidate()
-		return null
+	var b: Building = null
+	if bus != null:
+		# Networked: applied two turns later on both devices (returns null);
+		# the ghost closes now and the foundation appears when the turn runs.
+		var result: Variant = bus.submit({"type": "build", "player": player_id, "building_type": type_id, "cell": [cell.x, cell.y], "builders": OrderResolver.ids_of(builders)})
+		b = result as Building
+		if b == null and not bus_deferred():
+			_revalidate()
+			return null
+	else:
+		b = world.construction.start_construction(player_id, type_id, cell, builders)
+		if b == null:
+			_revalidate()
+			return null
 	active = false
 	visible = false
 	Sfx.play("place_building")
@@ -86,13 +98,28 @@ func confirm() -> Building:
 	return b
 
 
+## True while commands apply later (lockstep), so no result is known yet.
+func bus_deferred() -> bool:
+	return bus != null and bus.lockstep != null and bus.lockstep.active
+
+
 ## Line mode: builds every affordable free segment from the anchor on.
 func _confirm_line() -> Building:
 	if line_anchor.x < 0:
 		Sfx.play("order_stop")
 		return null
-	var made: Array[Building] = world.construction.start_wall_line(player_id, type_id, line_cells, builders)
-	if made.is_empty():
+	var made: Array[Building] = []
+	if bus != null:
+		var cells: Array = []
+		for c: Vector2i in line_cells:
+			cells.append([c.x, c.y])
+		var result: Variant = bus.submit({"type": "build_line", "player": player_id, "building_type": type_id, "cells": cells, "builders": OrderResolver.ids_of(builders)})
+		if result is Array:
+			for b: Variant in result:
+				made.append(b as Building)
+	else:
+		made = world.construction.start_wall_line(player_id, type_id, line_cells, builders)
+	if made.is_empty() and not bus_deferred():
 		Sfx.play("error")
 		_revalidate()
 		return null
@@ -100,10 +127,10 @@ func _confirm_line() -> Building:
 	line_anchor = line_cells[line_cells.size() - 1]
 	line_cells = [line_anchor]
 	Sfx.play("place_building")
-	if made.size() < line_cells.size():
+	if made.size() < line_cells.size() and not bus_deferred():
 		Sfx.play("error")
 	_revalidate()
-	placed.emit(made[0])
+	placed.emit(made[0] if not made.is_empty() else null)
 	_log("placed %s line n=%d" % [type_id, made.size()])
 	return made[0]
 

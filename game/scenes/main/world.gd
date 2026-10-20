@@ -34,6 +34,21 @@ var tech: TechSystem = TechSystem.new()
 var unit_pool: Dictionary = {}
 var units_created: int = 0
 
+# --- simulation identity and clock (lockstep multiplayer, replays) ---
+## Physics ticks simulated so far and the game seconds they add up to. Every
+## device of a networked match runs the same ticks, so these match too.
+var tick: int = 0
+var sim_time: float = 0.0
+## The match's random source for anything that changes the game (never the
+## global randf): seeded by the lobby so every device rolls the same numbers.
+var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Simulation ids handed out in creation order (units, buildings and nodes
+## share one counter); 0 = never assigned.
+var _next_sim_id: int = 1
+var _unit_by_id: Dictionary = {}
+var _building_by_id: Dictionary = {}
+var _node_by_id: Dictionary = {}
+
 var _grass_id: int = 0
 var _forest_id: int = 2
 ## cell key (y * width + x) -> wood left, only for trees already touched.
@@ -59,6 +74,7 @@ func build_from_map(p_map_id: String) -> void:
 	_forest_id = int(Dictionary(types.get("forest", {})).get("id", 2))
 	_tree_default = float(DataLoader.get_entry("resources", "tree").get("amount", 100))
 
+	rng.seed = int(map_def.get("seed", 1)) * 31 + 7
 	terrain_grid = MapGenerator.generate(map_def, terrain_def)
 	terrain_layer.tile_set = PlaceholderTileset.build(terrain_def)
 	terrain_layer.z_index = TERRAIN_Z  # below ground buildings (farms, z -1)
@@ -72,6 +88,99 @@ func build_from_map(p_map_id: String) -> void:
 	combat.setup(self)
 	vision.setup(self)
 	EventBus.map_generated.emit(map_width, map_height, tile_size)
+
+
+# ---------------------------------------------------------------- simulation clock
+
+## Runs before every child system in the same physics tick (parents first).
+func _physics_process(delta: float) -> void:
+	if map_width == 0:
+		return
+	tick += 1
+	sim_time += delta
+
+
+## Lockstep / replay mode: the same inputs must give the same world on every
+## device, so the path queue computes a fixed number of routes per tick.
+func set_deterministic(on: bool) -> void:
+	movement.set_deterministic(on)
+
+
+## Re-seeds the match RNG (the lobby's shared seed).
+func set_match_seed(seed_value: int) -> void:
+	rng.seed = seed_value
+
+
+func _assign_sim_id(node: Node2D) -> void:
+	node.set("sim_id", _next_sim_id)
+	_next_sim_id += 1
+
+
+func unit_by_id(id: int) -> Unit:
+	var u: Variant = _unit_by_id.get(id)
+	return u if u is Unit and is_instance_valid(u) else null
+
+
+func building_by_id(id: int) -> Building:
+	var b: Variant = _building_by_id.get(id)
+	return b if b is Building and is_instance_valid(b) else null
+
+
+func node_by_id(id: int) -> ResourceNode:
+	var n: Variant = _node_by_id.get(id)
+	return n if n is ResourceNode and is_instance_valid(n) else null
+
+
+## A number that sums up the whole simulation: tick, stockpiles and every
+## unit / building / node with its exact position, HP and job. Two devices
+## with the same hash at the same tick are running the same match; the first
+## different hash tells the turn a desync began. Order is the arrays' order,
+## which is itself part of the state.
+func state_hash() -> int:
+	var acc: Array = [tick, units.size(), buildings.size(), resource_nodes.size()]
+	for p: int in [0, 1]:
+		for res: String in GameState.RESOURCE_IDS:
+			acc.append(GameState.get_resource(p, res))
+		acc.append(GameState.pop_used(p))
+		acc.append(GameState.era_of(p))
+	for u: Unit in units:
+		acc.append(u.sim_id)
+		acc.append(u.owner_id)
+		acc.append(u.position.x)
+		acc.append(u.position.y)
+		acc.append(u.hp)
+		acc.append(u.carry_amount)
+		acc.append(u.task.kind if u.task != null else "")
+		acc.append(u.goal.x if u.goal != Vector2.INF else 0.0)
+		acc.append(u.goal.y if u.goal != Vector2.INF else 0.0)
+	for b: Building in buildings:
+		acc.append(b.sim_id)
+		acc.append(b.owner_id)
+		acc.append(b.hp)
+		acc.append(b.build_progress)
+		acc.append(b.queue.size())
+		acc.append(b.train_elapsed)
+		acc.append(b.garrison.size())
+	for n: ResourceNode in resource_nodes:
+		acc.append(n.sim_id)
+		acc.append(n.amount)
+	return acc.hash()
+
+
+## The same state as readable lines, one per entity (desync debugging: diff
+## two devices' dumps and the first differing line names the culprit).
+func state_lines() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("tick=%d time=%.5f units=%d buildings=%d nodes=%d" % [tick, sim_time, units.size(), buildings.size(), resource_nodes.size()])
+	for p: int in [0, 1]:
+		out.append("p%d f=%d w=%d g=%d s=%d pop=%d era=%d" % [p, GameState.get_resource(p, "food"), GameState.get_resource(p, "wood"), GameState.get_resource(p, "gold"), GameState.get_resource(p, "stone"), GameState.pop_used(p), GameState.era_of(p)])
+	for u: Unit in units:
+		out.append("u%d %s o=%d pos=(%.4f,%.4f) hp=%d spd=%.2f carry=%.3f task=%s goal=(%.1f,%.1f) path=%d/%d wait=%s" % [u.sim_id, u.unit_type, u.owner_id, u.position.x, u.position.y, u.hp, u.speed_px, u.carry_amount, u.task.kind if u.task != null else "-", u.goal.x if u.goal != Vector2.INF else 0.0, u.goal.y if u.goal != Vector2.INF else 0.0, u.path_i, u.path.size(), str(u.waiting_path)])
+	for b: Building in buildings:
+		out.append("b%d %s o=%d hp=%d prog=%.3f queue=%d train=%.3f garrison=%d" % [b.sim_id, b.building_type, b.owner_id, b.hp, b.build_progress, b.queue.size(), b.train_elapsed, b.garrison.size()])
+	for n: ResourceNode in resource_nodes:
+		out.append("n%d %s amount=%.3f" % [n.sim_id, n.resource_type, n.amount])
+	return out
 
 
 # ---------------------------------------------------------------- terrain
@@ -192,6 +301,8 @@ func spawn_unit(type_id: String, player_id: int, world_pos: Vector2) -> Unit:
 		unit = UNIT_SCENE.instantiate() as Unit
 		units_created += 1
 	unit.setup(type_id, player_id, world_pos)
+	_assign_sim_id(unit)
+	_unit_by_id[unit.sim_id] = unit
 	entities.add_child(unit)
 	units.append(unit)
 	unit.died.connect(_on_unit_died)
@@ -220,6 +331,7 @@ func remove_unit(unit: Unit, as_corpse: bool = false) -> void:
 func recycle_unit(unit: Unit) -> void:
 	if unit.get_parent() == entities:
 		entities.remove_child(unit)
+	_unit_by_id.erase(unit.sim_id)
 	unit.reset_for_pool()
 	var pool: Array = unit_pool.get(unit.unit_type, [])
 	pool.append(unit)
@@ -302,6 +414,9 @@ func units_in_rect(rect: Rect2, player_id: int) -> Array[Unit]:
 func place_building(type_id: String, player_id: int, origin_cell: Vector2i) -> Building:
 	var b: Building = Building.new()
 	b.setup(type_id, player_id, origin_cell, tile_size)
+	b.world = self
+	_assign_sim_id(b)
+	_building_by_id[b.sim_id] = b
 	b.recompute_stats()
 	if player_id >= 0:
 		# Scenario / save placement skips can_place: a neutral building
@@ -331,6 +446,7 @@ func remove_building(b: Building) -> void:
 			var ang: float = TAU * float(i) / n
 			drop_relic(approach_point(b.rect(), b.position + Vector2.from_angle(ang) * 400.0) + Vector2.from_angle(ang) * 20.0)
 	buildings.erase(b)
+	_building_by_id.erase(b.sim_id)
 	if not b.walkable:
 		nav.set_blocked(b.cells(), false)
 	elif b.is_gate() and not b.is_open:
@@ -393,7 +509,7 @@ func eject(unit: Unit, b: Building) -> void:
 		return
 	b.garrison.erase(unit)
 	var toward: Vector2 = b.rally_point if b.rally_point != Vector2.INF else b.position + Vector2(0, b.rect().size.y)
-	unit.position = approach_point(b.rect(), toward) + Vector2(randf_range(-10.0, 10.0), randf_range(-6.0, 6.0))
+	unit.position = approach_point(b.rect(), toward) + Vector2(rng.randf_range(-10.0, 10.0), rng.randf_range(-6.0, 6.0))
 	unit.visible = true
 	unit.garrisoned_in = null
 	units.append(unit)
@@ -634,6 +750,8 @@ func spawn_carcass(type_id: String, world_pos: Vector2) -> ResourceNode:
 
 
 func _add_node(n: ResourceNode) -> void:
+	_assign_sim_id(n)
+	_node_by_id[n.sim_id] = n
 	entities.add_child(n)
 	resource_nodes.append(n)
 	if not n.walkable:
@@ -645,6 +763,7 @@ func remove_resource(n: ResourceNode) -> void:
 	if not resource_nodes.has(n):
 		return
 	resource_nodes.erase(n)
+	_node_by_id.erase(n.sim_id)
 	if not n.walkable:
 		nav.set_blocked(n.cells(), false)
 	n.queue_free()

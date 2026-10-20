@@ -6,6 +6,8 @@ extends Node2D
 signal depleted(node: ResourceNode)
 
 var resource_type: String = ""
+## Simulation id (same on every device of a networked match, see Unit).
+var sim_id: int = 0
 var data: Dictionary = {}
 var resource: String = ""
 var subtype: String = ""

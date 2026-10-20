@@ -22,6 +22,9 @@ const WORK_KINDS: PackedStringArray = ["gather", "build", "hunt", "deliver", "re
 var world: World
 var camera: CameraController
 var order_marker: OrderMarker
+## Every order leaves through here as a plain command (local play applies it
+## at once; a networked match schedules it for a later turn on both devices).
+var bus: CommandBus = null
 var player_id: int = GameState.PLAYER_HUMAN
 var selected: Array[Unit] = []
 ## Battle formation for group orders (FormationLayout.KINDS; "none" = spread).
@@ -61,6 +64,12 @@ func setup(p_world: World, p_camera: CameraController, p_marker: OrderMarker) ->
 	_log = bool(DataLoader.rule("debug", "log_input", false)) and OS.is_debug_build()
 	EventBus.unit_removed.connect(_on_unit_removed)
 	EventBus.building_removed.connect(_on_building_removed)
+	if bus == null:
+		# Stand-alone use (tests without the match scene): a private local bus.
+		bus = CommandBus.new()
+		bus.name = "CommandBus"
+		bus.setup(world)
+		add_child(bus)
 
 
 ## Single tap: select what is under the finger, or order the selection there.
@@ -74,7 +83,7 @@ func on_tap(screen_pos: Vector2) -> void:
 		Sfx.play("select")
 	elif selected.is_empty() and selected_building != null and is_instance_valid(selected_building) 			and kind != "own_building" and not selected_building.trains().is_empty():
 		# A producing building is selected: the tap sets its rally point.
-		selected_building.rally_point = world_pos
+		bus.submit({"type": "rally", "player": player_id, "building": selected_building.sim_id, "pos": OrderResolver.vec_to_arr(world_pos)})
 		if order_marker != null:
 			order_marker.show_order(selected_building.position, world_pos, Color(0.5, 0.8, 1.0))
 		Sfx.play("order_move")
@@ -171,36 +180,31 @@ func _work_target(world_pos: Vector2, radius: float) -> Dictionary:
 	return {}
 
 
-## Gives each selected unit the order that fits the target.
+## Gives each selected unit the order that fits the target: builds one
+## "order" command and submits it (CommandBus / OrderResolver do the rest).
+## The marker colour and which villagers leave the selection are predicted
+## here from the same resolver, so they work even when the command only
+## applies two turns later in a networked match.
 func issue_order(world_pos: Vector2, target: Dictionary) -> void:
 	_prune()
 	if selected.is_empty():
 		return
 	var kind: String = String(target["kind"])
-	var movers: Array[Unit] = []
-	var order_kind: String = "move"
-	# Armed attack-move: the soldiers march and fight whatever they meet;
-	# anyone else in the selection just walks.
-	var fighters: Array[Unit] = []
-	if attack_armed:
-		fighters = selected.filter(func(u: Unit) -> bool: return not u.can_gather() and not u.data.get("combat", {}).is_empty())
+	var armed: bool = attack_armed
+	if armed:
 		arm_attack_move(false)
+	var order_kind: String = "move"
+	var workers: Array[Unit] = []
 	for unit: Unit in selected:
-		if fighters.has(unit):
+		if armed and not unit.can_gather() and not unit.data.get("combat", {}).is_empty():
+			order_kind = "attack"
 			continue
-		var task: UnitTask = _task_for(unit, kind, target.get("ref"))
+		var task: UnitTask = OrderResolver.task_for(world, unit, kind, target.get("ref"))
 		if task != null:
-			world.behavior.assign(unit, task)
 			order_kind = task.kind if task.kind != "gather" or kind != "own_building" else "deliver"
-		else:
-			world.behavior.assign(unit, null)
-			unit.attack_move = false
-			movers.append(unit)
-	if not fighters.is_empty():
-		world.combat.attack_move(fighters, world_pos, formation)
-		order_kind = "attack"
-	if not movers.is_empty():
-		world.movement.command_move(movers, world_pos, formation)
+			if unit.can_gather() and WORK_KINDS.has(task.kind):
+				workers.append(unit)
+	bus.submit(CommandBus.order_cmd(player_id, selected, target, world_pos, formation, armed))
 	if order_marker != null:
 		var positions: Array[Vector2] = []
 		for unit: Unit in selected:
@@ -208,18 +212,17 @@ func issue_order(world_pos: Vector2, target: Dictionary) -> void:
 		order_marker.show_order(Formation.centroid(positions), world_pos, ORDER_COLORS.get(order_kind, ORDER_COLORS["move"]))
 	Sfx.play("order_move")
 	_trace("order_" + order_kind, world_pos)
-	_release_workers()
+	_release_workers(workers)
 
 
 ## Monks (not gatherers) still take relic work from a tap.
 ## Villagers that just got work (gather, build, hunt, deliver) leave the
 ## selection, so the next tap does not pull them off the job. Soldiers stay
 ## selected: they usually get several orders in a row.
-func _release_workers() -> void:
-	if not bool(DataLoader.rule("input", "deselect_after_work_order", true)):
+func _release_workers(workers: Array[Unit]) -> void:
+	if not bool(DataLoader.rule("input", "deselect_after_work_order", true)) or workers.is_empty():
 		return
-	var keep: Array[Unit] = selected.filter(func(u: Unit) -> bool:
-		return not (u.can_gather() and u.task != null and WORK_KINDS.has(u.task.kind)))
+	var keep: Array[Unit] = selected.filter(func(u: Unit) -> bool: return not workers.has(u))
 	if keep.size() != selected.size():
 		set_selection(keep)
 
@@ -238,51 +241,9 @@ func order_move(world_pos: Vector2) -> void:
 	issue_order(world_pos, {"kind": "ground", "ref": null})
 
 
+## What a unit would do with this target (the shared resolver decides).
 func _task_for(unit: Unit, kind: String, ref: Variant) -> UnitTask:
-	if kind == "enemy_unit" or kind == "enemy_building":
-		if unit.data.get("combat", {}).is_empty():
-			return null
-		if bool(Dictionary(unit.data["combat"]).get("buildings_only", false)) and kind == "enemy_unit":
-			return null
-		return AttackTask.new(unit, world, ref, true)
-	if not unit.can_gather():
-		if kind == "animal" and not unit.data.get("combat", {}).is_empty():
-			return AttackTask.new(unit, world, ref, true)
-		if kind == "node" and (ref as ResourceNode).is_relic() and bool(unit.data.get("relic_carrier", false)):
-			return RelicTask.new(unit, world, ref)
-		if unit.data.has("trade") and kind == "neutral_building" and bool((ref as Building).data.get("trade_post", false)):
-			return TradeTask.new(unit, world, world.nearest_market(unit.owner_id, unit.position), ref)
-		if unit.data.has("trade") and kind == "own_building" and (ref as Building).data.has("market") and (ref as Building).is_complete():
-			return TradeTask.new(unit, world, ref, world.nearest_trade_post(unit.position))
-		if kind == "own_building" and unit.relic and bool((ref as Building).data.get("relic_vault", false)) and (ref as Building).is_complete():
-			return RelicTask.deliver_to(unit, world, ref)
-		if kind == "own_building" and (ref as Building).can_garrison(unit) and (ref as Building).in_danger(world):
-			return GarrisonTask.new(unit, world, ref)
-		return null
-	match kind:
-		"tree":
-			return GatherTask.for_tree(unit, world, ref)
-		"node":
-			if (ref as ResourceNode).is_relic():
-				return null
-			return GatherTask.for_node(unit, world, ref)
-		"animal", "own_unit":
-			var prey: Unit = ref
-			if prey != null and prey.is_animal():
-				return HuntTask.new(unit, world, prey)
-		"own_building":
-			var b: Building = ref
-			if not b.is_complete():
-				return BuildTask.new(unit, world, b)
-			if RepairTask.can_repair(unit, b):
-				return RepairTask.new(unit, world, b)
-			if not b.gather_info().is_empty():
-				return GatherTask.for_farm(unit, world, b)
-			if unit.carry_amount >= 1.0 and b.accepts(unit.carry_type):
-				return GatherTask.deliver_to(unit, world, b)
-			if b.can_garrison(unit) and b.in_danger(world):
-				return GarrisonTask.new(unit, world, b)
-	return null
+	return OrderResolver.task_for(world, unit, kind, ref)
 
 
 func _any_task_for(target: Dictionary) -> bool:
@@ -294,21 +255,16 @@ func _any_task_for(target: Dictionary) -> bool:
 
 func order_stop() -> void:
 	_prune()
-	for unit: Unit in selected:
-		world.behavior.assign(unit, null)
-		world.movement.stop(unit)
 	if not selected.is_empty():
+		bus.submit({"type": "stop", "player": player_id, "units": OrderResolver.ids_of(selected)})
 		Sfx.play("order_stop")
 	_trace("stop", Vector2.ZERO)
 
 
 func order_hold() -> void:
 	_prune()
-	for unit: Unit in selected:
-		world.behavior.assign(unit, null)
-		world.movement.stop(unit)
-		unit.stance = "hold"
 	if not selected.is_empty():
+		bus.submit({"type": "hold", "player": player_id, "units": OrderResolver.ids_of(selected)})
 		Sfx.play("order_stop")
 	_trace("hold", Vector2.ZERO)
 

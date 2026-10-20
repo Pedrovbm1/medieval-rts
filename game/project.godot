@@ -24,6 +24,7 @@ GameState="*res://autoload/game_state.gd"
 SaveManager="*res://autoload/save_manager.gd"
 Sfx="*res://autoload/sfx.gd"
 Music="*res://autoload/music.gd"
+NetSession="*res://autoload/net_session.gd"
 
 [display]
 

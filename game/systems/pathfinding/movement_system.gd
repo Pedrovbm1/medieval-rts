@@ -28,6 +28,12 @@ func setup(p_nav: NavGrid, p_units: Array[Unit]) -> void:
 	units = p_units
 	queue.budget = int(DataLoader.rule("movement", "paths_per_frame", 8))
 	queue.budget_usec = int(DataLoader.rule("movement", "path_budget_usec", 2500))
+	queue.deterministic = bool(DataLoader.rule("net", "deterministic_paths_solo", false))
+
+
+## Lockstep matches and replays: a fixed number of paths per tick.
+func set_deterministic(on: bool) -> void:
+	queue.deterministic = on
 	_spacing = float(DataLoader.rule("movement", "formation_spacing_px", 40))
 	_waypoint_reach = float(DataLoader.rule("movement", "waypoint_reach_px", 24))
 	_separation_gain = float(DataLoader.rule("movement", "separation_gain", 6.0))
@@ -237,7 +243,8 @@ func _separation(unit: Unit) -> Vector2:
 		if d2 >= min_dist * min_dist:
 			continue
 		var d: float = sqrt(d2)
-		var dir: Vector2 = offset / d if d > 0.01 else Vector2.from_angle(float(unit.get_instance_id() % 628) * 0.01)
+		# Tie-break by simulation id (instance ids differ between devices).
+		var dir: Vector2 = offset / d if d > 0.01 else Vector2.from_angle(float(unit.sim_id % 628) * 0.01)
 		var weight: float = 0.5 if unit.is_moving() and o.is_moving() else 1.0
 		push += dir * (min_dist - d) * _separation_gain * weight
 	return push

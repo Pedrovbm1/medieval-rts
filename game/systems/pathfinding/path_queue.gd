@@ -6,6 +6,9 @@ extends RefCounted
 var budget: int = 8
 ## Soft time cap per frame (microseconds). At least one path is always computed.
 var budget_usec: int = 2500
+## Networked / replayed matches: exactly `budget` paths per tick, never the
+## wall clock, so every device computes the same paths in the same tick.
+var deterministic: bool = false
 var total_computed: int = 0
 var _pending: Array[Dictionary] = []
 var _by_owner: Dictionary = {}
@@ -42,7 +45,7 @@ func process(nav: NavGrid) -> int:
 	var done: int = 0
 	var t0: int = Time.get_ticks_usec()
 	while done < budget and not _pending.is_empty():
-		if done > 0 and Time.get_ticks_usec() - t0 >= budget_usec:
+		if not deterministic and done > 0 and Time.get_ticks_usec() - t0 >= budget_usec:
 			break
 		var req: Dictionary = _pending.pop_front()
 		_by_owner.erase(req["owner"])

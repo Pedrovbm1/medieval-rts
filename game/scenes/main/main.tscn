@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/main/world.tscn" id="2_world"]
@@ -11,9 +11,17 @@
 [ext_resource type="Script" path="res://scenes/main/scenario_runner.gd" id="9_runner"]
 [ext_resource type="Script" path="res://systems/construction/placement_controller.gd" id="10_placement"]
 [ext_resource type="Script" path="res://systems/ai/match_rules.gd" id="11_rules"]
+[ext_resource type="Script" path="res://systems/net/command_bus.gd" id="12_bus"]
+[ext_resource type="Script" path="res://systems/net/lockstep.gd" id="13_lockstep"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
+
+[node name="Lockstep" type="Node" parent="."]
+script = ExtResource("13_lockstep")
+
+[node name="CommandBus" type="Node" parent="."]
+script = ExtResource("12_bus")
 
 [node name="World" parent="." instance=ExtResource("2_world")]
 
