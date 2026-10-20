@@ -224,6 +224,26 @@ Pedro ganó a Fácil y pidió comparar con el RTS clásico y revisar: "no da tie
 
 ---
 
+## F10-mp — Multijugador LAN por lockstep (2026-10-20)
+
+Primer paso jugable del multijugador. Antes de tocar código se escribió `docs/MULTIPLAYER-PLAN.md`: lockstep determinista contra host autoritativo, por qué lockstep (D109), la lista de lo que no era determinista y cómo se arregló, y el camino a online.
+
+**Qué se hizo**
+- Capa de órdenes: `systems/net/order_resolver.gd` (qué tarea toca según el objetivo, compartido por la selección y la red; objetivos como `{kind, id}`) y `systems/net/command_bus.gd` (`submit`/`apply`, tipos order/stop/hold/build/build_line/train/dequeue/cancel_construction/rally/sell/buy/eject/bell/resign, historial con tick). `SelectionController`, `PlacementController`, el HUD (vía `main.gd`) y la campana pasan por el bus; la partida en solitario se comporta igual (las pruebas de F3/F4/F9 que leen `unit.task` justo después de la orden siguen pasando).
+- Determinismo: `sim_id` en unidades/edificios/nodos con búsqueda en `World`; `World.rng`, `tick` y `sim_time`; `PathQueue.deterministic`; desempate por `sim_id` en la separación; `Building._now()` con el reloj del mundo; campana decidida por el estado (no por el HUD). `World.state_hash()` y `state_lines()` (volcado legible para encontrar al culpable de un desync).
+- Red: `autoload/net_session.gd` (ENet, host/join, RPC de inicio con mapa + semilla + asientos, IPs locales), `systems/net/lockstep.gd` (turnos, retraso, paquetes fiables, espera, hash, desync, rival perdido), menú "Multijugador (Wi-Fi)" con Crear partida (IP en pantalla, mapa cíclico, Iniciar cuando entra el rival) y Unirse con IP (campo + Conectar), textos en `ui.csv`, sección `net` en `rules.json`, permiso INTERNET en el preset Android, autoload nuevo en `project.godot`.
+- `GameState.PLAYER_HUMAN/PLAYER_AI` como variables (`set_local_player`): el cliente juega el asiento 1 sin tocar 40 usos.
+- Pruebas: `tests/test_f10_multiplayer.gd` (determinismo con sonda de tick dentro del paso de física; lobby y lockstep con dos `MultiplayerAPI` en un proceso). Modo de arranque por argumentos para dos instancias (`-- net=host:valle_rio autoplay`).
+
+**Problemas**
+- `await physics_frame` desde una corrutina de prueba se salta ticks cuando hay varios pasos de física por frame → la prueba mete un nodo `TickProbe` con prioridad antes de `World`.
+- `Engine.time_scale` se aplica a partir del siguiente frame: el primer tick de la primera partida corría con delta x1 y el de la segunda con x2 → esperar dos frames tras cambiarlo. Moraleja para la red: en partida en red el botón de velocidad queda fijo en x1.
+- La primera desincronía real: el temporizador de ociosos del HUD (reloj real, 0.5 s) apagaba la campana si nadie había llegado aún al Centro Urbano; el segundo toque entonces volvía a guarecer en una instancia y liberaba en la otra. La campana ahora mira el mundo (alguien dentro o en camino = liberar).
+- El `Lockstep` tiene que detener la simulación desde `setup()`, no desde `start()`: el mundo daba 2 ticks antes del primer turno.
+- Pendiente anotado: `_tick_gates` (archivo que edita la sesión de puertas) todavía usa `Time.get_ticks_msec`; pasar a `world.sim_time` cuando esa sesión termine.
+
+---
+
 ## Puertas por jugador (2026-10-20, mañana)
 
 Pedro jugó la versión de la noche ("sí se siente diferente") y reportó que al cerrarse una puerta sus tropas la tomaban por muro y daban la vuelta lejos. Causa: la puerta cerrada bloqueaba la celda en el NavGrid compartido. Arreglo (D108): celdas de puerta con dueño, una rejilla A* por jugador donde solo las puertas ajenas son sólidas, y el movimiento (rutas, línea de vista, deslizamiento) pasa el dueño de la unidad. Prueba nueva en `test_f9_defense.gd`: con la puerta cerrada por un enemigo pegado, la ruta propia la cruza en línea recta, la del rival da la vuelta por el extremo del muro y un miliciano propio la atraviesa físicamente.
