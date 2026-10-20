@@ -56,3 +56,11 @@ Cuando termines, dime "playtest F9" con lo que marcaste y lo que no.
 - [ ] En Normal, la primera presión llega después del minuto 11: ¿ahora sí da tiempo de prepararse?
 - [ ] Suena y se ve "¡Se acerca un ejército!" antes de que lleguen.
 - [ ] Al subir de era cambia el techo del Centro Urbano.
+
+## 8. Segundo playtest (2026-10-19, tras ganarle a Fácil)
+- [ ] Al destruir el Centro Urbano enemigo la partida termina y la pantalla dice por qué.
+- [ ] Los edificios caen en un tiempo razonable con infantería (y mucho más rápido con arietes).
+- [ ] Reconoces cuartel, galería, establo, herrería, universidad, monasterio y mercado por su letrero.
+- [ ] Si tocas "Avanzar a …" sin cumplir los requisitos, el aviso te dice qué falta.
+- [ ] Al tocar un edificio dice para qué sirve y qué hace cada unidad que entrena.
+- [ ] Al seleccionar una tropa ves su Fuerza (estrellas) y contra qué es fuerte.

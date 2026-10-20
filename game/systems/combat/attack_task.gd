@@ -14,6 +14,12 @@ var _windup: float = -1.0
 var _attack: Dictionary = {}
 var _range: float = 0.0
 var _repath_px: float = 48.0
+## Times the chase stalled (path ended short of the target). A target that
+## cannot be reached exactly (standing on a blocked cell, map edge) is hit
+## from a bit farther; after too many stalls the task gives up.
+var _stalls: int = 0
+const STALL_REACH_PX: float = 48.0
+const MAX_STALLS: int = 12
 
 
 func _init(p_unit: Unit, p_world: World, p_target: Object = null, p_ordered: bool = true) -> void:
@@ -35,7 +41,8 @@ func tick(delta: float) -> void:
 		return
 	var stance: Dictionary = unit.stance_data()
 	var gap: float = Combat.gap(unit, target)
-	if gap > _range:
+	var stalled_close: bool = not unit.is_moving() and _stalls >= 2 and gap <= _range + STALL_REACH_PX
+	if gap > _range and not stalled_close:
 		_windup = -1.0
 		if not ordered and not bool(stance.get("chase", true)):
 			finish()
@@ -45,9 +52,17 @@ func tick(delta: float) -> void:
 			finish(_walk_back())
 			return
 		var tpos: Vector2 = _target_pos()
-		if not unit.is_moving() or unit.goal.distance_to(tpos) > _repath_px:
+		if not unit.is_moving():
+			_stalls += 1
+			if _stalls > MAX_STALLS:
+				finish()  # unreachable: let auto-acquire or the player pick another
+				return
+			world.movement.move_unit(unit, tpos)
+		elif unit.goal.distance_to(tpos) > _repath_px:
 			world.movement.move_unit(unit, tpos)
 		return
+	if gap <= _range:
+		_stalls = 0
 	var min_range: float = float(unit.data.get("min_range_px", 0.0))
 	if min_range > 0.0 and gap < min_range:
 		# Too close to fire (siege): back off first.

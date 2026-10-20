@@ -89,7 +89,73 @@ static func paint(type_id: String, size: Vector2i, team: Color, era: int = 1) ->
 			_banner(img, Vector2(w * 0.5, h * 0.02), team, 8.0)
 		_:
 			_hall(img, w, h, PLANK, ROOF, team, true)
+	_sign(img, type_id, w, h)
 	return Raster.finish(img, size, Color(0.08, 0.06, 0.05, 0.6))
+
+
+## A hanging sign with a bold symbol on the front wall, so each building type
+## reads at a glance even zoomed out: crossed swords (barracks), target
+## (archery), horseshoe (stable), wheel (siege), hammer (blacksmith), book
+## (university), bell (monastery), coins (market), axe (lumber), pick (mining).
+static func _sign(img: Image, type_id: String, w: float, h: float) -> void:
+	var symbols: Array = ["barracks", "archery_range", "stable", "siege_workshop", "blacksmith", "university", "monastery", "market", "lumber_camp", "mining_camp"]
+	if not symbols.has(type_id):
+		return
+	var at: Vector2 = Vector2(12.0, h * 0.52)
+	var board: Rect2 = Rect2(at, Vector2(30, 26))
+	Raster.rect(img, Rect2(at.x + 13, at.y - 6, 4, 7), DARK)  # hook
+	Raster.framed_rect(img, board, Color(0.93, 0.88, 0.72), DARK, 2)
+	var c: Vector2 = board.get_center()
+	var ink: Color = Color(0.15, 0.12, 0.1)
+	match type_id:
+		"barracks":
+			Raster.line(img, c + Vector2(-9, -9), c + Vector2(9, 9), 2.4, STEEL.darkened(0.3))
+			Raster.line(img, c + Vector2(9, -9), c + Vector2(-9, 9), 2.4, STEEL.darkened(0.3))
+			Raster.line(img, c + Vector2(-9, -9), c + Vector2(9, 9), 1.2, STEEL.lightened(0.2))
+			Raster.line(img, c + Vector2(9, -9), c + Vector2(-9, 9), 1.2, STEEL.lightened(0.2))
+			Raster.rect(img, Rect2(c.x - 10, c.y + 6, 6, 3), Color(0.8, 0.65, 0.25))
+			Raster.rect(img, Rect2(c.x + 4, c.y + 6, 6, 3), Color(0.8, 0.65, 0.25))
+		"archery_range":
+			Raster.circle(img, c, 10.0, Color(0.85, 0.2, 0.15))
+			Raster.circle(img, c, 7.0, Color(0.95, 0.92, 0.85))
+			Raster.circle(img, c, 4.0, Color(0.85, 0.2, 0.15))
+			Raster.circle(img, c, 1.5, ink)
+			Raster.line(img, c + Vector2(2, -2), c + Vector2(12, -12), 1.4, PLANK.darkened(0.2))
+		"stable":
+			Raster.arc(img, c + Vector2(0, 1), 8.5, PI * 0.15, PI * 1.85 + PI * 0.3, 3.2, STEEL.darkened(0.25))
+			for a: float in [PI * 0.4, PI, PI * 1.6]:
+				Raster.circle(img, c + Vector2(0, 1) + Vector2.from_angle(a) * 8.5, 1.1, ink)
+		"siege_workshop":
+			Raster.circle(img, c, 10.0, PLANK.darkened(0.35))
+			Raster.circle(img, c, 7.5, Color(0.93, 0.88, 0.72))
+			for k: int in 4:
+				var d: Vector2 = Vector2.from_angle(k * PI / 4.0) * 9.5
+				Raster.line(img, c - d, c + d, 1.8, PLANK.darkened(0.35))
+			Raster.circle(img, c, 2.5, ink)
+		"blacksmith":
+			Raster.line(img, c + Vector2(-2, 11), c + Vector2(6, -5), 2.6, PLANK.darkened(0.25))
+			Raster.framed_rect(img, Rect2(c.x - 3, c.y - 11, 14, 8), STEEL.darkened(0.25), DARK)
+		"university":
+			Raster.framed_rect(img, Rect2(c.x - 11, c.y - 8, 11, 16), Color(0.6, 0.25, 0.2), DARK)
+			Raster.framed_rect(img, Rect2(c.x, c.y - 8, 11, 16), Color(0.95, 0.93, 0.85), DARK)
+			for k: int in 3:
+				Raster.rect(img, Rect2(c.x + 2, c.y - 5 + k * 4, 7, 1), Color(0.55, 0.5, 0.45))
+		"monastery":
+			Raster.blob(img, c + Vector2(0, 1), Vector2(7.5, 8), Color(0.85, 0.7, 0.3), DARK, 1.0)
+			Raster.rect(img, Rect2(c.x - 9, c.y + 6, 18, 3), Color(0.75, 0.6, 0.25))
+			Raster.circle(img, c + Vector2(0, 10), 2.2, ink)
+			Raster.rect(img, Rect2(c.x - 1.5, c.y - 12, 3, 5), ink)
+		"market":
+			for k: int in 3:
+				Raster.blob(img, c + Vector2(-5 + k * 5, 3 - k * 4), Vector2(6, 2.6), Color(0.95, 0.78, 0.25), DARK, 0.8)
+			Raster.circle(img, c + Vector2(6, -6), 4.5, Color(0.98, 0.85, 0.35))
+			Raster.circle(img, c + Vector2(6, -6), 2.0, Color(0.85, 0.65, 0.15))
+		"lumber_camp":
+			Raster.line(img, c + Vector2(-8, 10), c + Vector2(6, -6), 2.6, PLANK.darkened(0.25))
+			Raster.framed_polygon(img, PackedVector2Array([c + Vector2(3, -10), c + Vector2(12, -4), c + Vector2(6, 2), c + Vector2(1, -5)]), STEEL.darkened(0.2), DARK)
+		"mining_camp":
+			Raster.line(img, c + Vector2(-6, 11), c + Vector2(4, -4), 2.6, PLANK.darkened(0.25))
+			Raster.arc(img, c + Vector2(4, -1), 9.0, PI * 1.15, PI * 1.85, 2.6, STEEL.darkened(0.2))
 
 
 static func _hall(img: Image, w: float, h: float, wall: Color, roof: Color, team: Color, banner: bool) -> void:

@@ -221,3 +221,9 @@ Se cerraron juntas: la IA de F6 necesitaba eras y tecnologías (F7) para gastar 
 Pedro ganó a Fácil y pidió comparar con el RTS clásico y revisar: "no da tiempo", "faltan murallas y torres", "mejores gráficos". Se escribió `docs/GAMEPLAY-REVIEW-2026-10-19.md`, se pasó por `/plan-ceo-review` (autónomo, decisiones recomendadas anotadas) y se implementó lo aceptado: murallas en línea, puertas automáticas, Centro Urbano con flechas, rutas parciales, ventana de paz por dificultad, aviso de ejército, torres y mercado para la IA, techo del CU por era, misión 6 del tutorial, arte v3 (unidades tres cuartos con escudos, árboles, orilla, agua). Diferido a `TODOS.md`: 4 direcciones, reliquias, maravilla, guarnición.
 
 **Problemas**: la IA Difícil no llegaba a Era IV por falta de oro al final (minas secas) → vende en el mercado al ahorrar (D84); el precio mínimo 20 era un pozo sin fondo → 30 con recuperación más rápida. El jugador pasivo cae en 20-23 min con el CU disparando → gate 15-22 (D85). La prueba de rendimiento de PC varía 5x según la carga de la máquina: solo cuenta el S10.
+
+---
+
+## F9 — Segundo playtest de Pedro (2026-10-19)
+
+Pedro ganó a Fácil y pidió: victoria al destruir el edificio principal, edificios que caigan más rápido y se reconozcan, razón cuando no puede subir de era, descripciones de edificios y unidades, y un nivel de daño por tropa. Hecho en D87-D92. De paso se encontró y arregló una persecución infinita contra un objetivo inalcanzable (D92).

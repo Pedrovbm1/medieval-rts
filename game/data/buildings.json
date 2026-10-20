@@ -5,7 +5,7 @@
 			"wood": 275,
 			"stone": 100
 		},
-		"hp": 2400,
+		"hp": 2000,
 		"footprint": [
 			3,
 			3
@@ -46,14 +46,15 @@
 			"projectile": {
 				"speed_px": 640
 			}
-		}
+		},
+		"desc_key": "BLDG_TOWN_CENTER_DESC"
 	},
 	"house": {
 		"name_key": "BLDG_HOUSE_NAME",
 		"cost": {
 			"wood": 30
 		},
-		"hp": 550,
+		"hp": 400,
 		"footprint": [
 			2,
 			2
@@ -71,14 +72,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_HOUSE_DESC"
 	},
 	"lumber_camp": {
 		"name_key": "BLDG_LUMBER_CAMP_NAME",
 		"cost": {
 			"wood": 100
 		},
-		"hp": 600,
+		"hp": 450,
 		"footprint": [
 			2,
 			2
@@ -98,14 +100,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_LUMBER_CAMP_DESC"
 	},
 	"mining_camp": {
 		"name_key": "BLDG_MINING_CAMP_NAME",
 		"cost": {
 			"wood": 100
 		},
-		"hp": 600,
+		"hp": 450,
 		"footprint": [
 			2,
 			2
@@ -126,14 +129,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_MINING_CAMP_DESC"
 	},
 	"farm": {
 		"name_key": "BLDG_FARM_NAME",
 		"cost": {
 			"wood": 60
 		},
-		"hp": 300,
+		"hp": 250,
 		"footprint": [
 			2,
 			2
@@ -156,14 +160,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_FARM_DESC"
 	},
 	"barracks": {
 		"name_key": "BLDG_BARRACKS_NAME",
 		"cost": {
 			"wood": 150
 		},
-		"hp": 1500,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -185,14 +190,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_BARRACKS_DESC"
 	},
 	"archery_range": {
 		"name_key": "BLDG_ARCHERY_RANGE_NAME",
 		"cost": {
 			"wood": 175
 		},
-		"hp": 1500,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -213,14 +219,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_ARCHERY_RANGE_DESC"
 	},
 	"stable": {
 		"name_key": "BLDG_STABLE_NAME",
 		"cost": {
 			"wood": 175
 		},
-		"hp": 1500,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -242,14 +249,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_STABLE_DESC"
 	},
 	"siege_workshop": {
 		"name_key": "BLDG_SIEGE_WORKSHOP_NAME",
 		"cost": {
 			"wood": 200
 		},
-		"hp": 1500,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -270,14 +278,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_SIEGE_WORKSHOP_DESC"
 	},
 	"monastery": {
 		"name_key": "BLDG_MONASTERY_NAME",
 		"cost": {
 			"wood": 175
 		},
-		"hp": 1600,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -297,14 +306,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_MONASTERY_DESC"
 	},
 	"blacksmith": {
 		"name_key": "BLDG_BLACKSMITH_NAME",
 		"cost": {
 			"wood": 150
 		},
-		"hp": 1500,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -321,14 +331,15 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_BLACKSMITH_DESC"
 	},
 	"university": {
 		"name_key": "BLDG_UNIVERSITY_NAME",
 		"cost": {
 			"wood": 200
 		},
-		"hp": 1600,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -345,7 +356,8 @@
 			"hack": 2,
 			"pierce": 6,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_UNIVERSITY_DESC"
 	},
 	"watch_tower": {
 		"name_key": "BLDG_WATCH_TOWER_NAME",
@@ -353,7 +365,7 @@
 			"wood": 50,
 			"stone": 75
 		},
-		"hp": 850,
+		"hp": 700,
 		"footprint": [
 			1,
 			1
@@ -384,14 +396,15 @@
 			"projectile": {
 				"speed_px": 640
 			}
-		}
+		},
+		"desc_key": "BLDG_WATCH_TOWER_DESC"
 	},
 	"market": {
 		"name_key": "BLDG_MARKET_NAME",
 		"cost": {
 			"wood": 175
 		},
-		"hp": 1500,
+		"hp": 1000,
 		"footprint": [
 			3,
 			3
@@ -415,7 +428,8 @@
 				"wood",
 				"stone"
 			]
-		}
+		},
+		"desc_key": "BLDG_MARKET_DESC"
 	},
 	"palisade": {
 		"name_key": "BLDG_PALISADE_NAME",
@@ -441,7 +455,8 @@
 			"hack": 2,
 			"pierce": 8,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_PALISADE_DESC"
 	},
 	"stone_wall": {
 		"name_key": "BLDG_STONE_WALL_NAME",
@@ -467,7 +482,8 @@
 			"hack": 6,
 			"pierce": 12,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_STONE_WALL_DESC"
 	},
 	"gate": {
 		"name_key": "BLDG_GATE_NAME",
@@ -494,6 +510,7 @@
 			"hack": 3,
 			"pierce": 8,
 			"crush": 0
-		}
+		},
+		"desc_key": "BLDG_GATE_DESC"
 	}
 }

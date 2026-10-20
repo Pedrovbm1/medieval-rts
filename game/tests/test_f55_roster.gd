@@ -148,6 +148,9 @@ func test_h_full_roster_army() -> void:
 	for r: Unit in rams:
 		world.behavior.assign(r, AttackTask.new(r, world, house, true))
 	var t: float = await _fight(a, b, 120.0)
+	var left_a: Array = _alive(a).map(func(u: Unit) -> String: return "%s(%d,%s%s)" % [u.unit_type, u.hp, u.task.kind if u.task != null else "idle", "/moving" if u.is_moving() else ""])
+	var left_b: Array = _alive(b).map(func(u: Unit) -> String: return "%s(%d,%s%s)" % [u.unit_type, u.hp, u.task.kind if u.task != null else "idle", "/moving" if u.is_moving() else ""])
+	print("  info  roster battle left a=%s b=%s" % [left_a, left_b])
 	check(_alive(a).is_empty() or _alive(b).is_empty(), "a 20v20 army with every unit type ends in %.0f s" % t)
 	var used: PackedStringArray = PackedStringArray()
 	for type_id: String in types + ["ram"]:

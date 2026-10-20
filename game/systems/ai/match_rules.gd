@@ -12,6 +12,8 @@ var world: World
 var elapsed: float = 0.0
 var ended: bool = false
 var winner_id: int = -1
+## Why it ended: "town_center", "buildings" or "resign".
+var reason: String = ""
 ## Players that started with buildings: only they can lose. With fewer than
 ## two (sandbox, tests, demos) there is no match to decide.
 var contenders: Array[int] = []
@@ -43,15 +45,18 @@ func _physics_process(delta: float) -> void:
 	_timer = 0.0
 	if contenders.has(-1):
 		return
-	var alive: Dictionary = {}
+	# The Town Center is the heart: lose it (built or foundation) and the
+	# match is over, no need to hunt every last house.
+	var has_tc: Dictionary = {}
 	for p: int in contenders:
-		alive[p] = false
+		has_tc[p] = false
 	for b: Building in world.buildings:
-		if alive.has(b.owner_id):
-			alive[b.owner_id] = true
-	for p: int in alive.keys():
-		if not alive[p]:
+		if has_tc.has(b.owner_id) and b.building_type == String(DataLoader.get_entry("eras", "_rules").get("researched_at", "town_center")):
+			has_tc[b.owner_id] = true
+	for p: int in has_tc.keys():
+		if not has_tc[p]:
 			var other: int = GameState.PLAYER_AI if p == GameState.PLAYER_HUMAN else GameState.PLAYER_HUMAN
+			reason = "town_center"
 			finish(other, p)
 			return
 
@@ -62,6 +67,7 @@ func resign(player_id: int) -> void:
 		return
 	for p: int in contenders:
 		if p != player_id:
+			reason = "resign"
 			finish(p, player_id)
 			return
 

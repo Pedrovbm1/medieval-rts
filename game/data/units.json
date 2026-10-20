@@ -40,7 +40,8 @@
 			"prepare_s": 0.3,
 			"repeat_s": 1.5,
 			"bonus": {}
-		}
+		},
+		"desc_key": "UNIT_VILLAGER_DESC"
 	},
 	"scout": {
 		"name_key": "UNIT_SCOUT_NAME",
@@ -73,7 +74,8 @@
 			"repeat_s": 1.6,
 			"bonus": {}
 		},
-		"sight_px": 448
+		"sight_px": 448,
+		"desc_key": "UNIT_SCOUT_DESC"
 	},
 	"militia": {
 		"name_key": "UNIT_MILITIA_NAME",
@@ -104,10 +106,13 @@
 			"range_px": 0,
 			"prepare_s": 0.35,
 			"repeat_s": 1.4,
-			"bonus": {}
+			"bonus": {
+				"building": 3
+			}
 		},
 		"sight_px": 288,
-		"era": 1
+		"era": 1,
+		"desc_key": "UNIT_MILITIA_DESC"
 	},
 	"sheep": {
 		"name_key": "UNIT_SHEEP_NAME",
@@ -129,7 +134,8 @@
 			"hack": 0,
 			"pierce": 0,
 			"crush": 0
-		}
+		},
+		"desc_key": "UNIT_SHEEP_DESC"
 	},
 	"deer": {
 		"name_key": "UNIT_DEER_NAME",
@@ -151,7 +157,8 @@
 			"hack": 0,
 			"pierce": 0,
 			"crush": 0
-		}
+		},
+		"desc_key": "UNIT_DEER_DESC"
 	},
 	"boar": {
 		"name_key": "UNIT_BOAR_NAME",
@@ -182,7 +189,8 @@
 			"prepare_s": 0.3,
 			"repeat_s": 1.5,
 			"bonus": {}
-		}
+		},
+		"desc_key": "UNIT_BOAR_DESC"
 	},
 	"spearman": {
 		"name_key": "UNIT_SPEARMAN_NAME",
@@ -216,10 +224,12 @@
 			"prepare_s": 0.35,
 			"repeat_s": 1.4,
 			"bonus": {
-				"cavalry": 18
+				"cavalry": 18,
+				"building": 3
 			}
 		},
-		"sight_px": 288
+		"sight_px": 288,
+		"desc_key": "UNIT_SPEARMAN_DESC"
 	},
 	"archer": {
 		"name_key": "UNIT_ARCHER_NAME",
@@ -259,7 +269,8 @@
 				"speed_px": 640
 			}
 		},
-		"sight_px": 416
+		"sight_px": 416,
+		"desc_key": "UNIT_ARCHER_DESC"
 	},
 	"knight": {
 		"name_key": "UNIT_KNIGHT_NAME",
@@ -292,10 +303,12 @@
 			"prepare_s": 0.3,
 			"repeat_s": 1.8,
 			"bonus": {
-				"archer": 4
+				"archer": 4,
+				"building": 3
 			}
 		},
-		"sight_px": 384
+		"sight_px": 384,
+		"desc_key": "UNIT_KNIGHT_DESC"
 	},
 	"ram": {
 		"name_key": "UNIT_RAM_NAME",
@@ -332,7 +345,8 @@
 			},
 			"buildings_only": true
 		},
-		"sight_px": 256
+		"sight_px": 256,
+		"desc_key": "UNIT_RAM_DESC"
 	},
 	"skirmisher": {
 		"name_key": "UNIT_SKIRMISHER_NAME",
@@ -373,7 +387,8 @@
 				"speed_px": 620
 			}
 		},
-		"sight_px": 384
+		"sight_px": 384,
+		"desc_key": "UNIT_SKIRMISHER_DESC"
 	},
 	"swordsman": {
 		"name_key": "UNIT_SWORDSMAN_NAME",
@@ -405,9 +420,12 @@
 			"range_px": 0,
 			"prepare_s": 0.35,
 			"repeat_s": 1.5,
-			"bonus": {}
+			"bonus": {
+				"building": 3
+			}
 		},
-		"sight_px": 288
+		"sight_px": 288,
+		"desc_key": "UNIT_SWORDSMAN_DESC"
 	},
 	"monk": {
 		"name_key": "UNIT_MONK_NAME",
@@ -435,7 +453,8 @@
 			"hp_per_s": 3.0,
 			"range_px": 176
 		},
-		"sight_px": 352
+		"sight_px": 352,
+		"desc_key": "UNIT_MONK_DESC"
 	},
 	"mangonel": {
 		"name_key": "UNIT_MANGONEL_NAME",
@@ -477,7 +496,8 @@
 			"splash_px": 56
 		},
 		"sight_px": 480,
-		"min_range_px": 96
+		"min_range_px": 96,
+		"desc_key": "UNIT_MANGONEL_DESC"
 	},
 	"camel_rider": {
 		"name_key": "UNIT_CAMEL_RIDER_NAME",
@@ -511,12 +531,14 @@
 			"prepare_s": 0.3,
 			"repeat_s": 1.7,
 			"bonus": {
-				"cavalry": 8
+				"cavalry": 8,
+				"building": 3
 			}
 		},
 		"sight_px": 384,
 		"unique_to": [
 			"northvale"
-		]
+		],
+		"desc_key": "UNIT_CAMEL_RIDER_DESC"
 	}
 }

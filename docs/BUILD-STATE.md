@@ -140,6 +140,12 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 | D84 | F9 | Mercado: precio mínimo 30, baja 3 por venta, sube 4 cada 15 s; la IA vende hasta 3 lotes por turno cuando ahorra para una era y le falta oro; ahorro máximo 480 s | Difícil se atoraba en Era III con 2400 de comida y sin oro (minas secas) |
 | D85 | F9 | Gate del jugador pasivo contra Normal ampliado a 15-22 min | Las flechas del CU alargan 1-2 min la caída; es el efecto buscado |
 | D86 | F9 | Claridad: cola de producción con retratos de las unidades (del atlas) en vez de letras; estadísticas con palabras completas (Ataque/Armadura/Alcance/Velocidad/Vida); plurales en el panel; "Centro Urbano" en todas partes. Tutorial de 7 misiones: la 5 construye cuartel y entrena 2 milicianos antes de los bandidos (6); la 7 amuralla | Pendientes del primer playtest de Pedro; "no te da tiempo" también era no saber entrenar soldados |
+| D87 | F9 | Victoria al destruir el Centro Urbano del rival (construido o cimiento); la pantalla final dice por qué terminó (CU destruido, rendición) | Pedro arrasó casi todos los edificios y la IA seguía construyendo |
+| D88 | F9 | Edificios con menos vida (casa 400, producción 1000, CU 2000, torre 700) y la infantería y caballería cuerpo a cuerpo tienen +3 contra edificios; el asedio sigue siendo lo mejor | "Los edificios tardan tanto en destruirse" |
+| D89 | F9 | Letrero con símbolo en la pared de cada edificio de producción/mejora (espadas, diana, herradura, rueda, martillo, libro, campana, monedas, hacha, pico) | "Todos los edificios deberían ser más identificables" |
+| D90 | F9 | Los botones de era y tecnología se quedan activos aunque falte algo: al tocarlos sale la razón ("necesitas 2 edificios de esta era, tienes 0, cuentan: Aserradero, Campamento minero, Cuartel" o "faltan 350 comida") | "Si no puedo subir de era debería decir la razón" |
+| D91 | F9 | Descripción de cada edificio y unidad (`desc_key`) en el panel: el edificio dice para qué sirve y qué entrena cada unidad; la unidad seleccionada muestra su descripción, su Fuerza en estrellas (1-5 por daño por segundo × vida, umbrales en `rules.ui.power_steps`) y "Fuerte contra: …" según sus bonos; los botones de entrenar llevan las estrellas | "Que diga para qué es" y "un nivel de daño para saber cuál tropa es más efectiva" |
+| D92 | F9 | Un ataque que se atasca (la ruta termina corta) golpea desde 48 px más lejos y tras 12 atascos suelta el objetivo | Una batalla no terminaba porque 12 unidades perseguían un mangonel inalcanzable |
 | D23 | F3 | Recursos alrededor de cada inicio desde `start_layout` del mapa (grupos que se tocan para bayas/oro) | Inicio justo y data-driven |
 
 ## Blockers
@@ -149,6 +155,7 @@ adb shell am start -W -n dev.pedro.realm/com.godot.game.GodotAppLauncher
 - Riesgo visto 1 vez: el S10 cerró la app ~1 s después de arrancar (Samsung Game Optimizing Service, "KILL_YOURSELF"); no se repitió.
 
 ## Últimos tests
+- F9 segundo playtest de Pedro (2026-10-19): feedback 24/24, combate 37/37, roster 13/13, defensa 29/29, playtest 45/45, pasivo 20.0 min.
 - F9 noche 2026-10-19 (lentas): duelo Difícil vs Normal 3/4 (45, 38, empate, 33 min); partida completa Difícil vs Fácil 25.1 min 5/5; 0 errores de script.
 - F9 noche 2026-10-19: defensa 29/29, playtest 45/45, arte+audio 22/22, eras 21/21 (Era IV en 19.1 min); S10: F8 por toques 5/5, stress150 59.5 fps / 34 DC, battle20 60 fps, fortaleza (45 tramos + 130 unidades en batalla) 55-58 fps / 36 DC. La prueba de rendimiento de PC dio 7 ms con la máquina cargada por otras sesiones (1.5 ms sola el día anterior): no es del juego.
 - F9 tras playtest (2026-10-18): suite normal 328 pruebas sin fallas de código (la de rendimiento falló una vez con el CPU ocupado y dio 1.51 ms sola); playtest 26/26; duelo Difícil vs Normal 3/4 ✓; partida completa Difícil vs Fácil 39.3 min ✓. Instalada en S10 y S24 (SM-S938B).

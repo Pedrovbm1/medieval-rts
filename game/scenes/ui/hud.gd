@@ -231,6 +231,8 @@ func _set_mode(m: Mode) -> void:
 	mode = m
 	if queue_row != null and m != Mode.BUILDING:
 		queue_row.visible = false
+	if info_label != null and m != Mode.BUILDING and m != Mode.UNITS:
+		info_label.visible = false
 	for child: Node in actions.get_children():
 		actions.remove_child(child)
 		child.queue_free()
@@ -277,6 +279,10 @@ func _fill_units() -> void:
 	selection_label.text = ", ".join(parts)
 	if _units.size() == 1 and is_instance_valid(_units[0]):
 		selection_label.text += "\n" + unit_stats_text(_units[0])
+		_set_info(unit_role_text(_units[0].unit_type))
+	elif not counts.is_empty():
+		var first: String = counts.keys()[0]
+		_set_info(unit_role_text(first) if counts.size() == 1 else "")
 	if _units.any(func(u: Unit) -> bool: return is_instance_valid(u) and u.can_gather()):
 		build_button = _add_button(tr("HUD_BUILD"), build_pressed)
 	stop_button = _add_button(tr("HUD_STOP"), stop_pressed)
@@ -347,7 +353,11 @@ func _fill_building() -> void:
 			var def: Dictionary = DataLoader.get_entry("units", String(type_id))
 			if int(def.get("era", 1)) > GameState.era_of(player_id) or not ConstructionSystem.unit_allowed(player_id, String(type_id)):
 				continue
-			var b: Button = _add_cost_button(tr(String(def.get("name_key", type_id))), def.get("cost", {}), Vector2(150, 76))
+			var stars: int = unit_power(String(type_id))
+			var title: String = tr(String(def.get("name_key", type_id)))
+			if stars > 0:
+				title += "  " + stars_text(stars).left(stars)
+			var b: Button = _add_cost_button(title, def.get("cost", {}), Vector2(150, 76))
 			var id: String = String(type_id)
 			b.pressed.connect(func() -> void:
 				Sfx.play("ui_click")
@@ -400,6 +410,102 @@ func _add_sell_button(res: String) -> void:
 	type_buttons["sell:" + res] = b
 
 
+## Human-readable reason an item cannot be queued right now ("" if none).
+func enqueue_reason(b: Building, item: String) -> String:
+	if tech == null:
+		return ""
+	var err: String = ""
+	if TechSystem.is_research(item):
+		err = tech.research_error(b, item)
+	else:
+		err = world_construction_error(b, item)
+	match err:
+		"requires":
+			var next: int = GameState.era_of(player_id) + 1
+			var need: int = int(DataLoader.get_entry("eras", str(next)).get("requires_buildings", 2))
+			var exclude: Array = DataLoader.get_entry("eras", "_rules").get("exclude_from_requirement", [])
+			var names: PackedStringArray = PackedStringArray()
+			for type_id: String in DataLoader.get_table("buildings").keys():
+				var def: Dictionary = DataLoader.get_entry("buildings", type_id)
+				if int(def.get("era", 1)) == GameState.era_of(player_id) and not exclude.has(type_id) and bool(def.get("buildable", true)) and not Array(def.get("classes", [])).has("wall"):
+					names.append(tr(String(def.get("name_key", type_id))))
+			return tr("ERR_REQUIRES_ERA") % [need, tech.era_buildings(player_id), ", ".join(names)]
+		"cost":
+			var cost: Dictionary = TechSystem.item_cost(item) if TechSystem.is_research(item) else DataLoader.get_entry("units", item).get("cost", {})
+			var missing: PackedStringArray = PackedStringArray()
+			for res: String in cost.keys():
+				var short: int = int(cost[res]) - GameState.get_resource(player_id, res)
+				if short > 0:
+					missing.append("%d %s" % [short, tr("RESOURCE_%s_NAME" % res.to_upper()).to_lower()])
+			return tr("ERR_COST_DETAIL") % ", ".join(missing)
+		"queued":
+			return tr("ERR_QUEUED")
+		"done":
+			return tr("ERR_DONE")
+		"era":
+			return tr("ERR_ERA")
+		"pop":
+			return tr("HUD_POP_FULL")
+	return ""
+
+
+func world_construction_error(b: Building, type_id: String) -> String:
+	return tech.world.construction.can_enqueue(b, type_id) if tech != null and tech.world != null else ""
+
+
+## 1-5 stars from damage per second times hit points (how much a unit can
+## dish out before it dies). Siege and healers get their own reading.
+static func unit_power(type_id: String) -> int:
+	var def: Dictionary = DataLoader.get_entry("units", type_id)
+	var combat: Dictionary = def.get("combat", {})
+	if combat.is_empty():
+		return 0
+	var dmg: float = 0.0
+	for v: Variant in Dictionary(combat.get("damage", {})).values():
+		dmg += float(v)
+	var score: float = dmg / maxf(0.2, float(combat.get("repeat_s", 1.5))) * float(def.get("hp", 1))
+	var steps: Array = DataLoader.rule("ui", "power_steps", [100, 180, 300, 450])
+	var stars: int = 1
+	for s: Variant in steps:
+		if score >= float(s):
+			stars += 1
+	return stars
+
+
+static func stars_text(n: int) -> String:
+	var out: String = ""
+	for i: int in 5:
+		out += "★" if i < n else "☆"
+	return out
+
+
+## "Fuerte contra: caballería" from the unit's bonus table ("" if none).
+static func counters_text(type_id: String) -> String:
+	var bonus: Dictionary = Dictionary(DataLoader.get_entry("units", type_id).get("combat", {})).get("bonus", {})
+	var names: PackedStringArray = PackedStringArray()
+	for c: String in bonus.keys():
+		var key: String = "CLASS_%s" % c.to_upper()
+		names.append(TranslationServer.translate(key) if TranslationServer.translate(key) != key else c)
+	if names.is_empty():
+		return ""
+	return "%s: %s" % [TranslationServer.translate("STAT_STRONG_VS"), ", ".join(names)]
+
+
+## Second line of a unit's panel: description, power stars and counters.
+static func unit_role_text(type_id: String) -> String:
+	var def: Dictionary = DataLoader.get_entry("units", type_id)
+	var parts: PackedStringArray = PackedStringArray()
+	if def.has("desc_key"):
+		parts.append(TranslationServer.translate(String(def["desc_key"])))
+	var power: int = unit_power(type_id)
+	if power > 0:
+		parts.append("%s %s" % [TranslationServer.translate("STAT_POWER"), stars_text(power)])
+	var c: String = counters_text(type_id)
+	if c != "":
+		parts.append(c)
+	return "   ".join(parts)
+
+
 func _add_research_button(item: String, title: String) -> void:
 	var b: Button = _add_cost_button(title, TechSystem.item_cost(item), Vector2(170, 76))
 	var def: Dictionary = TechSystem.item_def(item)
@@ -420,6 +526,15 @@ func _refresh_building() -> void:
 	elif not _building.gather_info().is_empty():
 		text += "  (%d/%d)" % [_building.workers.size(), int(_building.gather_info().get("workers", 1))]
 	_refresh_queue_row()
+	var info: PackedStringArray = PackedStringArray()
+	if _building.data.has("desc_key"):
+		info.append(tr(String(_building.data["desc_key"])))
+	for type_id: Variant in _building.trains():
+		var udef: Dictionary = DataLoader.get_entry("units", String(type_id))
+		if int(udef.get("era", 1)) > GameState.era_of(player_id):
+			continue
+		info.append("%s: %s" % [tr(String(udef.get("name_key", type_id))), unit_role_text(String(type_id))])
+	_set_info("\n".join(info))
 	if not _building.queue.is_empty():
 		text += "\n%s: %d%%" % [tr("HUD_QUEUE"), int(_building.train_progress() * 100.0)]
 		if _building.blocked_by_pop:
@@ -429,6 +544,24 @@ func _refresh_building() -> void:
 
 ## The production queue as little portraits (unit idle frames from the atlas;
 ## research shows the tech's short name) instead of letters like "Q Q Q".
+## Small wrapped text under the title: what a building or unit is for.
+var info_label: Label
+
+
+func _set_info(text: String) -> void:
+	if info_label == null:
+		info_label = Label.new()
+		info_label.name = "InfoLabel"
+		info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info_label.add_theme_font_size_override("font_size", 16)
+		info_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.8))
+		info_label.custom_minimum_size = Vector2(600, 0)
+		selection_label.get_parent().add_child(info_label)
+		selection_label.get_parent().move_child(info_label, selection_label.get_index() + 1)
+	info_label.text = text
+	info_label.visible = text != ""
+
+
 func _refresh_queue_row() -> void:
 	if queue_row == null:
 		queue_row = HBoxContainer.new()
@@ -468,7 +601,10 @@ func _refresh_queue_row() -> void:
 	for id: String in type_buttons.keys():
 		var btn: Button = type_buttons[id]
 		if TechSystem.is_research(id):
-			btn.disabled = tech == null or tech.research_error(_building, id) != ""
+			# Left enabled: tapping a blocked item explains why (era requirements, cost).
+			var err: String = tech.research_error(_building, id) if tech != null else "type"
+			btn.disabled = err == "done" or err == "queued" or err == "type" or err == "max"
+			btn.modulate = Color.WHITE if err == "" else Color(1, 1, 1, 0.6)
 		else:
 			btn.disabled = not GameState.can_afford(player_id, TechSystem.item_cost(id))
 
@@ -619,7 +755,7 @@ func _emit_click(sig: Signal) -> void:
 
 
 ## End of match: big result, a few stats for both sides, and Retry.
-func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary) -> void:
+func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary, why: String = "") -> void:
 	if end_panel != null:
 		return
 	set_speed(1.0)
@@ -643,6 +779,12 @@ func show_end(won: bool, seconds: float, mine: Dictionary, theirs: Dictionary) -
 	title.add_theme_color_override("font_color", Color(1, 0.85, 0.35) if won else Color(1, 0.45, 0.4))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
+	if why != "":
+		var why_label: Label = Label.new()
+		why_label.text = why
+		why_label.add_theme_font_size_override("font_size", 20)
+		why_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		box.add_child(why_label)
 	var dur: Label = Label.new()
 	dur.text = "%s %d:%02d" % [tr("END_TIME"), int(seconds) / 60, int(seconds) % 60]
 	dur.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

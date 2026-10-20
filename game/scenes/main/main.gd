@@ -234,6 +234,10 @@ func _on_train_pressed(type_id: String) -> void:
 	if b != null and is_instance_valid(b):
 		if not world.construction.enqueue(b, type_id):
 			Sfx.play("error")
+			# Say why: which buildings are missing for the era, or what resources.
+			var why: String = hud.enqueue_reason(b, type_id)
+			if why != "":
+				hud.show_banner(why)
 
 
 func _on_sell_pressed(resource: String) -> void:
@@ -264,7 +268,14 @@ func _on_match_ended(winner_id: int, loser_id: int, seconds: float) -> void:
 		ai.enabled = false
 	if ai_override.has(GameState.PLAYER_HUMAN):
 		return  # AI vs AI test: no human screen.
-	hud.show_end(winner_id == GameState.PLAYER_HUMAN, seconds, GameState.stats.get(GameState.PLAYER_HUMAN, {}), GameState.stats.get(loser_id if winner_id == GameState.PLAYER_HUMAN else winner_id, {}))
+	var won: bool = winner_id == GameState.PLAYER_HUMAN
+	var why: String = ""
+	match rules.reason:
+		"town_center":
+			why = tr("END_WHY_TC_WIN") if won else tr("END_WHY_TC_LOSS")
+		"resign":
+			why = tr("END_WHY_RESIGN") if won else ""
+	hud.show_end(won, seconds, GameState.stats.get(GameState.PLAYER_HUMAN, {}), GameState.stats.get(loser_id if won else winner_id, {}), why)
 
 
 func _on_retry() -> void:
