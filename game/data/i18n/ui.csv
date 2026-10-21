@@ -80,7 +80,7 @@ END_KILLS,Bajas enemigas,Kills
 END_LOST,Bajas propias,Losses
 END_RETRY,Reintentar,Retry
 END_YOU,Tú,You
-END_AI,IA,AI
+END_AI,Rival,Rival
 TECH_LOOM_NAME,Telar,Loom
 TECH_LOOM_DESC,"Aldeanos +1/+1 armadura, +25% vida","Villagers +1/+1 armor, +25% HP"
 TECH_SICKLES_NAME,Hoces,Sickles
@@ -263,15 +263,15 @@ ALERT_VILLAGERS,¡Atacan a tus aldeanos! Toca la campana,Your villagers are unde
 ALERT_BREACH,¡Brecha en la muralla!,Wall breached!
 ALERT_POP_FULL,Población llena: construye casas,Population full: build houses
 REPORT_FIRST_ATTACK,Primer ataque: minuto %d:%02d,First attack: minute %d:%02d
-REPORT_ERAS,Eras · tú: %s · IA: %s,Eras · you: %s · AI: %s
-REPORT_ARMY,Ejército máximo · tú: %d · IA: %d,Peak army · you: %d · AI: %d
-REPORT_VILLAGERS,Aldeanos · tú: %d (perdiste %d) · IA: %d (perdió %d),Villagers · you: %d (lost %d) · AI: %d (lost %d)
-REPORT_HINT_ECO,La IA tuvo %d aldeanos más. Más aldeanos = más ejército: entrena aldeanos sin parar.,The AI had %d more villagers. More villagers = bigger army: never stop training them.
+REPORT_ERAS,Eras · tú: %s · rival: %s,Eras · you: %s · rival: %s
+REPORT_ARMY,Ejército máximo · tú: %d · rival: %d,Peak army · you: %d · rival: %d
+REPORT_VILLAGERS,Aldeanos · tú: %d (perdiste %d) · rival: %d (perdió %d),Villagers · you: %d (lost %d) · rival: %d (lost %d)
+REPORT_HINT_ECO,El rival tuvo %d aldeanos más. Más aldeanos = más ejército: entrena aldeanos sin parar.,The rival had %d more villagers. More villagers = bigger army: never stop training them.
 REPORT_HINT_ARMY,El rival juntó un ejército mayor (%d contra %d): más cuarteles y colas llenas.,The rival built a bigger army (%d vs %d): more barracks and full queues.
-REPORT_HINT_ERA,La IA subió de era antes: sube más rápido para desbloquear mejores tropas.,The AI advanced first: age up sooner to unlock better troops.
+REPORT_HINT_ERA,El rival subió de era antes: sube más rápido para desbloquear mejores tropas.,The rival advanced first: age up sooner to unlock better troops.
 REPORT_HINT_BELL,Perdiste %d aldeanos: toca la campana cuando veas enemigos cerca.,You lost %d villagers: ring the bell when enemies come close.
 REPORT_HINT_DEFENSE,"Estuvo cerrado. Prueba murallas y torres, y ataca cuando la IA salga.","It was close. Try walls and towers, and strike when the AI moves out."
-REPORT_WIN_ECO,Ganaste por economía: %d aldeanos más que la IA.,You won on economy: %d more villagers than the AI.
+REPORT_WIN_ECO,Ganaste por economía: %d aldeanos más que el rival.,You won on economy: %d more villagers than the rival.
 REPORT_WIN_ARMY,Ganaste por ejército: %d contra %d en el pico.,You won on army: %d vs %d at the peak.
 REPORT_WIN_CLOSE,Partida pareja: ganaste por decisiones.,Close match: you won on decisions.
 REPORT_AI_BONUS,La IA jugó con bonos: %s.,The AI played with bonuses: %s.

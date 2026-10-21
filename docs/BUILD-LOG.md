@@ -244,6 +244,12 @@ Primer paso jugable del multijugador. Antes de tocar código se escribió `docs/
 
 ---
 
+## Primera partida LAN real: Pedro (S24) vs Claude (S10), 2026-10-20
+
+Valle del Río, 22:14 min, ganó Pedro (42 soldados contra 13; le tumbó el Centro Urbano). **Cero desincronizaciones** en 13,300 ticks (hash comparado cada 200), 120 ticks de espera en total. Problemas encontrados: (1) el teclado del teléfono tapaba la casilla de la IP y no escribía → teclado numérico propio en la pantalla de unirse; (2) el botón de subir de era / investigar no hacía nada (ni en red ni contra la IA desde el commit de la capa de órdenes): la validación trataba la investigación como "unidad que este edificio no entrena" → se valida con `research_error` y hay prueba que oprime el botón; (3) la pantalla final decía "IA" con un rival humano → ahora dice "rival".
+
+---
+
 ## Puertas por jugador (2026-10-20, mañana)
 
 Pedro jugó la versión de la noche ("sí se siente diferente") y reportó que al cerrarse una puerta sus tropas la tomaban por muro y daban la vuelta lejos. Causa: la puerta cerrada bloqueaba la celda en el NavGrid compartido. Arreglo (D108): celdas de puerta con dueño, una rejilla A* por jugador donde solo las puertas ajenas son sólidas, y el movimiento (rutas, línea de vista, deslizamiento) pasa el dueño de la unidad. Prueba nueva en `test_f9_defense.gd`: con la puerta cerrada por un enemigo pegado, la ruta propia la cruza en línea recta, la del rival da la vuelta por el extremo del muro y un miliciano propio la atraviesa físicamente.

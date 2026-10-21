@@ -100,6 +100,15 @@ func test_d_blocked_era_up_says_why() -> void:
 	await frames(1)
 	var btn: Button = hud.type_buttons.get(item)
 	check(btn != null and not btn.disabled, "the era button stays pressable so a tap can explain")
+	# Pressing it must really queue the era (it was refused silently once the
+	# order layer checked research items like units).
+	var food: int = GameState.get_resource(0, "food")
+	main._on_train_pressed(item)
+	await physics_frames(2)
+	check(tc.queue.has(item) and GameState.get_resource(0, "food") == food - 350, "pressing the era button queues the era and pays 350 food (queue %s)" % [tc.queue])
+	main._on_train_pressed(TechSystem.PREFIX + "loom")
+	await physics_frames(2)
+	check(tc.queue.has(TechSystem.PREFIX + "loom"), "a tech button queues its research too (queue %s)" % [tc.queue])
 	await _close()
 
 

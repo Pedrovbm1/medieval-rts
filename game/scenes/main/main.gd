@@ -446,7 +446,17 @@ func _on_build_type_chosen(type_id: String) -> void:
 func _on_train_pressed(type_id: String) -> void:
 	var b: Building = selection.selected_building
 	if b != null and is_instance_valid(b):
-		if world.construction.can_enqueue(b, type_id) != "":
+		# Research items (eras, techs) are not in the building's train list:
+		# can_enqueue would call them "type" and refuse them silently.
+		var err: String = ""
+		if TechSystem.is_research(type_id):
+			if not b.is_complete() or b.queue.size() >= int(DataLoader.rule("production", "queue_max", 5)):
+				err = "full"
+			else:
+				err = world.tech.research_error(b, type_id)
+		else:
+			err = world.construction.can_enqueue(b, type_id)
+		if err != "":
 			Sfx.play("error")
 			# Say why: which buildings are missing for the era, or what resources.
 			var why: String = hud.enqueue_reason(b, type_id)
