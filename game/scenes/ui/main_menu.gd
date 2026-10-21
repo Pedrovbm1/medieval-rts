@@ -113,6 +113,19 @@ func _show_host() -> void:
 	_connect_net_signals()
 
 
+## The phone's keyboard covers the middle of the screen, where the menu is
+## centred: while it is up, the centring area shrinks to the part above it,
+## so the IP field (and what you type) stays in view.
+func _process(_delta: float) -> void:
+	var center: Control = get_node_or_null("Center") as Control
+	if center == null:
+		return
+	var kb: float = float(DisplayServer.virtual_keyboard_get_height())
+	var want: float = -kb if kb > 0.0 else 0.0
+	if not is_equal_approx(center.offset_bottom, want):
+		center.offset_bottom = want
+
+
 func _show_join() -> void:
 	_clear()
 	_heading(tr("MENU_JOIN"))
@@ -124,7 +137,31 @@ func _show_join() -> void:
 	ip.add_theme_font_size_override("font_size", 28)
 	ip.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ip.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_NUMBER_DECIMAL
+	# The phone keyboard covered the field and its keys did not always
+	# reach it: an IP is just digits and dots, so the menu has its own pad.
+	ip.virtual_keyboard_enabled = false
+	ip.context_menu_enabled = false
 	box.add_child(ip)
+	var pad: GridContainer = GridContainer.new()
+	pad.name = "IpPad"
+	pad.columns = 4
+	pad.add_theme_constant_override("h_separation", 8)
+	pad.add_theme_constant_override("v_separation", 8)
+	for key: String in ["1", "2", "3", "⌫", "4", "5", "6", ".", "7", "8", "9", "0"]:
+		var k: Button = Button.new()
+		k.text = key
+		k.custom_minimum_size = Vector2(124, 64)
+		k.focus_mode = Control.FOCUS_NONE
+		k.add_theme_font_size_override("font_size", 28)
+		k.pressed.connect(func() -> void:
+			Sfx.play("ui_click")
+			if key == "⌫":
+				ip.text = ip.text.left(maxi(0, ip.text.length() - 1))
+			elif ip.text.length() < 15:
+				ip.text += key
+			ip.caret_column = ip.text.length())
+		pad.add_child(k)
+	box.add_child(pad)
 	_net_status = Label.new()
 	_net_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_net_status.add_theme_font_size_override("font_size", 22)
