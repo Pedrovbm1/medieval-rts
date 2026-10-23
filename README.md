@@ -7,6 +7,30 @@ del género. Construido en Godot 4 con GDScript.
 Aquí no se analizan ni extraen artefactos de juegos propietarios. Mecánicas de género sí;
 contenido propio, siempre.
 
+## Descargar y jugar
+
+**[⬇ Descargar el APK más reciente](https://github.com/Pedrovbm1/medieval-rts/releases/latest)**
+(en el teléfono Android permite "instalar apps de origen desconocido").
+
+- **Un jugador:** Nueva partida → dificultad (Fácil / Normal / Difícil) → mapa.
+- **Multijugador por Wi-Fi:** los dos teléfonos en la misma red; uno entra a
+  *Multijugador → Crear partida* (muestra su IP) y el otro a *Unirse con IP*.
+- **Tutorial:** 7 misiones cortas que enseñan lo básico.
+
+¿Quieres ayudar a desarrollarlo? Lee **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+
+## Qué tiene hoy
+- 4 eras, 13 unidades con counters (lancero > caballo > arquero > infantería), 24 tecnologías.
+- Economía con 4 recursos, granjas que se resiembran, mercado de compra/venta y caravanas.
+- Murallas trazadas en línea, puertas que solo dejan pasar a tu bando, torres,
+  guarnición con campana, reparar, carnero con embestida.
+- IA en 3 dificultades (justa por defecto, sin bonos ocultos), niebla de guerra,
+  minimapa con alertas, guardado y autoguardado.
+- Tres formas de ganar: destruir el Centro Urbano rival, guardar todas las reliquias
+  3 minutos, o mantener una maravilla en pie 3 minutos.
+- Multijugador 1v1 por Wi-Fi (lockstep determinista).
+- Arte, música y sonidos 100 % generados por código de este repo.
+
 ## Estado
 - [x] Investigación + plan de construcción → `docs/PLAN-CONSTRUCCION-RTS.md`
 - [x] F0 — Setup + mundo mínimo (aprobada 2026-10-17; probada en Galaxy S10)
@@ -21,11 +45,13 @@ contenido propio, siempre.
 - [x] F8 — Fog of war + UX (niebla, minimapa, guardado; Difícil gana a Fácil en ~29 min)
 - [ ] F9 — Arte y contenido (arte v3, audio, tutorial de 7 misiones, 3 mapas, murallas/puertas/torres, mercado; falta el playtest final de Pedro)
 - [ ] IDEAS-AOE2 — mecánicas del clásico (`docs/IDEAS-AOE2.md`): hechos guarnición + campana, reparar, carnero/brecha, alertas, informe de fin, IA justa, granjas finitas, segundo CU, vetas centrales, compra en el mercado, reliquias, formaciones + attack-move, maravilla, caravana; falta la campaña
-- [ ] F10 — Publicación
+- [x] F10-mp — Multijugador LAN (lockstep; primera partida real teléfono↔teléfono 2026-10-20: 22 min, 0 desincronizaciones)
+- [ ] F10 — Publicación en Play Store
 
 ## Cómo trabajar
-Una fase por conversación con Claude. El prompt base y los criterios de aceptación
-de cada fase están en `docs/PROMPT-MAESTRO-CLAUDE.md` y `docs/PLAN-CONSTRUCCION-RTS.md`.
+Guía para colaboradores: **[CONTRIBUTING.md](CONTRIBUTING.md)**. El juego se construyó por
+fases con Claude; el prompt base y los criterios de aceptación de cada fase están en
+`docs/PROMPT-MAESTRO-CLAUDE.md` y `docs/PLAN-CONSTRUCCION-RTS.md`.
 
 ## Versión de Godot
 **Godot 4.7.2 stable** (renderer Compatibility, GDScript). No actualizar a mitad de fase.
@@ -39,11 +65,12 @@ Requisitos para exportar a Android:
 ```
 game/
 ├─ project.godot
-├─ autoload/          EventBus, DataLoader, GameState, SaveManager, Sfx, Music
+├─ autoload/          EventBus, DataLoader, GameState, SaveManager, Sfx, Music, NetSession
 ├─ scenes/main/       main (partida), world, scenario_runner, cámara
 ├─ scenes/ui/         main_menu, hud, minimap
 ├─ systems/           selection, pathfinding, economy, construction, combat,
-│                     ai, fog, tech, save, tutorial, world (mapas), render (arte por código)
+│                     ai, fog, tech, save, tutorial, net (multijugador), world (mapas),
+│                     render (arte por código)
 ├─ data/              units/buildings/techs/eras/ai/audio/tutorial.json, maps/, i18n/ui.csv
 ├─ assets/audio/      sfx/ y music/ generados por tools/gen_audio.py
 └─ tests/             run_tests.tscn + test_f*.gd (suites lentas: *_slow*)
