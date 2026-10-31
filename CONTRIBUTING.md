@@ -159,6 +159,7 @@ de publicación nunca van al repositorio (`.gitignore` ya las excluye).
    Pedro revisa y lo junta.
 
 ¿Por dónde empezar? Mira [`TODOS.md`](TODOS.md) (pendientes) y la sección
-"Siguiente" de [`docs/BUILD-STATE.md`](docs/BUILD-STATE.md). Ideas de diseño en
-[`docs/IDEAS-AOE2.md`](docs/IDEAS-AOE2.md) y plan del multijugador por internet en
-[`docs/MULTIPLAYER-PLAN.md`](docs/MULTIPLAYER-PLAN.md).
+"Siguiente" de [`docs/BUILD-STATE.md`](docs/BUILD-STATE.md) (las decisiones D93-D107
+resumen las ideas de diseño ya hechas) y el plan del multijugador por internet en
+[`docs/MULTIPLAYER-PLAN.md`](docs/MULTIPLAYER-PLAN.md). El documento de
+investigación `IDEAS-AOE2` es interno y no está en el repo: pídeselo a Pedro si lo necesitas.

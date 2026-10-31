@@ -44,7 +44,7 @@ contenido propio, siempre.
 - [x] F7 — Eras y 24 tecnologías
 - [x] F8 — Fog of war + UX (niebla, minimapa, guardado; Difícil gana a Fácil en ~29 min)
 - [ ] F9 — Arte y contenido (arte v3, audio, tutorial de 7 misiones, 3 mapas, murallas/puertas/torres, mercado; falta el playtest final de Pedro)
-- [ ] IDEAS-AOE2 — mecánicas del clásico (`docs/IDEAS-AOE2.md`): hechos guarnición + campana, reparar, carnero/brecha, alertas, informe de fin, IA justa, granjas finitas, segundo CU, vetas centrales, compra en el mercado, reliquias, formaciones + attack-move, maravilla, caravana; falta la campaña
+- [ ] IDEAS-AOE2 — mecánicas del clásico (investigación interna, fuera del repo): hechos guarnición + campana, reparar, carnero/brecha, alertas, informe de fin, IA justa, granjas finitas, segundo CU, vetas centrales, compra en el mercado, reliquias, formaciones + attack-move, maravilla, caravana; falta la campaña
 - [x] F10-mp — Multijugador LAN (lockstep; primera partida real teléfono↔teléfono 2026-10-20: 22 min, 0 desincronizaciones)
 - [ ] F10 — Publicación en Play Store
 

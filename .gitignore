@@ -16,3 +16,5 @@ Thumbs.db
 *.swp
 .vscode/
 .idea/
+# Internal design research (kept local, never published)
+docs/IDEAS-AOE2.md
