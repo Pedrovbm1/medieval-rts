@@ -149,6 +149,17 @@ de publicación nunca van al repositorio (`.gitignore` ya las excluye).
 
 ---
 
+### iOS
+
+No hace falta una Mac: `.github/workflows/ios.yml` compila en una Mac de GitHub
+(macOS 26 con Xcode 26, los templates de Godot 4.7 piden el SDK de iOS 26) y deja
+un `.ipa` **sin firmar** en los *Artifacts* de la corrida. Se lanza desde la pestaña
+*Actions* o con un tag `v*`. Para instalarlo, fírmalo con tu Apple ID usando
+Sideloadly (la firma gratis dura 7 días). Falta probarlo en un iPhone real, incluido
+el multijugador contra Android.
+
+---
+
 ## 7. Flujo de trabajo
 
 1. Crea una rama: `git checkout -b feat/lo-que-haces`.

@@ -4,6 +4,12 @@ Una entrada por fase: qué se hizo, archivos, tests, problemas y tiempo aproxima
 
 ---
 
+## iOS — IPA sin firmar en la nube (2026-11-01)
+
+Pedro no tiene Mac. `.github/workflows/ios.yml` importa, exporta el proyecto de Xcode con el preset nuevo `iOS` y compila sin firma en `macos-26`. El primer intento en `macos-15` (Xcode 16.4) falló al enlazar: los templates de Godot 4.7 piden el SDK de iOS 26 (`CADynamicRange*`, `MTLTensorDomain`). Con Xcode 26.6 compila; el IPA pesa 26 MB y su PCK abre el menú en Godot de escritorio. **No probado en un iPhone real**: falta ver rendimiento, márgenes del notch (el juego no usa safe area) y multijugador contra Android.
+
+---
+
 ## F0 — Setup + mundo mínimo (2026-10-17, ~1 h)
 
 **Qué se hizo**
