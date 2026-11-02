@@ -1,0 +1,72 @@
+# Builds an unsigned iOS app on a cloud Mac. Whoever installs it signs it with
+# their own Apple account (Sideloadly, or TestFlight once there is a paid one).
+name: iOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/ios-build]
+    tags: ["v*"]
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot and its iOS template
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/Library/Application Support/Godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-ios
+
+      - name: Install Godot and its iOS template
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_macos.universal.zip"
+          mkdir -p ~/godot
+          unzip -q godot.zip -d ~/godot
+          curl -fsSL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          dest="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$dest"
+          unzip -q -j templates.tpz 'templates/ios*' 'templates/version.txt' -d "$dest"
+          ls -la "$dest"
+
+      - name: Import the project
+        run: ~/godot/Godot.app/Contents/MacOS/Godot --headless --path game --import
+
+      - name: Export the Xcode project
+        run: |
+          mkdir -p build/ios
+          ~/godot/Godot.app/Contents/MacOS/Godot --headless --path game --export-release "iOS" ../build/ios/realm.xcodeproj
+          ls -la build/ios
+
+      - name: Compile without signing
+        run: |
+          xcodebuild -project build/ios/realm.xcodeproj -scheme realm \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -derivedDataPath build/derived \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" \
+            build
+
+      - name: Package the IPA
+        run: |
+          mkdir -p build/out/Payload
+          cp -R build/derived/Build/Products/Release-iphoneos/realm.app build/out/Payload/
+          cd build/out
+          ditto -c -k --sequesterRsrc --keepParent Payload realm-unsigned.ipa
+          ls -la
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: realm-unsigned-ipa
+          path: build/out/realm-unsigned.ipa
+          if-no-files-found: error
