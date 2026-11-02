@@ -13,7 +13,7 @@ env:
 
 jobs:
   ios:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -49,8 +49,11 @@ jobs:
           ~/godot/Godot.app/Contents/MacOS/Godot --headless --path game --export-release "iOS" ../build/ios/realm.xcodeproj
           ls -la build/ios
 
+      # The Godot 4.7 iOS template is built against the iOS 26 SDK, so an older
+      # Xcode cannot link it (undefined CADynamicRange* and MTLTensorDomain).
       - name: Compile without signing
         run: |
+          xcodebuild -version
           xcodebuild -project build/ios/realm.xcodeproj -scheme realm \
             -configuration Release -destination 'generic/platform=iOS' \
             -derivedDataPath build/derived \
@@ -61,6 +64,7 @@ jobs:
         run: |
           mkdir -p build/out/Payload
           cp -R build/derived/Build/Products/Release-iphoneos/realm.app build/out/Payload/
+          plutil -p build/out/Payload/realm.app/Info.plist | grep -E "CFBundleIdentifier|CFBundleShortVersion|NSLocalNetwork|MinimumOS"
           cd build/out
           ditto -c -k --sequesterRsrc --keepParent Payload realm-unsigned.ipa
           ls -la
